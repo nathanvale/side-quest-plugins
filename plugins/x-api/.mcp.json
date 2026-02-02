@@ -2,7 +2,7 @@
 	"mcpServers": {
 		"x-api": {
 			"command": "bunx",
-			"args": ["--bun", "@side-quest/x-api"],
+			"args": ["--bun", "--packages", "@side-quest/x-api", "x-api-mcp"],
 			"env": {
 				"X_BEARER_TOKEN": "${X_BEARER_TOKEN}"
 			}
