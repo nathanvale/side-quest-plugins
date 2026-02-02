@@ -1,0 +1,8 @@
+{
+	"name": "bun-runner",
+	"description": "Bun test runner MCP server — structured, token-efficient test output for Claude Code",
+	"version": "1.0.0",
+	"author": {
+		"name": "Nathan Vale"
+	}
+}

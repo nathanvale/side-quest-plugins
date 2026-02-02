@@ -1,0 +1,26 @@
+{
+	"hooks": {
+		"PostToolUse": [
+			{
+				"matcher": "Write|Edit|MultiEdit",
+				"hooks": [
+					{
+						"command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/tsc-check.ts",
+						"timeout": 30
+					}
+				]
+			}
+		],
+		"Stop": [
+			{
+				"matcher": "*",
+				"hooks": [
+					{
+						"command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/tsc-ci.ts",
+						"timeout": 120
+					}
+				]
+			}
+		]
+	}
+}

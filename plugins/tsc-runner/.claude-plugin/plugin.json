@@ -1,0 +1,8 @@
+{
+	"name": "tsc-runner",
+	"description": "TypeScript type checker MCP server with post-edit hooks for Claude Code",
+	"version": "1.0.0",
+	"author": {
+		"name": "Nathan Vale"
+	}
+}
