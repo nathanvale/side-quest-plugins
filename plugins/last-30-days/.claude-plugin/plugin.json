@@ -1,0 +1,21 @@
+{
+	"name": "last-30-days",
+	"description": "Research any topic from the last 30 days across Reddit, X, and web — engagement-ranked results with copy-paste prompts",
+	"version": "1.0.0",
+	"author": {
+		"name": "Nathan Vale"
+	},
+	"keywords": [
+		"research",
+		"reddit",
+		"twitter",
+		"x",
+		"web-search",
+		"prompts",
+		"engagement"
+	],
+	"license": "MIT",
+	"repository": "https://github.com/nathanvale/side-quest-plugins/tree/main/plugins/last-30-days",
+	"commands": ["./commands/last-30-days.md"],
+	"skills": ["./skills/last-30-days"]
+}
