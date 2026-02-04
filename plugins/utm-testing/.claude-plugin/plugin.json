@@ -1,0 +1,9 @@
+{
+	"name": "utm-testing",
+	"version": "1.0.0",
+	"description": "UTM macOS VM setup, SSH access, and clone-based testing workflows",
+	"author": {
+		"name": "Nathan Vale"
+	},
+	"skills": ["./skills/utm-testing"]
+}
