@@ -69,6 +69,15 @@ Master routing table for diagnosing issues in repos created from `nathanvale/bun
 | `.npm-changesets/` files appear in version PR | Prefix directory not gitignored | Add `.npm-changesets/` to `.gitignore` | `.gitignore` |
 | `npm install --no-save` crashes with "Cannot read properties of null" | npm can't parse Bun's node_modules layout | Use `npm install --prefix` instead of `--no-save` | `publish.yml` |
 
+### Changeset Bot Issues
+
+| Symptom | Cause | Fix | Config File |
+|---------|-------|-----|-------------|
+| "No Changeset found" comment on every PR | Changeset Bot installed but no changeset in PR | Expected behavior — `autogenerate-changeset.yml` will create one automatically, or create manually with `bun version:gen` | `.changeset/` |
+| No Changeset Bot comment on PR | Bot not installed on repo | Install at https://github.com/apps/changeset-bot | GitHub App settings |
+| Bot comments but no changeset auto-generated | `autogenerate-changeset.yml` workflow failing or missing | Check workflow exists and has `contents: write` permission | `.github/workflows/autogenerate-changeset.yml` |
+| Bot shows wrong package name | `.changeset/config.json` has template placeholders | Run `bun run setup` or manually replace `{{GITHUB_USER}}/{{REPO_NAME}}` | `.changeset/config.json` |
+
 ### Setup Issues
 
 | Symptom | Cause | Fix | Config File |

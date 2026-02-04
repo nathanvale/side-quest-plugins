@@ -4,6 +4,21 @@
 
 17 GitHub Actions workflows organized into quality gates, release automation, and security scanning.
 
+## GitHub Apps
+
+The template relies on these GitHub Apps installed at the repository level:
+
+| App | Purpose | Install URL |
+|-----|---------|-------------|
+| [Changeset Bot](https://github.com/apps/changeset-bot) | Comments on PRs with changeset status ("No Changeset found" warning or confirmation) | https://github.com/apps/changeset-bot |
+
+**Changeset Bot** provides immediate PR feedback before the `autogenerate-changeset.yml` workflow runs. Together they form the changeset safety net:
+
+1. **Changeset Bot** (instant) — comments on every PR indicating whether a changeset exists
+2. **`autogenerate-changeset.yml`** (workflow) — auto-generates a changeset if missing and commits it to the PR branch
+
+Install the bot on each repo created from the template: visit the install URL, select your repo, and grant "Read & write" access to pull requests and "Read-only" access to repository contents.
+
 ## Workflow Inventory
 
 ### Quality Gates (PR/Push)
