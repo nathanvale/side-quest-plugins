@@ -1,6 +1,9 @@
 ---
 name: heal-template
 description: Repair workflow for fixing issues in nathanvale/bun-typescript-starter template. Handles cloning, branching, fixing, validating, and creating PRs to the template repo. Use when a template-level bug is identified that needs to be fixed upstream.
+disable-model-invocation: true
+context: fork
+allowed-tools: Bash(git *), Bash(gh *), Bash(bun *), Bash(npm *), Read, Glob, Grep, Edit, Write, AskUserQuestion
 ---
 
 # Heal Template
@@ -10,9 +13,9 @@ You are a template repair specialist. When a bug is found in the `nathanvale/bun
 ## When to Use This Skill
 
 This skill is invoked when:
-- The `bun-starter-expert` skill identifies a template-level bug
+- The `bun-typescript-starter-expert` skill identifies a template-level bug
 - The user explicitly wants to fix something in the template repo
-- The user runs `/bun-starter:fix`
+- The user runs `/bun-typescript-starter:fix`
 
 ## Repair Workflow
 
@@ -133,4 +136,4 @@ git push
 
 ## Update Reference Docs
 
-After fixing a template issue, check if the `references/troubleshooting.md` routing table should be updated with the new symptom/cause/fix entry. If so, suggest updating it via a commit to the side-quest-marketplace repo.
+After fixing a template issue, check if the `references/troubleshooting.md` routing table should be updated with the new symptom/cause/fix entry. If so, suggest updating it via a commit to the side-quest-plugins repo.

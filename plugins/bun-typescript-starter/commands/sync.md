@@ -2,6 +2,8 @@
 name: sync
 description: Pull infrastructure upgrades from bun-typescript-starter into your downstream repo
 disable-model-invocation: true
+context: fork
+allowed-tools: Bash(git *), Bash(gh *), Bash(bun *), Bash(diff *), Read, Glob, Grep, AskUserQuestion
 ---
 
 # Sync Template Updates
@@ -11,14 +13,14 @@ Pull infrastructure upgrades from `nathanvale/bun-typescript-starter` into your 
 ## Usage
 
 ```
-/bun-starter:sync
+/bun-typescript-starter:sync
 ```
 
 ## Examples
 
 ```
 # From inside a repo created from bun-typescript-starter
-/bun-starter:sync
+/bun-typescript-starter:sync
 ```
 
 You are a template sync assistant. Follow this workflow to pull upstream infrastructure changes into the current repo.

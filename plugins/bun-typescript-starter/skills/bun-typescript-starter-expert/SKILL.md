@@ -1,5 +1,5 @@
 ---
-name: bun-starter-expert
+name: bun-typescript-starter-expert
 description: Diagnose and fix issues in repos created from nathanvale/bun-typescript-starter. Auto-routes to relevant reference docs based on symptom category. Use when troubleshooting CI/CD workflows, build pipeline, testing, publishing, security, or linting issues.
 argument-hint: "[issue description] [--chrome]"
 ---
@@ -70,7 +70,6 @@ Determine which category the issue falls into:
 | **Security** | CodeQL, OSV, dependency review, SBOM, vulnerability |
 | **Setup** | template, setup script, placeholders, gh repo create |
 | **Sync** | upstream, template sync, cherry-pick, downstream |
-| **Changeset Bot** | "No Changeset found", changeset-bot, bot comment, missing changeset |
 | **Monorepo** | workspace, packages, filter, monorepo, multi-package |
 
 ### 2. Load Reference Context
@@ -87,7 +86,6 @@ Based on the category, read the relevant reference files from the plugin's `refe
 | Security | [security.md](../../references/security.md) |
 | Setup | [setup-script.md](../../references/setup-script.md), [architecture.md](../../references/architecture.md) |
 | Sync | [downstream-sync.md](../../references/downstream-sync.md) |
-| Changeset Bot | [publishing.md](../../references/publishing.md), [troubleshooting.md](../../references/troubleshooting.md) |
 | Monorepo | [monorepo.md](../../references/monorepo.md), [ci-cd-pipelines.md](../../references/ci-cd-pipelines.md), [publishing.md](../../references/publishing.md) |
 | Browser automation | [chrome-devtools-workflows.md](../../references/chrome-devtools-workflows.md) _(only when DevTools mode is active)_ |
 
@@ -149,7 +147,7 @@ Determine if the issue is:
 
 - **Project-specific**: Fix it in the user's repo directly
 - **Template-level**: The fix should go upstream to `nathanvale/bun-typescript-starter`
-  - Suggest using `/bun-starter:fix` to create a PR to the template repo
+  - Suggest using `/bun-typescript-starter:fix` to create a PR to the template repo
   - Explain that this will benefit all downstream repos
 
 ## Common Scenarios
@@ -178,14 +176,6 @@ bun version:gen --bump <patch|minor|major> --summary "<description>"
 ```
 
 Never run bare `changeset` or `bun version:gen` without flags in agent context — it will hang waiting for interactive input.
-
-### "No Changeset found" / Changeset Bot comment
-
-1. This is **expected behavior** from the Changeset Bot GitHub App
-2. The `autogenerate-changeset.yml` workflow will auto-generate one shortly
-3. If the workflow didn't run, check it exists in `.github/workflows/`
-4. If the bot itself isn't commenting, it may not be installed — install at https://github.com/apps/changeset-bot
-5. Load `references/publishing.md` for the full changeset lifecycle
 
 ### "Tests pass locally but fail in CI"
 
