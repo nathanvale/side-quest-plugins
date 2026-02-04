@@ -1,0 +1,8 @@
+{
+	"name": "agent-skills-bridge",
+	"description": "Cross-tool skill sharing knowledge — compatibility tracking, setup guidance, and ecosystem awareness for SKILL.md across Claude Code, Codex CLI, Cursor, Gemini CLI, and more",
+	"version": "1.0.0",
+	"author": {
+		"name": "Nathan Vale"
+	}
+}
