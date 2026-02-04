@@ -133,4 +133,4 @@ git push
 
 ## Update Reference Docs
 
-After fixing a template issue, check if the `references/troubleshooting.md` routing table should be updated with the new symptom/cause/fix entry. If so, suggest updating it via a commit to the side-quest-marketplace repo.
+After fixing a template issue, check if the `references/troubleshooting.md` routing table should be updated with the new symptom/cause/fix entry. If so, suggest updating it via a commit to the side-quest-plugins repo.

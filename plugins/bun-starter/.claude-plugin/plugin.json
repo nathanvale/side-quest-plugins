@@ -16,6 +16,7 @@
 		"npm-publish"
 	],
 	"license": "MIT",
+	"repository": "https://github.com/nathanvale/side-quest-plugins/tree/main/plugins/bun-starter",
 	"commands": [
 		"./commands/create.md",
 		"./commands/fix.md",
