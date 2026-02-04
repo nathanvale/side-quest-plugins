@@ -1,5 +1,5 @@
 {
-	"name": "bun-starter",
+	"name": "bun-typescript-starter",
 	"version": "1.0.0",
 	"description": "Create, debug, and heal repos from nathanvale/bun-typescript-starter template",
 	"author": {
@@ -16,11 +16,11 @@
 		"npm-publish"
 	],
 	"license": "MIT",
-	"repository": "https://github.com/nathanvale/side-quest-plugins/tree/main/plugins/bun-starter",
+	"repository": "https://github.com/nathanvale/side-quest-plugins/tree/main/plugins/bun-typescript-starter",
 	"commands": [
 		"./commands/create.md",
 		"./commands/fix.md",
 		"./commands/sync.md"
 	],
-	"skills": ["./skills/bun-starter-expert", "./skills/heal-template"]
+	"skills": ["./skills/bun-typescript-starter-expert", "./skills/heal-template"]
 }

@@ -3,6 +3,8 @@ name: fix
 description: Apply a fix to the bun-typescript-starter template repository and create a PR
 argument-hint: "[issue-description]"
 disable-model-invocation: true
+context: fork
+allowed-tools: Bash(git *), Bash(gh *), Bash(bun *), Bash(npm *), Read, Glob, Grep, Edit, Write, AskUserQuestion
 ---
 
 # Fix Template Issue
@@ -12,7 +14,7 @@ Apply a fix to the `nathanvale/bun-typescript-starter` template repository and c
 ## Usage
 
 ```
-/bun-starter:fix [issue-description]
+/bun-typescript-starter:fix [issue-description]
 ```
 
 ## Arguments
@@ -22,9 +24,9 @@ Apply a fix to the `nathanvale/bun-typescript-starter` template repository and c
 ## Examples
 
 ```
-/bun-starter:fix coverage comment not posting on PRs
-/bun-starter:fix biome config not ignoring dist folder
-/bun-starter:fix
+/bun-typescript-starter:fix coverage comment not posting on PRs
+/bun-typescript-starter:fix biome config not ignoring dist folder
+/bun-typescript-starter:fix
 ```
 
 You are a template maintenance assistant. Follow this workflow to fix issues in the `nathanvale/bun-typescript-starter` template repo.

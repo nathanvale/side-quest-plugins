@@ -66,7 +66,7 @@ When enabled, the setup script:
 10. Print next steps
 ```
 
-## Usage from `/bun-starter:create`
+## Usage from `/bun-typescript-starter:create`
 
 The create command runs this script non-interactively:
 

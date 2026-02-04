@@ -3,6 +3,8 @@ name: create
 description: Create a new repository from bun-typescript-starter template with full CI/CD, publishing, and quality infrastructure
 argument-hint: "[repo-name]"
 disable-model-invocation: true
+context: fork
+allowed-tools: Bash(git *), Bash(gh *), Bash(bun *), Bash(npm *), Bash(cp *), Bash(mkdir *), Bash(ls *), Read, Glob, Grep, AskUserQuestion
 ---
 
 # Create Bun TypeScript Project
@@ -12,7 +14,7 @@ Create a new repository from `nathanvale/bun-typescript-starter` template with f
 ## Usage
 
 ```
-/bun-starter:create [repo-name]
+/bun-typescript-starter:create [repo-name]
 ```
 
 ## Arguments
@@ -22,9 +24,9 @@ Create a new repository from `nathanvale/bun-typescript-starter` template with f
 ## Examples
 
 ```
-/bun-starter:create my-awesome-lib
-/bun-starter:create @nathanvale/utils
-/bun-starter:create
+/bun-typescript-starter:create my-awesome-lib
+/bun-typescript-starter:create @nathanvale/utils
+/bun-typescript-starter:create
 ```
 
 You are a project scaffolding assistant. Follow this workflow precisely to create a new repo from the bun-typescript-starter template.
@@ -187,4 +189,4 @@ Show the user:
    - Go to repo Settings > Branches > Add rule for `main`
    - Enable: Require PR, require status checks ("All checks passed"), require linear history
 
-4. **Reference docs**: Point to `references/` directory in the bun-starter plugin for detailed documentation on CI/CD, publishing, security, and troubleshooting.
+4. **Reference docs**: Point to `references/` directory in the bun-typescript-starter plugin for detailed documentation on CI/CD, publishing, security, and troubleshooting.

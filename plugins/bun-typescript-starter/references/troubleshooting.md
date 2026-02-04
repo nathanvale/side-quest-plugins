@@ -112,7 +112,7 @@ TF_BUILD=true bun test --recursive
 | First scoped publish fails with OIDC | Package must exist before OIDC works | First publish locally: `npm publish --access public --no-provenance` | n/a |
 | Per-package releases not created | Template creates single release | Use `publishedPackages` JSON iteration (see `monorepo.md`) | `.github/workflows/publish.yml` |
 
-## When to Use `/bun-starter:fix`
+## When to Use `/bun-typescript-starter:fix`
 
 Use the fix command when:
 - The issue is in the **template itself** (not your project-specific code)

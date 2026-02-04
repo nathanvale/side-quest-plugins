@@ -1,5 +1,5 @@
 ---
-name: bun-starter-expert
+name: bun-typescript-starter-expert
 description: Diagnose and fix issues in repos created from nathanvale/bun-typescript-starter. Auto-routes to relevant reference docs based on symptom category. Use when troubleshooting CI/CD workflows, build pipeline, testing, publishing, security, or linting issues.
 argument-hint: "[issue description] [--chrome]"
 ---
@@ -147,7 +147,7 @@ Determine if the issue is:
 
 - **Project-specific**: Fix it in the user's repo directly
 - **Template-level**: The fix should go upstream to `nathanvale/bun-typescript-starter`
-  - Suggest using `/bun-starter:fix` to create a PR to the template repo
+  - Suggest using `/bun-typescript-starter:fix` to create a PR to the template repo
   - Explain that this will benefit all downstream repos
 
 ## Common Scenarios

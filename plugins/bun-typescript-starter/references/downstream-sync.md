@@ -107,7 +107,7 @@ gh pr create --repo nathanvale/bun-typescript-starter \
 
 **Warning**: Never push directly to `template/main` — it bypasses branch protection and CI checks, and could break all downstream repos. Always use a branch and PR.
 
-**Note**: Pushing upstream requires write access to the template repo. Alternatively, use `/bun-starter:fix` which handles the full workflow.
+**Note**: Pushing upstream requires write access to the template repo. Alternatively, use `/bun-typescript-starter:fix` which handles the full workflow.
 
 ## Strategy 3: Manual Cherry-Pick
 
@@ -130,7 +130,7 @@ git diff template/main -- .github/ | git apply
 ### From Downstream to Template
 
 ```bash
-# In the template repo (or use /bun-starter:fix)
+# In the template repo (or use /bun-typescript-starter:fix)
 # Identify the fix commit in downstream
 git cherry-pick <commit-sha>
 # Or manually recreate the fix
@@ -161,4 +161,4 @@ cp /tmp/template/.github/workflows/pr-quality.yml your-project/.github/workflows
 | One-off fix from specific commit | Cherry-pick |
 | Cautious, selective updates | Manual diff |
 
-The `/bun-starter:create` command offers to install `actions-template-sync` during setup.
+The `/bun-typescript-starter:create` command offers to install `actions-template-sync` during setup.
