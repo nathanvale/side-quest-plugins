@@ -63,9 +63,12 @@ function parseArgs(): DigestConfig {
 	for (let i = 0; i < args.length; i++) {
 		if (args[i] === '--dry-run') {
 			config.dryRun = true
-		} else if (args[i] === '--recipient' && args[i + 1]) {
-			config.recipient = args[i + 1]
-			i++
+		} else if (args[i] === '--recipient') {
+			const next = args[i + 1]
+			if (next !== undefined) {
+				config.recipient = next
+				i++
+			}
 		}
 	}
 

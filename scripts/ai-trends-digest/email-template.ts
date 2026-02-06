@@ -154,7 +154,7 @@ function generateTopicSection(result: ResearchResult): string {
 			highlights.push(`
         <div class="source">
           <div class="source-header">
-            <span class="reddit">r/${thread.subreddit}</span>
+            <span class="reddit">r/${escapeHtml(thread.subreddit)}</span>
             <a href="${sanitizeUrl(thread.url)}">${escapeHtml(thread.title)}</a>
           </div>
           <div class="source-meta">
@@ -174,7 +174,7 @@ function generateTopicSection(result: ResearchResult): string {
 			highlights.push(`
         <div class="source">
           <div class="source-header">
-            <span class="twitter">@${post.handle}</span>
+            <span class="twitter">@${escapeHtml(post.handle)}</span>
           </div>
           <p style="margin: 4px 0; font-size: 13px;">${escapeHtml(truncate(post.content, 200))}</p>
           <div class="source-meta">
@@ -194,7 +194,7 @@ function generateTopicSection(result: ResearchResult): string {
 			highlights.push(`
         <div class="source">
           <div class="source-header">
-            <span class="web">${page.domain}</span>
+            <span class="web">${escapeHtml(page.domain)}</span>
             <a href="${sanitizeUrl(page.url)}">${escapeHtml(truncate(page.title, 60))}</a>
           </div>
           ${page.snippet ? `<p style="margin: 4px 0 0 0; font-size: 13px; color: #555;">${escapeHtml(truncate(page.snippet, 150))}</p>` : ''}

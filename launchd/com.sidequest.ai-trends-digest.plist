@@ -48,7 +48,7 @@
 	<key>KeepAlive</key>
 	<false/>
 
-	<!-- Nice priority (lower = nicer) -->
+	<!-- Nice priority (higher = lower scheduling priority) -->
 	<key>Nice</key>
 	<integer>10</integer>
 </dict>
