@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Job identifier -->
+	<key>Label</key>
+	<string>com.sidequest.ai-trends-digest</string>
+
+	<!-- Working directory -->
+	<key>WorkingDirectory</key>
+	<string>/Users/nathanvale/code/side-quest-plugins/scripts/ai-trends-digest</string>
+
+	<!-- Command to run -->
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/nathanvale/.bun/bin/bun</string>
+		<string>run</string>
+		<string>send-digest.ts</string>
+	</array>
+
+	<!-- Schedule: Monday at 7:00 AM (local time, AEDT) -->
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Weekday</key>
+		<integer>1</integer>
+		<key>Hour</key>
+		<integer>7</integer>
+		<key>Minute</key>
+		<integer>0</integer>
+	</dict>
+
+	<!-- Log output -->
+	<key>StandardOutPath</key>
+	<string>/Users/nathanvale/Library/Logs/ai-trends-digest/output.log</string>
+	<key>StandardErrorPath</key>
+	<string>/Users/nathanvale/Library/Logs/ai-trends-digest/error.log</string>
+
+	<!-- Environment variables -->
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>HOME</key>
+		<string>/Users/nathanvale</string>
+		<key>PATH</key>
+		<string>/Users/nathanvale/.bun/bin:/usr/local/bin:/usr/bin:/bin</string>
+	</dict>
+
+	<!-- Keep it loaded -->
+	<key>KeepAlive</key>
+	<false/>
+
+	<!-- Nice priority (lower = nicer) -->
+	<key>Nice</key>
+	<integer>10</integer>
+</dict>
+</plist>

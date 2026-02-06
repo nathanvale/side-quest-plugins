@@ -1,11 +1,11 @@
 ---
 name: last-30-days
-description: Research a topic from the last 30 days on Reddit + X + Web, become an expert, and write copy-paste-ready prompts for the user's target tool.
-argument-hint: "[topic] for [tool]" or "[topic]"
+description: Research any topic from the last 30 days across Reddit, X, and web with engagement-ranked results.
+argument-hint: '"[topic] for [tool]" or "[topic]"'
 context: fork
 agent: Explore
 disable-model-invocation: true
-allowed-tools: Bash, Read, Write, AskUserQuestion, WebSearch
+allowed-tools: Bash, Read, Write, AskUserQuestion, WebSearch, WebFetch
 ---
 
 # last-30-days: Research Any Topic from the Last 30 Days
@@ -44,7 +44,7 @@ Common patterns:
 **Store these variables:**
 - `TOPIC = [extracted topic]`
 - `TARGET_TOOL = [extracted tool, or "unknown" if not specified]`
-- `QUERY_TYPE = [RECOMMENDATIONS | NEWS | HOW-TO | GENERAL]`
+- `QUERY_TYPE = [PROMPTING | RECOMMENDATIONS | NEWS | GENERAL]`
 
 ---
 
@@ -63,8 +63,8 @@ The skill works in three modes based on available API keys:
 If the user wants to add API keys for better results:
 
 ```bash
-mkdir -p ~/.config/last-30-days
-cat > ~/.config/last-30-days/.env << 'ENVEOF'
+mkdir -p ~/.config/research
+cat > ~/.config/research/.env << 'ENVEOF'
 # last-30-days API Configuration
 # Both keys are optional - skill works with WebSearch fallback
 
@@ -75,8 +75,8 @@ OPENAI_API_KEY=
 XAI_API_KEY=
 ENVEOF
 
-chmod 600 ~/.config/last-30-days/.env
-echo "Config created at ~/.config/last-30-days/.env"
+chmod 600 ~/.config/research/.env
+echo "Config created at ~/.config/research/.env"
 echo "Edit to add your API keys for enhanced research."
 ```
 
@@ -141,7 +141,7 @@ For ALL query types:
 - INCLUDE: blogs, tutorials, docs, news, GitHub repos
 - **DO NOT output "Sources:" list** - this is noise, we'll show stats at the end
 
-**Step 3: Wait for background script to complete**
+**Step 4: Wait for background script to complete**
 Use TaskOutput to get the script results before proceeding to synthesis.
 
 **Depth options** (passed through from user's command):
@@ -256,7 +256,7 @@ Research complete!
 - Web: {n} pages | {domains}
 - Top sources: {author1} on {site1}, {author2} on {site2}
 
-Want engagement metrics? Add API keys to ~/.config/last-30-days/.env
+Want engagement metrics? Add API keys to ~/.config/research/.env
    - OPENAI_API_KEY -> Reddit (real upvotes & comments)
    - XAI_API_KEY -> X/Twitter (real likes & reposts)
 ```
@@ -387,5 +387,5 @@ Based on: {n} web pages from {domains}
 
 Want another prompt? Just tell me what you're creating next.
 
-Unlock Reddit & X data: Add API keys to ~/.config/last-30-days/.env
+Unlock Reddit & X data: Add API keys to ~/.config/research/.env
 ```
