@@ -1,4 +1,5 @@
 {
 	"extends": "./tsconfig.base.json",
-	"include": ["plugins/**/*.ts", "scripts/**/*.ts"]
+	"include": ["plugins/**/*.ts", "scripts/**/*.ts"],
+	"exclude": ["scripts/ai-trends-digest/**"]
 }
