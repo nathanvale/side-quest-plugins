@@ -226,7 +226,7 @@ After applying changes:
    | Setting | Expected Value |
    |---------|---------------|
    | `required_status_checks.strict` | `true` |
-   | `required_status_checks.contexts` | Must include `All checks passed` and `CodeRabbit` |
+   | `required_status_checks.checks` | Must include `{"context": "All checks passed"}` and `{"context": "CodeRabbit"}` |
    | `enforce_admins.enabled` | `true` |
    | `required_pull_request_reviews.dismiss_stale_reviews` | `true` |
    | `required_pull_request_reviews.required_approving_review_count` | `0` |
