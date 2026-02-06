@@ -107,12 +107,6 @@ export function generateEmailHtml(
       border-radius: 6px;
       margin-top: 24px;
     }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      text-align: center;
-    }
     .stat-value {
       font-size: 20px;
       font-weight: 700;
@@ -230,24 +224,27 @@ function generateStatsFooter(results: ResearchResult[]): string {
 		}
 	}
 
+	// Use table layout for email client compatibility (CSS Grid unsupported in Outlook, Yahoo, etc.)
 	return `
     <div class="stats">
-      <div class="stats-grid">
-        <div>
-          <div class="stat-value">${totalRedditThreads}</div>
-          <div class="stat-label">Reddit Threads</div>
-          <div style="font-size: 10px; color: #888;">${totalUpvotes.toLocaleString()} upvotes</div>
-        </div>
-        <div>
-          <div class="stat-value">${totalXPosts}</div>
-          <div class="stat-label">X Posts</div>
-          <div style="font-size: 10px; color: #888;">${totalLikes.toLocaleString()} likes</div>
-        </div>
-        <div>
-          <div class="stat-value">${totalWebPages}</div>
-          <div class="stat-label">Web Pages</div>
-        </div>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+        <tr>
+          <td width="33%" align="center" style="padding: 0 6px;">
+            <div class="stat-value">${totalRedditThreads}</div>
+            <div class="stat-label">Reddit Threads</div>
+            <div style="font-size: 10px; color: #888;">${totalUpvotes.toLocaleString()} upvotes</div>
+          </td>
+          <td width="33%" align="center" style="padding: 0 6px;">
+            <div class="stat-value">${totalXPosts}</div>
+            <div class="stat-label">X Posts</div>
+            <div style="font-size: 10px; color: #888;">${totalLikes.toLocaleString()} likes</div>
+          </td>
+          <td width="33%" align="center" style="padding: 0 6px;">
+            <div class="stat-value">${totalWebPages}</div>
+            <div class="stat-label">Web Pages</div>
+          </td>
+        </tr>
+      </table>
     </div>
   `
 }
@@ -318,6 +315,11 @@ function escapeHtml(text: string): string {
 		.replace(/'/g, '&#039;')
 }
 
+/**
+ * Sanitize a URL for use in HTML href attributes.
+ * escapeHtml converts & to &amp; which is correct for HTML attributes -
+ * browsers decode &amp; back to & when following the link.
+ */
 function sanitizeUrl(url: string): string {
 	try {
 		const parsed = new URL(url)

@@ -64,8 +64,8 @@ echo "Config created. Add your RESEND_API_KEY and DIGEST_RECIPIENT."
 
 Extract flags from `$ARGUMENTS`:
 
-- `--dry-run` — Preview email content without sending
-- `--recipient <email>` — Override the default recipient
+- `--dry-run` - Preview email content without sending
+- `--recipient <email>` - Override the default recipient
 
 Store:
 - `DRY_RUN = true/false`
@@ -121,7 +121,7 @@ fi
 ```
 --- DRY RUN ---
 Would send to: {email}
-Subject: AI Trends Digest — Week of {date}
+Subject: AI Trends Digest - Week of {date}
 
 [Preview of email content]
 
@@ -159,8 +159,8 @@ cd ~/code/side-quest-plugins/scripts/ai-trends-digest && bun run send-digest.ts
 
 The digest researches these topics (configurable in send-digest.ts):
 
-1. **AI agentic workflows 2026 trends** — Latest developments in AI agents
-2. **Claude Code MCP tools best practices** — Model Context Protocol insights
-3. **AI coding assistants productivity** — Developer productivity with AI
+1. **AI agentic workflows 2026 trends** - Latest developments in AI agents
+2. **Claude Code MCP tools best practices** - Model Context Protocol insights
+3. **AI coding assistants productivity** - Developer productivity with AI
 
 Each topic uses the `@side-quest/last-30-days` package for research.

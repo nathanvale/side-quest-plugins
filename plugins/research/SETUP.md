@@ -5,8 +5,8 @@ This document covers deployment of the AI Trends Digest automated email system.
 ## Overview
 
 The research plugin includes two skills:
-1. **last-30-days** — Interactive topic research (no setup required)
-2. **ai-trends-digest** — Automated weekly email digest (requires setup)
+1. **last-30-days** - Interactive topic research (no setup required)
+2. **ai-trends-digest** - Automated weekly email digest (requires setup)
 
 ---
 
@@ -78,12 +78,15 @@ The digest runs automatically every Monday at 7:00 AM local time.
 
 ### Install the Launch Agent
 
+**Important:** The plist contains hardcoded `/Users/nathanvale/` paths. If you're not nathanvale, edit the plist to replace all occurrences with your home directory before copying:
+
 ```bash
 # Create logs directory
 mkdir -p ~/Library/Logs/ai-trends-digest
 
-# Copy plist to LaunchAgents
+# Copy plist and customize paths
 cp ~/code/side-quest-plugins/launchd/com.sidequest.ai-trends-digest.plist ~/Library/LaunchAgents/
+sed -i '' "s|/Users/nathanvale|$HOME|g" ~/Library/LaunchAgents/com.sidequest.ai-trends-digest.plist
 
 # Load the agent
 launchctl load ~/Library/LaunchAgents/com.sidequest.ai-trends-digest.plist
@@ -107,6 +110,16 @@ launchctl start com.sidequest.ai-trends-digest
 
 # Watch logs
 tail -f ~/Library/Logs/ai-trends-digest/output.log
+```
+
+### Log Rotation
+
+launchd does not rotate logs automatically. Periodically clean up log files to prevent unbounded growth:
+
+```bash
+# Truncate logs
+> ~/Library/Logs/ai-trends-digest/output.log
+> ~/Library/Logs/ai-trends-digest/error.log
 ```
 
 ### Uninstall

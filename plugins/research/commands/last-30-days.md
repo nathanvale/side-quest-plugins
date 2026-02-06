@@ -16,7 +16,7 @@ Research any topic from the last 30 days across Reddit, X, and web.
 Invoke the `last-30-days` skill with the user's arguments.
 
 **Examples:**
-- `/last-30-days photorealistic people in Nano Banana Pro` — prompting research
-- `/last-30-days best Claude Code skills` — recommendations
-- `/last-30-days what's happening with OpenAI` — news
-- `/last-30-days web app mockups for Midjourney --deep` — deep research with target tool
+- `/last-30-days photorealistic people in Nano Banana Pro` - prompting research
+- `/last-30-days best Claude Code skills` - recommendations
+- `/last-30-days what's happening with OpenAI` - news
+- `/last-30-days web app mockups for Midjourney --deep` - deep research with target tool

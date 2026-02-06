@@ -64,7 +64,7 @@ export interface WebPage {
 
 /** Configuration for the digest */
 export interface DigestConfig {
-	recipient: string
+	recipient: string | undefined
 	dryRun: boolean
 	topics: string[]
 }

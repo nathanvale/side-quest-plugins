@@ -1,5 +1,3 @@
-#!/usr/bin/env bun
-
 /**
  * AI Trends Digest - Send weekly email digest of AI trends
  *
@@ -10,13 +8,12 @@
  */
 
 import { existsSync } from 'node:fs'
-import { homedir } from 'node:os'
 import { resolve } from 'node:path'
 import { Resend } from 'resend'
 import { generateEmailHtml, generateEmailText } from './email-template'
 import type { DigestConfig, ResearchResult } from './types'
 
-/** Default research topics */
+/** Default research topics - these are trusted hardcoded values used in Bun.spawn args */
 const DEFAULT_TOPICS = [
 	'AI agentic workflows 2026 trends',
 	'Claude Code MCP tools best practices',
@@ -24,10 +21,25 @@ const DEFAULT_TOPICS = [
 ]
 
 /** Path to environment config */
-const ENV_PATH = resolve(process.env.HOME || homedir(), '.config/research/.env')
+const ENV_PATH = resolve(
+	process.env.HOME ?? '',
+	'.config/research/.env',
+)
 
 /**
- * Load environment variables from config file
+ * Type guard to validate parsed JSON matches ResearchResult shape
+ */
+function isResearchResult(data: unknown): data is ResearchResult {
+	return (
+		typeof data === 'object' &&
+		data !== null &&
+		'mode' in data &&
+		typeof (data as ResearchResult).mode === 'string'
+	)
+}
+
+/**
+ * Load environment variables from config file using Bun's env file support
  */
 async function loadEnv(): Promise<void> {
 	if (!existsSync(ENV_PATH)) {
@@ -39,12 +51,33 @@ async function loadEnv(): Promise<void> {
 	const content = await Bun.file(ENV_PATH).text()
 	for (const line of content.split('\n')) {
 		const trimmed = line.trim()
-		if (trimmed && !trimmed.startsWith('#')) {
-			const [key, ...valueParts] = trimmed.split('=')
-			const value = valueParts.join('=').replace(/^["']|["']$/g, '')
-			if (key && value) {
-				process.env[key] = value
-			}
+		if (!trimmed || trimmed.startsWith('#')) continue
+
+		// Handle optional 'export' prefix
+		const normalized = trimmed.startsWith('export ')
+			? trimmed.slice(7)
+			: trimmed
+
+		const eqIndex = normalized.indexOf('=')
+		if (eqIndex === -1) continue
+
+		const key = normalized.slice(0, eqIndex).trim()
+		const rawValue = normalized.slice(eqIndex + 1).trim()
+
+		// Strip matching quotes only (both must be the same quote character)
+		let value = rawValue
+		if (
+			value.length >= 2 &&
+			((value.startsWith('"') && value.endsWith('"')) ||
+				(value.startsWith("'") && value.endsWith("'")))
+		) {
+			value = value.slice(1, -1)
+		}
+
+		if (key) {
+			// Set even if value is empty - lets us distinguish "key exists but empty"
+			// from "key not in file at all" for better error messages
+			process.env[key] = value
 		}
 	}
 }
@@ -55,7 +88,7 @@ async function loadEnv(): Promise<void> {
 function parseArgs(): DigestConfig {
 	const args = process.argv.slice(2)
 	const config: DigestConfig = {
-		recipient: '',
+		recipient: undefined,
 		dryRun: false,
 		topics: DEFAULT_TOPICS,
 	}
@@ -104,10 +137,14 @@ async function runResearch(topic: string): Promise<ResearchResult | null> {
 			return null
 		}
 
-		// Parse JSON output
-		const result = JSON.parse(output) as ResearchResult
-		result.topic = topic
-		return result
+		// Parse and validate JSON output
+		const parsed: unknown = JSON.parse(output)
+		if (!isResearchResult(parsed)) {
+			console.error(`  Warning: Invalid research output for "${topic}"`)
+			return null
+		}
+		parsed.topic = topic
+		return parsed
 	} catch (error) {
 		console.error(`  ⚠ Research error for "${topic}":`, error)
 		return null
@@ -139,8 +176,9 @@ async function main(): Promise<void> {
 	// Parse arguments
 	const config = parseArgs()
 
-	// Resolve recipient
-	const recipient = config.recipient || process.env.DIGEST_RECIPIENT
+	// Resolve recipient - narrow to string for the send path
+	const recipient: string | undefined =
+		config.recipient || process.env.DIGEST_RECIPIENT || undefined
 	if (!recipient && !config.dryRun) {
 		console.error('No recipient specified.')
 		console.error('Either set DIGEST_RECIPIENT in ~/.config/research/.env')
@@ -155,16 +193,16 @@ async function main(): Promise<void> {
 		process.exit(1)
 	}
 
-	// Run research for all topics
+	// Run research for all topics in parallel
 	console.log('📚 Running research...\n')
-	const results: ResearchResult[] = []
-
-	for (const topic of config.topics) {
-		const result = await runResearch(topic)
-		if (result) {
-			results.push(result)
-		}
-	}
+	const settled = await Promise.allSettled(config.topics.map(runResearch))
+	const results = settled
+		.filter(
+			(r): r is PromiseFulfilledResult<ResearchResult | null> =>
+				r.status === 'fulfilled',
+		)
+		.map((r) => r.value)
+		.filter((r): r is ResearchResult => r !== null)
 
 	if (results.length === 0) {
 		console.error('\n✗ No research results. Cannot generate digest.')
@@ -195,14 +233,17 @@ async function main(): Promise<void> {
 	}
 
 	// Send email via Resend
-	console.log(`📧 Sending to ${recipient}...`)
+	// recipient is guaranteed defined here: we exit(1) above if !recipient && !dryRun,
+	// and dryRun returns early. TypeScript can't infer through process.exit.
+	const validRecipient = recipient as string
+	console.log(`📧 Sending to ${validRecipient}...`)
 
 	const resend = new Resend(process.env.RESEND_API_KEY)
 
 	try {
 		const { data, error } = await resend.emails.send({
 			from: 'AI Trends Digest <digest@sidequest.dev>',
-			to: recipient!,
+			to: validRecipient,
 			subject,
 			html,
 			text,
@@ -215,7 +256,7 @@ async function main(): Promise<void> {
 
 		console.log('\n✓ Email sent successfully!')
 		console.log(`  ID: ${data?.id}`)
-		console.log(`  Recipient: ${recipient}`)
+		console.log(`  Recipient: ${validRecipient}`)
 		console.log(`  Topics: ${config.topics.join(', ')}`)
 
 		// Summary stats
