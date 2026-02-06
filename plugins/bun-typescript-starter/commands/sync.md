@@ -208,7 +208,71 @@ After applying changes:
    ```
    If there are new deps, suggest the user review and add them manually.
 
-4. **Suggest next steps**:
+4. **Check branch protection drift**: Compare the repo's branch protection against the template's expected settings. This catches settings drift that file sync can't detect (e.g., missing required status checks, disabled conversation resolution).
+
+   First, detect the repo owner and name:
+   ```bash
+   gh api repos/{owner}/{repo} --jq '.full_name'
+   ```
+
+   Then fetch the current branch protection and check each expected setting:
+   ```bash
+   # Get current branch protection as JSON
+   gh api repos/{owner}/{repo}/branches/main/protection 2>&1
+   ```
+
+   Compare against these expected settings from the template's setup script:
+
+   | Setting | Expected Value |
+   |---------|---------------|
+   | `required_status_checks.strict` | `true` |
+   | `required_status_checks.contexts` | Must include `All checks passed` and `CodeRabbit` |
+   | `enforce_admins.enabled` | `true` |
+   | `required_pull_request_reviews.dismiss_stale_reviews` | `true` |
+   | `required_pull_request_reviews.required_approving_review_count` | `0` |
+   | `required_linear_history.enabled` | `true` |
+   | `required_conversation_resolution.enabled` | `true` |
+   | `allow_force_pushes.enabled` | `false` |
+   | `allow_deletions.enabled` | `false` |
+
+   Report drift as a table showing each setting, expected value, and actual value. Only show rows that differ.
+
+   If there is drift, ask the user with AskUserQuestion:
+   - **Fix all** - Apply the expected branch protection settings via `gh api`
+   - **Skip** - Leave branch protection as-is
+
+   To fix, send the full protection payload:
+   ```bash
+   gh api repos/{owner}/{repo}/branches/main/protection \
+     --method PUT \
+     -H 'Accept: application/vnd.github+json' \
+     --input - <<'EOF'
+   {
+     "required_status_checks": {
+       "strict": true,
+       "checks": [
+         {"context": "All checks passed"},
+         {"context": "CodeRabbit"}
+       ]
+     },
+     "enforce_admins": true,
+     "required_pull_request_reviews": {
+       "dismiss_stale_reviews": true,
+       "require_code_owner_reviews": false,
+       "required_approving_review_count": 0
+     },
+     "restrictions": null,
+     "required_linear_history": true,
+     "required_conversation_resolution": true,
+     "allow_force_pushes": false,
+     "allow_deletions": false
+   }
+   EOF
+   ```
+
+   If branch protection is not configured at all (404 response), report this and offer to set it up from scratch using the same payload.
+
+5. **Suggest next steps**:
    - Review the changes: `git diff HEAD~1`
    - Run tests: `bun test`
    - If anything breaks, revert: `git revert HEAD`
