@@ -1,11 +1,11 @@
 ---
 name: last-30-days
-description: Research a topic from the last 30 days on Reddit + X + Web, become an expert, and write copy-paste-ready prompts for the user's target tool.
-argument-hint: "[topic] for [tool]" or "[topic]"
+description: Research any topic from the last 30 days across Reddit, X, and web with engagement-ranked results.
+argument-hint: '"[topic] for [tool]" or "[topic]"'
 context: fork
 agent: Explore
 disable-model-invocation: true
-allowed-tools: Bash, Read, Write, AskUserQuestion, WebSearch
+allowed-tools: Bash, Read, Write, AskUserQuestion, WebSearch, WebFetch
 ---
 
 # last-30-days: Research Any Topic from the Last 30 Days
@@ -13,10 +13,10 @@ allowed-tools: Bash, Read, Write, AskUserQuestion, WebSearch
 Research ANY topic across Reddit, X, and the web. Surface what people are actually discussing, recommending, and debating right now.
 
 Use cases:
-- **Prompting**: "photorealistic people in Nano Banana Pro", "Midjourney prompts", "ChatGPT image generation" — learn techniques, get copy-paste prompts
-- **Recommendations**: "best Claude Code skills", "top AI tools" — get a LIST of specific things people mention
-- **News**: "what's happening with OpenAI", "latest AI announcements" — current events and updates
-- **General**: any topic you're curious about — understand what the community is saying
+- **Prompting**: "photorealistic people in Nano Banana Pro", "Midjourney prompts", "ChatGPT image generation" - learn techniques, get copy-paste prompts
+- **Recommendations**: "best Claude Code skills", "top AI tools" - get a LIST of specific things people mention
+- **News**: "what's happening with OpenAI", "latest AI announcements" - current events and updates
+- **General**: any topic you're curious about - understand what the community is saying
 
 ## CRITICAL: Parse User Intent
 
@@ -25,17 +25,17 @@ Before doing anything, parse the user's input for:
 1. **TOPIC**: What they want to learn about (e.g., "web app mockups", "Claude Code skills", "image generation")
 2. **TARGET TOOL** (if specified): Where they'll use the prompts (e.g., "Nano Banana Pro", "ChatGPT", "Midjourney")
 3. **QUERY TYPE**: What kind of research they want:
-   - **PROMPTING** - "X prompts", "prompting for X", "X best practices" — User wants to learn techniques and get copy-paste prompts
-   - **RECOMMENDATIONS** - "best X", "top X", "what X should I use", "recommended X" — User wants a LIST of specific things
-   - **NEWS** - "what's happening with X", "X news", "latest on X" — User wants current events/updates
-   - **GENERAL** - anything else — User wants broad understanding of the topic
+   - **PROMPTING** - "X prompts", "prompting for X", "X best practices" - User wants to learn techniques and get copy-paste prompts
+   - **RECOMMENDATIONS** - "best X", "top X", "what X should I use", "recommended X" - User wants a LIST of specific things
+   - **NEWS** - "what's happening with X", "X news", "latest on X" - User wants current events/updates
+   - **GENERAL** - anything else - User wants broad understanding of the topic
 
 Common patterns:
-- `[topic] for [tool]` — "web mockups for Nano Banana Pro" — TOOL IS SPECIFIED
-- `[topic] prompts for [tool]` — "UI design prompts for Midjourney" — TOOL IS SPECIFIED
-- Just `[topic]` — "iOS design mockups" — TOOL NOT SPECIFIED, that's OK
-- "best [topic]" or "top [topic]" — QUERY_TYPE = RECOMMENDATIONS
-- "what are the best [topic]" — QUERY_TYPE = RECOMMENDATIONS
+- `[topic] for [tool]` - "web mockups for Nano Banana Pro" - TOOL IS SPECIFIED
+- `[topic] prompts for [tool]` - "UI design prompts for Midjourney" - TOOL IS SPECIFIED
+- Just `[topic]` - "iOS design mockups" - TOOL NOT SPECIFIED, that's OK
+- "best [topic]" or "top [topic]" - QUERY_TYPE = RECOMMENDATIONS
+- "what are the best [topic]" - QUERY_TYPE = RECOMMENDATIONS
 
 **IMPORTANT: Do NOT ask about target tool before research.**
 - If tool is specified in the query, use it
@@ -44,7 +44,7 @@ Common patterns:
 **Store these variables:**
 - `TOPIC = [extracted topic]`
 - `TARGET_TOOL = [extracted tool, or "unknown" if not specified]`
-- `QUERY_TYPE = [RECOMMENDATIONS | NEWS | HOW-TO | GENERAL]`
+- `QUERY_TYPE = [PROMPTING | RECOMMENDATIONS | NEWS | GENERAL]`
 
 ---
 
@@ -63,8 +63,8 @@ The skill works in three modes based on available API keys:
 If the user wants to add API keys for better results:
 
 ```bash
-mkdir -p ~/.config/last-30-days
-cat > ~/.config/last-30-days/.env << 'ENVEOF'
+mkdir -p ~/.config/research
+cat > ~/.config/research/.env << 'ENVEOF'
 # last-30-days API Configuration
 # Both keys are optional - skill works with WebSearch fallback
 
@@ -75,8 +75,8 @@ OPENAI_API_KEY=
 XAI_API_KEY=
 ENVEOF
 
-chmod 600 ~/.config/last-30-days/.env
-echo "Config created at ~/.config/last-30-days/.env"
+chmod 600 ~/.config/research/.env
+echo "Config created at ~/.config/research/.env"
 echo "Edit to add your API keys for enhanced research."
 ```
 
@@ -141,13 +141,13 @@ For ALL query types:
 - INCLUDE: blogs, tutorials, docs, news, GitHub repos
 - **DO NOT output "Sources:" list** - this is noise, we'll show stats at the end
 
-**Step 3: Wait for background script to complete**
+**Step 4: Wait for background script to complete**
 Use TaskOutput to get the script results before proceeding to synthesis.
 
 **Depth options** (passed through from user's command):
-- `--quick` — Faster, fewer sources (8-12 each)
-- (default) — Balanced (20-30 each)
-- `--deep` — Comprehensive (50-70 Reddit, 40-60 X)
+- `--quick` - Faster, fewer sources (8-12 each)
+- (default) - Balanced (20-30 each)
+- `--deep` - Comprehensive (50-70 Reddit, 40-60 X)
 
 ---
 
@@ -256,7 +256,7 @@ Research complete!
 - Web: {n} pages | {domains}
 - Top sources: {author1} on {site1}, {author2} on {site2}
 
-Want engagement metrics? Add API keys to ~/.config/last-30-days/.env
+Want engagement metrics? Add API keys to ~/.config/research/.env
    - OPENAI_API_KEY -> Reddit (real upvotes & comments)
    - XAI_API_KEY -> X/Twitter (real likes & reposts)
 ```
@@ -302,10 +302,10 @@ Based on what they want to create, write a **single, highly-tailored prompt** us
 
 **If research says to use a specific prompt FORMAT, YOU MUST USE THAT FORMAT:**
 
-- Research says "JSON prompts" — Write the prompt AS JSON
-- Research says "structured parameters" — Use structured key: value format
-- Research says "natural language" — Use conversational prose
-- Research says "keyword lists" — Use comma-separated keywords
+- Research says "JSON prompts" - Write the prompt AS JSON
+- Research says "structured parameters" - Use structured key: value format
+- Research says "natural language" - Use conversational prose
+- Research says "keyword lists" - Use comma-separated keywords
 
 **ANTI-PATTERN**: Research says "use JSON prompts with device specs" but you write plain prose. This defeats the entire purpose of the research.
 
@@ -387,5 +387,5 @@ Based on: {n} web pages from {domains}
 
 Want another prompt? Just tell me what you're creating next.
 
-Unlock Reddit & X data: Add API keys to ~/.config/last-30-days/.env
+Unlock Reddit & X data: Add API keys to ~/.config/research/.env
 ```
