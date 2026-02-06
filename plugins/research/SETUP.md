@@ -165,7 +165,7 @@ rm ~/Library/LaunchAgents/com.sidequest.ai-trends-digest.plist
 3. Verify Bun path is correct:
    ```bash
    which bun
-   # Should match path in plist: /Users/nathanvale/.bun/bin/bun
+   # Should match the path in your installed plist
    ```
 
 ### Research Failing
