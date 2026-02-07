@@ -71,6 +71,8 @@ Four intents via `workflow_dispatch`:
 
 Uses OIDC trusted publishing (npm 11.6+ on Node 24). Falls back to `NPM_TOKEN` secret.
 
+**GitHub App token (anti-recursion bypass)**: `publish.yml` uses a 1Password-sourced GitHub App token instead of `GITHUB_TOKEN` for all git operations. This is critical because `GITHUB_TOKEN` pushes don't trigger `pull_request_target` events (GitHub's anti-recursion policy), which would prevent `version-packages-auto-merge.yml` from firing on version packages PRs. The App token bypasses this, completing the automated release chain: publish -> version PR -> auto-merge -> publish.
+
 **Registry conflict fix**: Removes `bunfig.toml` registry entry that conflicts with npm's auth:
 ```yaml
 - name: Fix bunfig registry conflict
@@ -104,7 +106,7 @@ All 17 workflows follow these patterns:
 |--------|---------|---------|
 | `GITHUB_TOKEN` | Most workflows | Default GitHub token |
 | `NPM_TOKEN` | publish, release, alpha-snapshot | npm auth (fallback for OIDC) |
-| `OP_SERVICE_ACCOUNT_TOKEN` | release, version-packages-auto-merge | 1Password GitHub App credentials |
+| `OP_SERVICE_ACCOUNT_TOKEN` | publish, release, version-packages-auto-merge | 1Password GitHub App credentials |
 
 ## Composite Actions
 
