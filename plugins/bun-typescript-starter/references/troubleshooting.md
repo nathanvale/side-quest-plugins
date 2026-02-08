@@ -62,6 +62,8 @@ Master routing table for diagnosing issues in repos created from `nathanvale/bun
 | "All checks passed" status missing | Gate job didn't run | Ensure `gate` job depends on all other jobs | `pr-quality.yml` |
 | Dependabot PR not auto-merging | Missing label | Add `dev-dependencies` label | `dependabot-auto-merge.yml` |
 | Auto-merge fails on version PR | Needs elevated permissions | Configure 1Password + GitHub App | `version-packages-auto-merge.yml` |
+| Version PR created but auto-merge never triggers | `publish.yml` uses `GITHUB_TOKEN` -- pushes don't fire `pull_request_target` (GitHub anti-recursion) | Replace `secrets.GITHUB_TOKEN` with App token from 1Password in `publish.yml` (add `load-secrets-action` + `create-github-app-token` steps, replace all `GITHUB_TOKEN` env refs with `steps.app-token.outputs.token`) | `publish.yml` |
+| `OP_SERVICE_ACCOUNT_TOKEN` empty in CI | Secret set but env var shows blank | Re-set secret from 1Password: `op item get <id> --vault="API Credentials" --fields label=credential --reveal \| gh secret set OP_SERVICE_ACCOUNT_TOKEN` | GitHub repo secrets |
 | CodeQL timeout | Analysis too slow | Increase timeout or exclude dirs | `codeql.yml` |
 | SBOM not generated | anchore/sbom-action issue | Check action version is pinned to valid SHA | `release.yml` |
 | `Cannot find module '@scope/pkg/subpath'` in CI | Cleanup step deletes `node_modules/.bun` | Remove `node_modules/.bun` from `rm -rf` in cleanup steps | `publish.yml`, `pr-quality.yml` |

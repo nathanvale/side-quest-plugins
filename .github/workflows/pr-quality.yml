@@ -15,6 +15,8 @@ concurrency:
 permissions:
   contents: read
   actions: read
+  checks: write
+  pull-requests: write
 
 jobs:
   lint:
@@ -34,6 +36,24 @@ jobs:
 
       - name: Biome lint
         run: bun run lint
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Standard env
+        uses: ./.github/actions/standard-ci-env
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: TSC typecheck
+        run: bun run typecheck
 
   lint-scripts:
     name: Lint Shell Scripts
@@ -57,7 +77,7 @@ jobs:
   gate:
     name: All checks passed
     runs-on: ubuntu-latest
-    needs: [lint, lint-scripts]
+    needs: [lint, typecheck, lint-scripts]
     timeout-minutes: 5
     steps:
       - name: Aggregate result
@@ -72,5 +92,6 @@ jobs:
             echo "| Check | Status |"
             echo "|---|---|"
             echo "| Lint | ${{ needs.lint.result }} |"
+            echo "| Typecheck | ${{ needs.typecheck.result }} |"
             echo "| Lint Shell Scripts | ${{ needs.lint-scripts.result }} |"
           } >> "$GITHUB_STEP_SUMMARY"

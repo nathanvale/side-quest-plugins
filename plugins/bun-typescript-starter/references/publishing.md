@@ -340,6 +340,16 @@ Can be used as a drop-in replacement for the publish step if Changesets' publish
 - Verify changeset files exist in `.changeset/` (not just README.md)
 - The Changesets action only opens a PR when there are pending changesets
 
+### Version PR opens but auto-merge never triggers
+
+- **Root cause**: `publish.yml` was using `GITHUB_TOKEN` for the changesets action. When changesets pushes to `changeset-release/main`, GitHub's anti-recursion policy prevents `GITHUB_TOKEN` pushes from triggering `pull_request_target` events. The `version-packages-auto-merge.yml` workflow never fires.
+- **Fix**: Replace `secrets.GITHUB_TOKEN` with a GitHub App token sourced from 1Password in `publish.yml`:
+  1. Add `OP_SERVICE_ACCOUNT_TOKEN` secret to the repo: `op item get <id> --vault="API Credentials" --fields label=credential --reveal | gh secret set OP_SERVICE_ACCOUNT_TOKEN`
+  2. Add 1Password load-secrets and create-github-app-token steps before the changesets action
+  3. Replace all `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` with `GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}`
+- **Fixed in template** -- `publish.yml` now uses App token for all git operations
+- The `release.yml` already used this pattern; `publish.yml` was the only workflow still using `GITHUB_TOKEN`
+
 ### Pre-release versions leaking to stable
 
 - Ensure `pre.json` exists in `.changeset/` when in pre-mode

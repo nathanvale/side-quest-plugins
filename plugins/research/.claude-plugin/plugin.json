@@ -1,0 +1,24 @@
+{
+	"name": "research",
+	"description": "Research tools - topic research across Reddit/X/web and automated AI trends digests",
+	"version": "1.1.0",
+	"author": {
+		"name": "Nathan Vale"
+	},
+	"keywords": [
+		"research",
+		"reddit",
+		"twitter",
+		"x",
+		"web-search",
+		"prompts",
+		"engagement",
+		"ai-trends",
+		"digest",
+		"email"
+	],
+	"license": "MIT",
+	"repository": "https://github.com/nathanvale/side-quest-plugins/tree/main/plugins/research",
+	"commands": ["./commands/last-30-days.md"],
+	"skills": ["./skills/last-30-days", "./skills/ai-trends-digest"]
+}

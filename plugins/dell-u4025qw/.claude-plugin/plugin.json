@@ -1,0 +1,19 @@
+{
+	"name": "dell-u4025qw",
+	"version": "1.0.0",
+	"description": "Knowledge bank for the Dell UltraSharp U4025QW 40\" curved Thunderbolt hub monitor - multi-computer switching, macOS software, firmware, troubleshooting, and DDC automation.",
+	"author": {
+		"name": "Nathan Vale"
+	},
+	"keywords": [
+		"dell",
+		"u4025qw",
+		"monitor",
+		"kvm",
+		"thunderbolt",
+		"ddc",
+		"ultrawide"
+	],
+	"license": "MIT",
+	"skills": ["./skills/dell-u4025qw"]
+}

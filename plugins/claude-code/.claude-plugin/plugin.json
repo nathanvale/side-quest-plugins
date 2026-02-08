@@ -1,0 +1,20 @@
+{
+	"name": "claude-code",
+	"version": "1.0.0",
+	"description": "Knowledge bank for Claude Code hooks - event lifecycle, hook types, configuration, community patterns, best practices, and troubleshooting.",
+	"author": {
+		"name": "Nathan Vale"
+	},
+	"keywords": [
+		"claude-code",
+		"hooks",
+		"plugins",
+		"skills",
+		"automation",
+		"PreToolUse",
+		"PostToolUse",
+		"SessionStart"
+	],
+	"license": "MIT",
+	"skills": ["./skills/hooks"]
+}
