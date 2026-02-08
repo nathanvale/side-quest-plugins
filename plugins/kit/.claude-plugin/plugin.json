@@ -1,0 +1,8 @@
+{
+	"name": "kit",
+	"description": "Kit CLI integration for intelligent code search, semantic analysis, and context engineering. 7 MCP tools with priority hierarchy for token efficiency.",
+	"version": "1.0.0",
+	"author": {
+		"name": "Nathan Vale"
+	}
+}

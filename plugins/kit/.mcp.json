@@ -1,0 +1,8 @@
+{
+	"mcpServers": {
+		"kit": {
+			"command": "bunx",
+			"args": ["--bun", "@side-quest/kit"]
+		}
+	}
+}
