@@ -20,9 +20,9 @@ m1ddc set input 17   # Switch to HDMI (Mac 3)
 ### Brightness and Contrast
 
 ```bash
-m1ddc set brightness 70    # 0-100
+m1ddc set luminance 70    # 0-100
 m1ddc set contrast 75      # 0-100
-m1ddc get brightness       # Read current value
+m1ddc get luminance       # Read current value
 ```
 
 ### Volume
@@ -118,7 +118,7 @@ Add these rules to your Karabiner `karabiner.json` (or a complex modifications f
       }
     },
     "to": [{
-      "shell_command": "/opt/homebrew/bin/m1ddc chg brightness -10"
+      "shell_command": "/opt/homebrew/bin/m1ddc chg luminance -10"
     }]
   }]
 }
@@ -136,7 +136,7 @@ Add these rules to your Karabiner `karabiner.json` (or a complex modifications f
       }
     },
     "to": [{
-      "shell_command": "/opt/homebrew/bin/m1ddc chg brightness 10"
+      "shell_command": "/opt/homebrew/bin/m1ddc chg luminance 10"
     }]
   }]
 }
@@ -213,7 +213,7 @@ fi
 ```bash
 #!/bin/bash
 # night-mode.sh
-m1ddc set brightness 30
+m1ddc set luminance 30
 m1ddc set contrast 50
 echo "Night mode enabled"
 ```
@@ -223,7 +223,7 @@ echo "Night mode enabled"
 ```bash
 #!/bin/bash
 # day-mode.sh
-m1ddc set brightness 80
+m1ddc set luminance 80
 m1ddc set contrast 75
 echo "Day mode enabled"
 ```
@@ -234,7 +234,7 @@ echo "Day mode enabled"
 #!/bin/bash
 # wait-for-ddc.sh - Wait until DDC responds after wake
 for i in $(seq 1 10); do
-  if m1ddc get brightness > /dev/null 2>&1; then
+  if m1ddc get luminance > /dev/null 2>&1; then
     echo "DDC ready"
     exit 0
   fi

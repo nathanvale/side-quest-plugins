@@ -56,3 +56,7 @@ website/.docusaurus/
 website/.cache-loader/
 website/build/
 website/node_modules/
+
+# Plugin caches (auto-generated, not source)
+plugins/*/skills/*/cache/*
+!plugins/*/skills/*/cache/.gitkeep

@@ -1,0 +1,18 @@
+{
+	"description": "Refresh community intelligence cache at session start (workaround for anthropics/claude-code#17688 - plugin skill frontmatter hooks are broken)",
+	"hooks": {
+		"SessionStart": [
+			{
+				"matcher": "startup",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bun run ${CLAUDE_PLUGIN_ROOT}/scripts/refresh-cache.ts",
+						"timeout": 120,
+						"async": true
+					}
+				]
+			}
+		]
+	}
+}
