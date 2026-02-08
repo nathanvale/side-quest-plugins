@@ -3,7 +3,6 @@ name: last-30-days
 description: Research any topic from the last 30 days across Reddit, X, and web with engagement-ranked results.
 argument-hint: '"[topic] for [tool]" or "[topic]"'
 context: fork
-agent: Explore
 disable-model-invocation: true
 allowed-tools: Bash, Read, Write, AskUserQuestion, WebSearch, WebFetch
 ---
