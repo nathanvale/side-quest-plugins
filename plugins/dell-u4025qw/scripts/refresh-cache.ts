@@ -19,7 +19,7 @@
  * Exit 0 = success (always non-blocking).
  */
 
-import { existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, renameSync } from 'node:fs'
 import { join } from 'node:path'
 
 const TOPICS = [
@@ -109,14 +109,25 @@ function getCacheDir(): string {
 	return join(pluginRoot, 'skills', 'dell-u4025qw', 'cache')
 }
 
+const MAX_CACHE_AGE_DAYS = 60
+
 /** Check whether the cache is still fresh. */
 function isCacheFresh(cacheDir: string): boolean {
 	const metadataPath = join(cacheDir, 'last-updated.json')
 	if (!existsSync(metadataPath)) return false
 
+	// Cache requires both metadata and the actual intel file
+	if (!existsSync(join(cacheDir, 'community-intel.md'))) return false
+
 	try {
 		const text = readFileSync(metadataPath, 'utf-8')
 		const metadata: CacheMetadata = JSON.parse(text)
+
+		// Guard against clock skew: if last_updated is > 60 days old, force refresh
+		const lastUpdated = new Date(metadata.last_updated)
+		const ageMs = Date.now() - lastUpdated.getTime()
+		if (ageMs > MAX_CACHE_AGE_DAYS * 24 * 60 * 60 * 1000) return false
+
 		const nextUpdate = new Date(metadata.next_update_after)
 		return nextUpdate.getTime() > Date.now()
 	} catch {
@@ -334,36 +345,76 @@ async function main() {
 	// Run all topic queries in parallel
 	const results = await Promise.all(TOPICS.map(runQuery))
 
-	// Only update if at least one query returned actual data
-	const hasResults = results.some((r) => r !== null && hasData(r))
-	if (!hasResults) {
-		emitStatus(hadExistingCache ? 'failed' : 'no_cache', 'all queries failed')
+	// If all queries failed, write a 4-hour backoff to cap retries at ~6/day
+	const successCount = results.filter((r) => r !== null && hasData(r)).length
+	if (successCount === 0) {
+		const backoffHours = 4
+		let preservedTimestamp = new Date().toISOString()
+		const existingMetaPath = join(cacheDir, 'last-updated.json')
+		if (existsSync(existingMetaPath)) {
+			try {
+				preservedTimestamp = JSON.parse(
+					readFileSync(existingMetaPath, 'utf-8'),
+				).last_updated
+			} catch {
+				// Use current time if metadata is corrupt
+			}
+		}
+		const backoffMetadata: CacheMetadata = {
+			last_updated: preservedTimestamp,
+			topics_researched: TOPICS,
+			next_update_after: new Date(
+				Date.now() + backoffHours * 60 * 60 * 1000,
+			).toISOString(),
+		}
+		const backoffPath = join(cacheDir, 'last-updated.json')
+		const backoffTmp = `${backoffPath}.tmp`
+		await Bun.write(
+			backoffTmp,
+			JSON.stringify(backoffMetadata, null, '\t') + '\n',
+		)
+		renameSync(backoffTmp, backoffPath)
+		emitStatus(
+			hadExistingCache ? 'failed' : 'no_cache',
+			'all queries failed, backoff 4h',
+		)
 		process.exit(0)
 	}
 
 	const now = new Date()
+	// If fewer than 50% of queries returned data, use shorter interval so thin cache self-heals
+	const THIN_CACHE_INTERVAL_DAYS = 7
+	const intervalDays =
+		successCount < TOPICS.length / 2
+			? THIN_CACHE_INTERVAL_DAYS
+			: REFRESH_INTERVAL_DAYS
 	const nextUpdate = new Date(
-		now.getTime() + REFRESH_INTERVAL_DAYS * 24 * 60 * 60 * 1000,
+		now.getTime() + intervalDays * 24 * 60 * 60 * 1000,
 	)
 	const updatedAt = now.toISOString()
 
-	// Write community-intel.md
+	// Write community-intel.md (atomic: write .tmp then rename)
 	const markdown = formatMarkdown(results, updatedAt)
-	await Bun.write(join(cacheDir, 'community-intel.md'), markdown)
+	const intelPath = join(cacheDir, 'community-intel.md')
+	const intelTmp = `${intelPath}.tmp`
+	await Bun.write(intelTmp, markdown)
+	renameSync(intelTmp, intelPath)
 
-	// Write last-updated.json
+	// Write last-updated.json (atomic: write .tmp then rename)
 	const metadata: CacheMetadata = {
 		last_updated: updatedAt,
 		topics_researched: TOPICS,
 		next_update_after: nextUpdate.toISOString(),
 	}
-	await Bun.write(
-		join(cacheDir, 'last-updated.json'),
-		JSON.stringify(metadata, null, '\t') + '\n',
-	)
+	const metadataPath = join(cacheDir, 'last-updated.json')
+	const metadataTmp = `${metadataPath}.tmp`
+	await Bun.write(metadataTmp, JSON.stringify(metadata, null, '\t') + '\n')
+	renameSync(metadataTmp, metadataPath)
 
-	const successCount = results.filter((r) => r !== null && hasData(r)).length
-	emitStatus('refreshed', `${successCount}/${TOPICS.length} topics`)
+	emitStatus(
+		'refreshed',
+		`${successCount}/${TOPICS.length} topics (interval: ${intervalDays}d)`,
+	)
 	process.exit(0)
 }
 

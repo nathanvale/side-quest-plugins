@@ -5,7 +5,7 @@ description: >
   Multi-computer switching, macOS software control, firmware, troubleshooting, and DDC automation.
   Triggers on: dell monitor, u4025qw, kvm switching, monitor input, ddc, m1ddc, thunderbolt monitor,
   ultrawide setup, multi-mac monitor, monitor firmware, BetterDisplay, Lunar, MonitorControl.
-argument-hint: "[question about your U4025QW]"
+argument-hint: "[--refresh] [question about your U4025QW]"
 allowed-tools: Bash, Read, Write, Glob, Grep, WebSearch, AskUserQuestion
 # NOTE: hooks moved to hooks/hooks.json (workaround for anthropics/claude-code#17688)
 # Plugin skill frontmatter hooks are silently ignored - see issue for details.
@@ -15,23 +15,69 @@ allowed-tools: Bash, Read, Write, Glob, Grep, WebSearch, AskUserQuestion
 
 Expert guidance for the Dell UltraSharp U4025QW 40" curved 5K2K Thunderbolt hub monitor. Covers multi-computer switching (up to 3 Macs), macOS software control, DDC automation, firmware, and troubleshooting.
 
-## Step 1: Check Community Intelligence
+## Step 0: Parse Input
 
-Community knowledge is auto-refreshed every 30 days via a SessionStart hook (defined in `hooks/hooks.json`). The script checks cache staleness on every session start and only fetches new data when the 30-day window has expired.
+Check the user's input for a `--refresh` flag:
 
-### 1a. Read the cache file
+- If the input starts with `--refresh` or `refresh`, set **FORCE_REFRESH = true** and strip it from the question text.
+- Otherwise, set **FORCE_REFRESH = false** and use the full input as the question.
 
-Read [community-intel.md](cache/community-intel.md) for recent findings before answering.
+## Step 1: Load Community Intelligence
 
-### 1b. Evaluate what you got
+Community knowledge is auto-refreshed every 30 days via a SessionStart hook (defined in `hooks/hooks.json`). The skill operates in three modes - **never** prompt the user about cache status.
 
-- **Cache exists with content** (headings + links): proceed to Step 2. Optionally read `cache/last-updated.json` to report cache age.
-- **Cache missing or refresh failed**: community intel is unavailable for this session. Proceed using reference files only -- do not ask the user to run anything manually.
-- **Cache exists but empty/headers only** (no links or data sections): no recent community activity for this topic. Proceed normally using reference files.
+### 1a. Determine cache status
+
+Read `cache/last-updated.json`. Determine CACHE_STATUS:
+
+- **fresh**: File exists and `next_update_after` is in the future
+- **stale**: File exists but `next_update_after` is in the past
+- **missing**: File does not exist
+
+Check whether [community-intel.md](cache/community-intel.md) exists.
+
+### 1b. Decide whether to refresh
+
+Use this decision table:
+
+| Condition | Action |
+|-----------|--------|
+| FORCE_REFRESH is true | Refresh (on-demand mode) |
+| CACHE_STATUS is fresh | Proceed silently (silent mode) |
+| CACHE_STATUS is stale/missing AND question is **Troubleshooting** or **Firmware** | Refresh (smart mode) |
+| CACHE_STATUS is stale/missing AND question is anything else | Proceed silently with whatever cache exists (silent mode) |
+
+To quick-classify the question for this decision, check for Troubleshooting keywords (not working, flickering, disconnect, black screen, wake, sleep) or Firmware keywords (firmware, update, version, M3T). Store this classification to reuse in Step 2.
+
+### 1c. If refreshing
+
+Tell the user: "Refreshing community intel - this takes about 60 seconds."
+
+Run the refresh script via Bash:
+
+```bash
+bun run ${CLAUDE_PLUGIN_ROOT}/scripts/refresh-cache.ts
+```
+
+This blocks for approximately 45-60 seconds. After it completes, re-read `cache/last-updated.json` to verify success.
+
+If the refresh fails, proceed silently with reference files. **NEVER** suggest "come back later."
+
+### 1d. Load community intel
+
+Read [community-intel.md](cache/community-intel.md) if it exists (any age). If it does not exist, proceed without it.
+
+### 1e. Set cache age note
+
+If `cache/last-updated.json` exists, compute the cache age from `last_updated` and store a CACHE_AGE_NOTE for the response footer. Format: "Community intel last updated X days ago. Run `/tech-support --refresh` for latest."
+
+If the cache is fresh (updated within the last day), do not set a CACHE_AGE_NOTE.
 
 ## Step 2: Classify the Question
 
-Parse the user's question into one or more categories:
+Parse the user's question into one or more categories. If you already classified in Step 1b, reuse that classification.
+
+If a question spans multiple categories, identify the primary concern (usually the symptom) and secondary categories. Address primary first, then connect to secondary categories with separate headed sections.
 
 | Category                | Keywords / Signals                                      | Reference File                                                                                                    | Manual Pages                            |
 | ----------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
@@ -50,16 +96,23 @@ Parse the user's question into one or more categories:
 
 ## Step 3: Read Reference Files
 
-Read the relevant reference files based on the classification. Always read at minimum:
-
-- The primary reference file for the category
-- [community-intel.md](cache/community-intel.md) (for recent community findings)
+Read the relevant reference files based on the classification. Always read the primary reference file for the category. Community intel was already loaded in Step 1d.
 
 For multi-category questions, read all relevant files.
 
 **Manual fallback**: If the reference files don't fully answer the question, read the relevant pages from [dell-u4025qw-user-guide.pdf](references/dell-u4025qw-user-guide.pdf) using the page index in [manual-page-index.md](references/manual-page-index.md). For categories with no reference file (DPBS, Daisy Chain), go directly to the manual pages listed in the classification table.
 
 ## Step 4: Synthesize Answer
+
+### Universal Response Structure
+
+Every response should follow this structure:
+
+1. **One-line answer** - direct, no preamble
+2. **Key details** - tables, steps, bullets as appropriate
+3. **Commands** - fenced code blocks, copy-paste ready
+4. **Caveats** - bold warnings, limitations
+5. **Sources** - reference files and manual pages cited
 
 ### For Setup Questions
 
@@ -69,7 +122,6 @@ For multi-category questions, read all relevant files.
 4. Explain KVM limitations (only 2 USB upstreams)
 5. Recommend cables
 6. Explain that they can remap Mac 1/2/3 to their own machines
-7. **Always offer port diagram links** so the user can visually locate where to plug in cables
 
 ### For Software Questions
 
@@ -126,7 +178,6 @@ For multi-category questions, read all relevant files.
 1. Answer directly from the monitor reference
 2. Include relevant tables
 3. Note macOS-specific behavior where applicable
-4. **Always offer port diagram links** -- include the ManualsLib Back View and Bottom View links so the user can visually locate physical ports
 
 ## Device Naming Convention
 
@@ -146,13 +197,14 @@ When answering setup questions, explain this convention and tell the user they c
 - **Provide exact commands** - users should be able to copy/paste
 - **Warn about limitations** - especially the DDC active-input limitation
 - **Version-aware** - note macOS Sequoia vs Tahoe differences when relevant
-- **Include community intel** - if cache/community-intel.md has relevant recent findings, mention them
+- **Include community intel** - if community-intel.md has relevant recent findings, mention them
 - **Be direct** - answer the question first, then provide context
 - **Cite manual pages** - when referencing official Dell information from the PDF, cite the page (e.g., "See User Guide p.45 for the connection diagram")
 - **Tables for comparisons** - use tables when comparing options or listing ports/specs
-- **Always offer port diagrams** - when discussing port numbers, physical setup, wiring, or cable connections, always include the ManualsLib diagram links so the user can visually locate ports:
+- **Port diagrams when relevant** - when the answer involves physical ports, cables, or wiring, include the ManualsLib diagram links so the user can visually locate ports:
   - [Back View (page 15)](https://www.manualslib.com/manual/3407628/Dell-Thunderbolt-U4025qw.html?page=15)
   - [Bottom View (page 16)](https://www.manualslib.com/manual/3407628/Dell-Thunderbolt-U4025qw.html?page=16)
+- **Cache age footer** - if CACHE_AGE_NOTE is set, include it as an italicized footer at the end of the response
 
 ## Examples
 
@@ -216,12 +268,14 @@ displayed. You press the hotkey on the machine you're switching
 AWAY from, not the one you're switching to.
 ```
 
-### Example 3: Troubleshooting
+### Example 3: Troubleshooting (with smart refresh)
 
 ```text
 User: My monitor keeps disconnecting when my Mac wakes from sleep
 
-Skill: [Reads troubleshooting.md + firmware.md + community-intel.md]
+Skill: [Detects Troubleshooting category, cache is stale]
+Skill: "Refreshing community intel - this takes about 60 seconds."
+Skill: [Runs refresh script, reads troubleshooting.md + firmware.md + community-intel.md]
 
 This is the most common U4025QW issue - TB4 disconnect during
 sleep/wake cycles.
@@ -240,5 +294,19 @@ sleep/wake cycles.
 4. Factory reset the monitor OSD:
    Menu > Others > Reset
 
-[If community-intel.md has recent reports, include them]
+[Includes relevant community-intel.md findings]
+
+*Community intel last updated 15 days ago. Run `/tech-support --refresh` for latest.*
+```
+
+### Example 4: On-demand refresh
+
+```text
+User: /tech-support --refresh what firmware should I use?
+
+Skill: [Detects --refresh flag, forces refresh regardless of cache status]
+Skill: "Refreshing community intel - this takes about 60 seconds."
+Skill: [Runs refresh script, reads firmware.md + community-intel.md]
+
+[Answers with freshly updated community data, no cache footer needed]
 ```
