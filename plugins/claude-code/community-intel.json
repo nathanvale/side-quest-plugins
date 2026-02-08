@@ -1,0 +1,13 @@
+{
+	"topics": [
+		"Claude Code hooks best practices automation",
+		"Claude Code PreToolUse PostToolUse hook examples",
+		"Claude Code hooks auto-format lint security guard",
+		"Claude Code SessionStart Stop hook patterns",
+		"Claude Code plugin hooks skills configuration",
+		"Claude Code hooks troubleshooting debug issues"
+	],
+	"refreshIntervalDays": 7,
+	"thinCacheIntervalDays": 3,
+	"context": "Knowledge-bank skill for Claude Code hooks. Focus on: new hook patterns, community recipes, configuration tips, troubleshooting solutions, plugin/skill hook usage. Ignore: general Claude Code questions unrelated to hooks."
+}
