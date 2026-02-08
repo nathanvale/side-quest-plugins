@@ -105,7 +105,7 @@ if pgrep -q "GlobalProtect" 2>/dev/null; then
   vpn_found=true
 fi
 
-if pgrep -q "Cisco AnyConnect\|vpnagentd" 2>/dev/null; then
+if pgrep -q "Cisco AnyConnect" 2>/dev/null || pgrep -q "vpnagentd" 2>/dev/null; then
   pass "Cisco AnyConnect process is running"
   vpn_found=true
 fi
@@ -115,12 +115,12 @@ if pgrep -q "openvpn" 2>/dev/null; then
   vpn_found=true
 fi
 
-if pgrep -q "ZscalerTunnel\|Zscaler" 2>/dev/null; then
+if pgrep -q "ZscalerTunnel" 2>/dev/null || pgrep -q "Zscaler" 2>/dev/null; then
   info "Zscaler tunnel process detected"
   vpn_found=true
 fi
 
-if pgrep -q "FortiClient\|forticlient" 2>/dev/null; then
+if pgrep -q "FortiClient" 2>/dev/null || pgrep -q "forticlient" 2>/dev/null; then
   pass "FortiClient process is running"
   vpn_found=true
 fi
@@ -148,7 +148,7 @@ fi
 divider "4. Direct TLS to $TARGET_HOST (no proxy)"
 
 echo "  Attempting direct connection..."
-direct_tls_output=$(openssl s_client -connect "$TARGET_HOST:443" -servername "$TARGET_HOST" </dev/null 2>&1 | head -50)
+direct_tls_output=$(openssl s_client -connect "$TARGET_HOST:443" -servername "$TARGET_HOST" </dev/null 2>&1 | head -50 || true)
 
 # Who issued the cert we received?
 direct_issuer=$(echo "$direct_tls_output" | grep -m1 "issuer=" | sed 's/.*issuer=//')
@@ -178,7 +178,7 @@ fi
 divider "5. Direct TLS with CAFile ($CA_FILE)"
 
 if [[ -f "$CA_FILE" ]]; then
-  ca_tls_output=$(openssl s_client -connect "$TARGET_HOST:443" -servername "$TARGET_HOST" -CAfile "$CA_FILE" </dev/null 2>&1 | head -50)
+  ca_tls_output=$(openssl s_client -connect "$TARGET_HOST:443" -servername "$TARGET_HOST" -CAfile "$CA_FILE" </dev/null 2>&1 | head -50 || true)
 
   if echo "$ca_tls_output" | grep -q "Verify return code: 0"; then
     pass "TLS handshake succeeded with CAFile"
@@ -199,6 +199,7 @@ if [[ -n "${HTTP_PROXY:-}" ]]; then
   # Parse proxy host and port
   proxy_url="${HTTP_PROXY#http://}"
   proxy_url="${proxy_url#https://}"
+  proxy_url="${proxy_url##*@}"
   proxy_host="${proxy_url%%:*}"
   proxy_port="${proxy_url##*:}"
   proxy_port="${proxy_port%%/*}"
@@ -229,10 +230,10 @@ if [[ -n "${HTTP_PROXY:-}" && -f "$CA_FILE" ]]; then
     "https://$TARGET_HOST/" 2>&1) || true
 
   if [[ "$proxy_curl_output" =~ ^[0-9]+$ ]]; then
-    if [[ "$proxy_curl_output" -ge 200 && "$proxy_curl_output" -lt 500 ]]; then
-      pass "Got HTTP $proxy_curl_output through proxy (connection works)"
-    elif [[ "$proxy_curl_output" == "403" ]]; then
+    if [[ "$proxy_curl_output" == "403" ]]; then
       fail "HTTP 403 - proxy may be blocking $TARGET_HOST"
+    elif [[ "$proxy_curl_output" -ge 200 && "$proxy_curl_output" -lt 500 ]]; then
+      pass "Got HTTP $proxy_curl_output through proxy (connection works)"
     else
       info "HTTP $proxy_curl_output through proxy"
     fi

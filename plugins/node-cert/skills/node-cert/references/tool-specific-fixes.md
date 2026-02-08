@@ -154,7 +154,7 @@ pip install --cert ~/CAFile.pem requests
 **Verify:**
 ```bash
 pip config get global.cert
-pip search test  # Should not error on cert
+pip install --dry-run requests  # Should not error on cert
 ```
 
 ## conda

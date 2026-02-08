@@ -119,9 +119,9 @@ tests_failed=0
 # Test 1: With current NODE_EXTRA_CA_CERTS
 if [[ -n "${NODE_EXTRA_CA_CERTS:-}" ]]; then
   if run_node_test "$NODE_EXTRA_CA_CERTS" "With NODE_EXTRA_CA_CERTS=$NODE_EXTRA_CA_CERTS"; then
-    ((tests_passed++))
+    tests_passed=$((tests_passed + 1))
   else
-    ((tests_failed++))
+    tests_failed=$((tests_failed + 1))
   fi
 else
   info "Skipping NODE_EXTRA_CA_CERTS test (not set)"
@@ -130,9 +130,9 @@ fi
 # Test 2: With explicit CA file
 if [[ -f "$CA_FILE" ]]; then
   if run_node_test "$CA_FILE" "With explicit CA file ($CA_FILE)"; then
-    ((tests_passed++))
+    tests_passed=$((tests_passed + 1))
   else
-    ((tests_failed++))
+    tests_failed=$((tests_failed + 1))
   fi
 else
   info "Skipping explicit CA test (file not found: $CA_FILE)"
@@ -141,10 +141,10 @@ fi
 # Test 3: Without any CA override (baseline)
 info "Testing without CA override (baseline)..."
 if run_node_test "none" "Without CA override"; then
-  ((tests_passed++))
+  tests_passed=$((tests_passed + 1))
   warn "Node.js works WITHOUT CA override - SSL inspection may not be active"
 else
-  ((tests_failed++))
+  tests_failed=$((tests_failed + 1))
   info "As expected - Node.js needs CA override for this host"
 fi
 

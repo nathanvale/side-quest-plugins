@@ -71,7 +71,7 @@ elif pgrep -q "Cisco AnyConnect" 2>/dev/null; then
   vpn_detected="Cisco AnyConnect"
 elif pgrep -q "openvpn" 2>/dev/null; then
   vpn_detected="OpenVPN"
-elif pgrep -q "ZscalerTunnel\|Zscaler" 2>/dev/null; then
+elif pgrep -q "ZscalerTunnel" 2>/dev/null || pgrep -q "Zscaler" 2>/dev/null; then
   vpn_detected="Zscaler"
 fi
 
@@ -82,7 +82,7 @@ else
 fi
 
 # Check DNS resolution
-if ! dig +short "$TARGET_HOST" >/dev/null 2>&1; then
+if ! dig +short "$TARGET_HOST" 2>/dev/null | grep -q .; then
   fail "Cannot resolve $TARGET_HOST - DNS issue?"
   exit 1
 fi
@@ -92,7 +92,7 @@ info "$TARGET_HOST resolves OK"
 
 info "Checking for SSL inspection..."
 
-issuer=$(openssl s_client -connect "$TARGET_HOST:443" -servername "$TARGET_HOST" </dev/null 2>/dev/null | grep -m1 "issuer=" | sed 's/.*issuer=//')
+issuer=$(openssl s_client -connect "$TARGET_HOST:443" -servername "$TARGET_HOST" </dev/null 2>/dev/null | grep -m1 "issuer=" | sed 's/.*issuer=//' || true)
 
 if [[ -z "$issuer" ]]; then
   fail "Could not connect to $TARGET_HOST:443"

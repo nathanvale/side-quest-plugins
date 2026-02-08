@@ -80,12 +80,12 @@ not_after=$(echo "$dates" | grep "notAfter" | sed 's/notAfter=//')
 fingerprint=$(openssl x509 -in "$CERT_FILE" -noout -sha256 -fingerprint 2>/dev/null | sed 's/.*=//')
 
 # Key info
-pubkey_info=$(openssl x509 -in "$CERT_FILE" -noout -text 2>/dev/null | grep -A1 "Public Key Algorithm" | head -2)
-key_algo=$(echo "$pubkey_info" | grep "Public Key Algorithm" | sed 's/.*: //')
-key_size=$(openssl x509 -in "$CERT_FILE" -noout -text 2>/dev/null | grep -E "RSA Public-Key:|EC Public-Key:" | head -1 | grep -oE '\([0-9]+ bit\)')
+pubkey_info=$(openssl x509 -in "$CERT_FILE" -noout -text 2>/dev/null | grep -A1 "Public Key Algorithm" | head -2 || true)
+key_algo=$(echo "$pubkey_info" | grep "Public Key Algorithm" | sed 's/.*: //' || true)
+key_size=$(openssl x509 -in "$CERT_FILE" -noout -text 2>/dev/null | grep -E "RSA Public-Key:|EC Public-Key:" | head -1 | grep -oE '\([0-9]+ bit\)' || true)
 
 # CA flag
-is_ca=$(openssl x509 -in "$CERT_FILE" -noout -text 2>/dev/null | grep -A1 "Basic Constraints" | grep "CA:" || echo "")
+is_ca=$(openssl x509 -in "$CERT_FILE" -noout -text 2>/dev/null | grep -A1 "Basic Constraints" | grep "CA:" 2>/dev/null || true)
 
 # Serial
 serial=$(openssl x509 -in "$CERT_FILE" -noout -serial 2>/dev/null | sed 's/serial=//')
