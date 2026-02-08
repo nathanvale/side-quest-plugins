@@ -1,0 +1,18 @@
+{
+	"description": "Refresh community intelligence cache for hooks knowledge at session start",
+	"hooks": {
+		"SessionStart": [
+			{
+				"matcher": "startup|clear",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bunx @side-quest/community-intel-cache refresh --config ${CLAUDE_PLUGIN_ROOT}/community-intel.json --cache-dir ${CLAUDE_PLUGIN_ROOT}/skills/hooks/cache",
+						"timeout": 180,
+						"async": true
+					}
+				]
+			}
+		]
+	}
+}
