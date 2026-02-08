@@ -81,11 +81,21 @@ Common issues with the Dell U4025QW on macOS, with causes and fixes.
 
 **Cause**: macOS doesn't automatically enable HiDPI for the 5120x2160 resolution.
 
-**Fix**:
+**Fix (Preferred - BetterDisplay Pro flexible scaling)**:
+1. Install **BetterDisplay** (Pro required for flexible scaling)
+2. Settings > Displays > select U4025QW
+3. Enable "Edit the default system configuration of this display model"
+4. Enable "Enable flexible scaling"
+5. Apply > admin password > **reboot**
+6. Use resolution slider to target **3840x1620 HiDPI**
+
+**Fix (Fallback - virtual screen mirroring)**:
 1. Install **BetterDisplay**
 2. Create virtual display at **3840x1620**
 3. Mirror virtual display to the real U4025QW
-4. macOS now renders at 2x scaling - text is crisp
+4. Caveat: DRM content (Netflix, etc.) won't work with virtual displays
+
+**M4/M4 Pro users**: 3840x1620 HiDPI may only be available at 120Hz or with VRR enabled due to an Apple hardware limitation. See macos-software.md for details and workarounds.
 
 **Why 3840x1620?** At this virtual resolution, macOS renders at 2x DPI (each virtual pixel = 1.33 physical pixels). This gives sharp text with more usable screen space than true 2560x1080 (which would be exact 2x of native but wastes the panel).
 
@@ -123,21 +133,21 @@ Common issues with the Dell U4025QW on macOS, with causes and fixes.
 
 ### Firmware Update Fails on macOS
 
-**Symptoms**: Dell DDPM shows "unable to update" or crashes during firmware update.
+**Symptoms**: Dell DDPM shows "unable to update" or "The selected firmware is not for this monitor" error.
 
-**Cause**: Dell DDPM is broken on macOS Tahoe (26.x) and unreliable on Sequoia (15.x).
+**Cause**: Dell's firmware updater was broken on macOS Tahoe 26.0-26.1 due to an Apple libusb API change. Fixed in Tahoe 26.2+.
 
 **Fix**:
-1. Use a **Windows machine** (easiest - Dell DDPM works reliably on Windows)
-2. Use a **Windows VM** (Parallels, UTM) connected to the monitor
-3. If on Sequoia and DDPM works, try it - but save your firmware version first
-4. See firmware.md for detailed update procedure
+1. **Tahoe 26.2+**: Use the .pkg firmware installer from Dell (download from dell.com/support, search U4025QW). Works directly.
+2. **Tahoe 26.0-26.1**: Use a **Windows machine** or upgrade macOS to 26.2+
+3. **Sequoia 15.x**: DDPM or .pkg installer generally works
+4. See firmware.md for detailed update procedure and pre/post-update checklists
 
 ---
 
 ### DDC Commands Not Working After Sleep
 
-**Symptoms**: `m1ddc set brightness 70` returns an error or does nothing after waking the Mac.
+**Symptoms**: `m1ddc set luminance 70` returns an error or does nothing after waking the Mac.
 
 **Cause**: DDC/CI takes a few seconds to re-initialize after monitor wakes from standby.
 
@@ -146,7 +156,7 @@ Common issues with the Dell U4025QW on macOS, with causes and fixes.
 2. Use the wait script:
    ```bash
    for i in $(seq 1 10); do
-     m1ddc get brightness > /dev/null 2>&1 && break
+     m1ddc get luminance > /dev/null 2>&1 && break
      sleep 1
    done
    ```

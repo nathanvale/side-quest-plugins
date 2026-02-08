@@ -1,5 +1,5 @@
 ---
-name: dell-u4025qw
+name: tech-support
 description: >
   Knowledge bank for the Dell UltraSharp U4025QW 40" curved Thunderbolt hub monitor.
   Multi-computer switching, macOS software control, firmware, troubleshooting, and DDC automation.
@@ -7,14 +7,8 @@ description: >
   ultrawide setup, multi-mac monitor, monitor firmware, BetterDisplay, Lunar, MonitorControl.
 argument-hint: "[question about your U4025QW]"
 allowed-tools: Bash, Read, Write, Glob, Grep, WebSearch, AskUserQuestion
-hooks:
-  PreToolUse:
-    - matcher: "Read"
-      hooks:
-        - type: command
-          command: "bun run ${CLAUDE_PLUGIN_ROOT}/scripts/refresh-cache.ts"
-          timeout: 120
-          once: true
+# NOTE: hooks moved to hooks/hooks.json (workaround for anthropics/claude-code#17688)
+# Plugin skill frontmatter hooks are silently ignored - see issue for details.
 ---
 
 # Dell U4025QW Knowledge Bank
@@ -23,38 +17,47 @@ Expert guidance for the Dell UltraSharp U4025QW 40" curved 5K2K Thunderbolt hub 
 
 ## Step 1: Check Community Intelligence
 
-Community knowledge is auto-refreshed every 30 days by a plugin hook.
+Community knowledge is auto-refreshed every 30 days via a SessionStart hook (defined in `hooks/hooks.json`). The script checks cache staleness on every session start and only fetches new data when the 30-day window has expired.
+
+### 1a. Read the cache file
 
 Read [community-intel.md](cache/community-intel.md) for recent findings before answering.
 
-If the cache appears empty or outdated, manually refresh:
+### 1b. Evaluate what you got
 
-```bash
-bunx --bun @side-quest/last-30-days "Dell U4025QW firmware update issues" --emit=compact --quick 2>&1
-```
+- **Cache exists with content** (headings + links): proceed to Step 2. Optionally read `cache/last-updated.json` to report cache age.
+- **Cache missing or refresh failed**: community intel is unavailable for this session. Proceed using reference files only -- do not ask the user to run anything manually.
+- **Cache exists but empty/headers only** (no links or data sections): no recent community activity for this topic. Proceed normally using reference files.
 
 ## Step 2: Classify the Question
 
 Parse the user's question into one or more categories:
 
-| Category | Keywords / Signals | Reference File |
-|----------|-------------------|----------------|
-| **Setup / Wiring** | connect, setup, cable, port, 2 macs, 3 macs | [multi-computer-setup.md](references/multi-computer-setup.md) |
-| **Input Switching** | switch input, KVM, toggle, change source | [multi-computer-setup.md](references/multi-computer-setup.md) + [ddc-automation.md](references/ddc-automation.md) |
-| **Software** | BetterDisplay, Lunar, MonitorControl, DDPM, HiDPI | [macos-software.md](references/macos-software.md) |
-| **DDC Automation** | m1ddc, Karabiner, hotkey, shortcut, script | [ddc-automation.md](references/ddc-automation.md) |
-| **Troubleshooting** | not working, flickering, disconnect, black screen | [troubleshooting.md](references/troubleshooting.md) |
-| **Firmware** | firmware, update, version, M3T | [firmware.md](references/firmware.md) |
-| **Specs / Ports** | resolution, refresh, port, spec, what is | [monitor-reference.md](references/monitor-reference.md) |
-| **Brightness / Volume** | brightness, contrast, volume, mute, media keys | [ddc-automation.md](references/ddc-automation.md) + [macos-software.md](references/macos-software.md) |
+| Category                | Keywords / Signals                                      | Reference File                                                                                                    | Manual Pages                            |
+| ----------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| **Setup / Wiring**      | connect, setup, cable, port, 2 macs, 3 macs             | [multi-computer-setup.md](references/multi-computer-setup.md)                                                     | pp.41-50 (connecting), pp.16-17 (ports) |
+| **Input Switching**     | switch input, KVM, toggle, change source                | [multi-computer-setup.md](references/multi-computer-setup.md) + [ddc-automation.md](references/ddc-automation.md) | pp.67-87 (OSD menu)                     |
+| **Software**            | BetterDisplay, Lunar, MonitorControl, DDPM, HiDPI       | [macos-software.md](references/macos-software.md)                                                                 | --                                      |
+| **DDC Automation**      | m1ddc, Karabiner, hotkey, shortcut, script              | [ddc-automation.md](references/ddc-automation.md)                                                                 | --                                      |
+| **Troubleshooting**     | not working, flickering, disconnect, black screen       | [troubleshooting.md](references/troubleshooting.md)                                                               | pp.96-105 (troubleshooting chapter)     |
+| **Firmware**            | firmware, update, version, M3T                          | [firmware.md](references/firmware.md)                                                                             | --                                      |
+| **Specs / Ports**       | resolution, refresh, port, spec, what is                | [monitor-reference.md](references/monitor-reference.md)                                                           | pp.16-18 (ports), pp.18-27 (specs)      |
+| **Color / Calibration** | color mode, preset, Display P3, DCI-P3, sRGB, calibration, color profile, washed out | [monitor-reference.md](references/monitor-reference.md)                                                           | pp.67-87 (OSD menu)                     |
+| **OSD / Settings**      | OSD, menu, display settings, color profile, PBP, PIP    | [monitor-reference.md](references/monitor-reference.md)                                                           | pp.67-87 (full OSD menu)                |
+| **DPBS / Power Sync**   | power button sync, DPBS, remote power, wake via monitor | --                                                                                                                | pp.51-56                                |
+| **Daisy Chain**         | daisy chain, multi-monitor, second monitor, chain       | --                                                                                                                | pp.21, 26, 57-59                        |
+| **Brightness / Volume** | brightness, contrast, volume, mute, media keys          | [ddc-automation.md](references/ddc-automation.md) + [macos-software.md](references/macos-software.md)             | --                                      |
 
 ## Step 3: Read Reference Files
 
 Read the relevant reference files based on the classification. Always read at minimum:
+
 - The primary reference file for the category
 - [community-intel.md](cache/community-intel.md) (for recent community findings)
 
 For multi-category questions, read all relevant files.
+
+**Manual fallback**: If the reference files don't fully answer the question, read the relevant pages from [dell-u4025qw-user-guide.pdf](references/dell-u4025qw-user-guide.pdf) using the page index in [manual-page-index.md](references/manual-page-index.md). For categories with no reference file (DPBS, Daisy Chain), go directly to the manual pages listed in the classification table.
 
 ## Step 4: Synthesize Answer
 
@@ -66,6 +69,7 @@ For multi-category questions, read all relevant files.
 4. Explain KVM limitations (only 2 USB upstreams)
 5. Recommend cables
 6. Explain that they can remap Mac 1/2/3 to their own machines
+7. **Always offer port diagram links** so the user can visually locate where to plug in cables
 
 ### For Software Questions
 
@@ -96,21 +100,43 @@ For multi-category questions, read all relevant files.
 3. Warn about M3T102 (known bad)
 4. Include pre-update and post-update checklists
 
+### For OSD / Settings Questions
+
+1. Read manual pp.67-87 for the full OSD menu reference
+2. Answer from monitor-reference.md first, supplement with manual details
+3. Include exact OSD navigation path (e.g., Menu > Display > Brightness)
+4. Note macOS-specific behavior where applicable (e.g., PBP scaling)
+
+### For DPBS / Power Sync Questions
+
+1. Read manual pp.51-56 for Dell Power Button Sync details
+2. Explain that DPBS lets you power on/off the Mac via the monitor's power button over TB4
+3. Include setup requirements and limitations
+4. Note this only works over Thunderbolt 4 (port 6), not DP or HDMI
+
+### For Daisy Chain Questions
+
+1. Read manual pp.21, 26, 57-59 for daisy chain specifics
+2. Explain resolution limits when daisy-chaining (refer to pp.26 table)
+3. Walk through the physical connection (TB4 downstream port 5)
+4. Note that daisy-chaining reduces available bandwidth/resolution
+
 ### For Specs / Ports Questions
 
 1. Answer directly from the monitor reference
 2. Include relevant tables
 3. Note macOS-specific behavior where applicable
+4. **Always offer port diagram links** -- include the ManualsLib Back View and Bottom View links so the user can visually locate physical ports
 
 ## Device Naming Convention
 
 Throughout all answers, use generic labels:
 
-| Label | Role | Port |
-|-------|------|------|
-| **Mac 1** | Primary / daily driver | TB4 (port 1) |
-| **Mac 2** | Secondary | DP (port 2) |
-| **Mac 3** | Tertiary | HDMI (port 3) + USB-C (port 7) |
+| Label     | Role                   | Port                                                      |
+| --------- | ---------------------- | --------------------------------------------------------- |
+| **Mac 1** | Primary / daily driver | TB4 upstream (physical port 6)                            |
+| **Mac 2** | Secondary              | DP (physical port 4)                                      |
+| **Mac 3** | Tertiary               | HDMI (physical port 3) + USB-C upstream (physical port 7) |
 
 When answering setup questions, explain this convention and tell the user they can remap these labels to match their own machines.
 
@@ -122,7 +148,11 @@ When answering setup questions, explain this convention and tell the user they c
 - **Version-aware** - note macOS Sequoia vs Tahoe differences when relevant
 - **Include community intel** - if cache/community-intel.md has relevant recent findings, mention them
 - **Be direct** - answer the question first, then provide context
+- **Cite manual pages** - when referencing official Dell information from the PDF, cite the page (e.g., "See User Guide p.45 for the connection diagram")
 - **Tables for comparisons** - use tables when comparing options or listing ports/specs
+- **Always offer port diagrams** - when discussing port numbers, physical setup, wiring, or cable connections, always include the ManualsLib diagram links so the user can visually locate ports:
+  - [Back View (page 15)](https://www.manualslib.com/manual/3407628/Dell-Thunderbolt-U4025qw.html?page=15)
+  - [Bottom View (page 16)](https://www.manualslib.com/manual/3407628/Dell-Thunderbolt-U4025qw.html?page=16)
 
 ## Examples
 
