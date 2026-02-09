@@ -1,6 +1,6 @@
 # Git Plugin for Claude Code
 
-> **v2.0.0** — Lean skills-based architecture (no MCP server)
+> **v1.0.0** — Lean skills-based architecture (no MCP server)
 
 Provides intelligent git context, history exploration, smart commit capabilities, and safety guardrails for Claude Code sessions.
 

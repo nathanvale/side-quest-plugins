@@ -6,6 +6,7 @@
  * PostToolUse hook that logs Bash commands to an audit trail.
  */
 
+import { appendFile, mkdir } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
@@ -62,18 +63,8 @@ if (import.meta.main) {
 		const logDir = join(homedir(), '.claude', 'logs')
 		const logPath = join(logDir, 'git-command-log.jsonl')
 
-		await Bun.spawn(['mkdir', '-p', logDir], {
-			stdout: 'pipe',
-			stderr: 'pipe',
-		}).exited
-
-		const file = Bun.file(logPath)
-		const existing = (await file.exists()) ? await file.text() : ''
-		const separator = existing.endsWith('\n') || existing === '' ? '' : '\n'
-		await Bun.write(
-			logPath,
-			`${existing}${separator}${JSON.stringify(entry)}\n`,
-		)
+		await mkdir(logDir, { recursive: true })
+		await appendFile(logPath, `${JSON.stringify(entry)}\n`)
 	} catch {
 		// fire and forget
 	}

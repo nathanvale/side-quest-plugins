@@ -54,11 +54,11 @@ const BLOCKED_PATTERNS: Array<{ pattern: RegExp; reason: string }> = [
 		reason: 'git clean -f permanently deletes untracked files.',
 	},
 	{
-		pattern: /git\s+checkout\s+\.\s*$/,
+		pattern: /git\s+checkout\s+\.\s*(?:$|[;&|])/,
 		reason: 'git checkout . discards all unstaged changes permanently.',
 	},
 	{
-		pattern: /git\s+restore\s+\.\s*$/,
+		pattern: /git\s+restore\s+\.\s*(?:$|[;&|])/,
 		reason: 'git restore . discards all unstaged changes permanently.',
 	},
 	{
