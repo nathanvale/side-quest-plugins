@@ -60,18 +60,33 @@ The preferred auth method for npm. No secrets needed after initial setup.
 1. Create a **granular access token** at `https://www.npmjs.com/settings/<username>/tokens/granular-access-tokens/new`
    - Scope to the package or org (e.g., `@side-quest`)
    - Grant **Read and Write** permissions
-   - Check **"Bypass 2FA"** (required for CI/CD)
+   - Check **"Bypass 2FA"** (required for CI/CD and local scripted publishes)
    - Note: write tokens expire in 90 days max (npm policy since late 2025)
-2. **For scoped packages** (`@org/name`), do the first publish locally:
+   - **"Bypass 2FA" is what prevents OTP prompts** -- without it, `npm publish` will ask for an authenticator code even with a valid granular token
+2. **Ensure `~/.npmrc` has the correct token** before publishing locally.
+   Your `~/.npmrc` may contain a stale/revoked classic token (classic tokens were permanently revoked Dec 2025). Even if you have a valid granular token in 1Password, npm reads `~/.npmrc` first and will fail with "Access token expired or revoked" + an OTP prompt.
+   ```bash
+   # Check current token status
+   npm whoami  # If this fails with E401, your ~/.npmrc token is bad
+
+   # Replace with valid token from 1Password
+   op read "op://API Credentials/NPM_TOKEN/credential" \
+     | xargs -I{} bash -c 'echo "//registry.npmjs.org/:_authToken={}" > ~/.npmrc'
+
+   # Verify
+   npm whoami  # Should print your username
+   ```
+   **Why this matters:** The OTP/2FA prompt during `npm publish` is almost always caused by a bad token in `~/.npmrc`, not by missing 2FA setup. A valid granular token with "Bypass 2FA" enabled will publish without any OTP.
+3. **For scoped packages** (`@org/name`), do the first publish locally:
    ```bash
    npm publish --access public --no-provenance
    ```
    Why: npm requires the package to exist before CI tokens (granular or OIDC) can publish to it. A brand new scoped package returns E404 until the first publish registers it.
-   Note: `--no-provenance` is required for local publishes — provenance attestation only works in CI (GitHub Actions OIDC). Without this flag you'll get `Automatic provenance generation not supported for provider: null`.
-3. Add token as a repository secret for CI: `gh secret set NPM_TOKEN --repo <owner>/<repo>`
-4. CI handles subsequent publishes via Changesets (version PR → merge → auto-publish)
-5. After successful publish, configure OIDC trusted publishing (see steps below)
-6. Remove `NPM_TOKEN` secret (no longer needed — OIDC handles auth)
+   Note: `--no-provenance` is required for local publishes -- provenance attestation only works in CI (GitHub Actions OIDC). Without this flag you'll get `Automatic provenance generation not supported for provider: null`.
+4. Add token as a repository secret for CI: `gh secret set NPM_TOKEN --repo <owner>/<repo>`
+5. CI handles subsequent publishes via Changesets (version PR -> merge -> auto-publish)
+6. After successful publish, configure OIDC trusted publishing (see steps below)
+7. Remove `NPM_TOKEN` secret (no longer needed -- OIDC handles auth)
 
 **Configure OIDC trusted publishing** (after first publish):
 1. Go to `https://www.npmjs.com/package/<package-name>/access`
@@ -327,7 +342,19 @@ Can be used as a drop-in replacement for the publish step if Changesets' publish
 
 - Classic npm tokens were permanently revoked in Dec 2025
 - Create a new **granular access token** at `https://www.npmjs.com/settings/<username>/tokens/granular-access-tokens/new`
-- Write tokens now expire in 90 days max — set a calendar reminder to rotate
+- Write tokens now expire in 90 days max -- set a calendar reminder to rotate
+
+### "Access token expired or revoked" + EOTP (OTP prompt)
+
+- **Root cause:** `~/.npmrc` contains a stale or revoked token. npm reads this first, fails auth, then falls back to requesting OTP. This happens even when you have a valid granular token elsewhere (1Password, GitHub secrets).
+- **Misleading symptom:** The OTP prompt makes it look like a 2FA issue, but it's actually a bad token issue. A valid granular token with "Bypass 2FA" enabled never asks for OTP.
+- **Fix:** Replace the `~/.npmrc` token with the valid one from 1Password:
+  ```bash
+  op read "op://API Credentials/NPM_TOKEN/credential" \
+    | xargs -I{} bash -c 'echo "//registry.npmjs.org/:_authToken={}" > ~/.npmrc'
+  npm whoami  # Verify: should print username without error
+  ```
+- **Prevention:** After creating a new granular token, always update both 1Password AND `~/.npmrc`
 
 ### OIDC publish fails with "No matching package found"
 
