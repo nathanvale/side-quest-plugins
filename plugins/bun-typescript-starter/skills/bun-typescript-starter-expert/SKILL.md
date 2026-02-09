@@ -99,7 +99,7 @@ Based on the category, read the relevant reference files from the plugin's `refe
 # Check if package already exists on npm (and at what version)
 npm view <package-name> version 2>&1
 
-# Check npm auth
+# Check npm auth -- CRITICAL: if this fails with E401, ~/.npmrc has a bad token
 npm whoami 2>&1
 
 # Check if build output exists
@@ -112,7 +112,20 @@ gh secret list --repo <owner>/<repo> 2>&1
 grep -A3 publishConfig package.json
 ```
 
-**Skip any step the user has already completed.** If `npm view` returns a version, the first publish is done — go straight to OIDC setup or Changesets flow. If GitHub secrets already include `NPM_TOKEN`, don't ask them to create one.
+**If `npm whoami` fails (E401):** The `~/.npmrc` token is stale or revoked. Before doing ANYTHING else, fix it:
+```bash
+# Check if 1Password has a valid token
+op item list --vault="API Credentials" 2>&1 | grep -i npm
+
+# If NPM_TOKEN exists in 1Password, swap it into ~/.npmrc
+op read "op://API Credentials/NPM_TOKEN/credential" \
+  | xargs -I{} bash -c 'echo "//registry.npmjs.org/:_authToken={}" > ~/.npmrc'
+npm whoami  # Should now succeed
+```
+
+**IMPORTANT -- OTP/2FA prompt trap:** If `npm publish` asks for an OTP code, do NOT ask the user for their authenticator code. This almost always means `~/.npmrc` has a bad token. A valid granular token with "Bypass 2FA" enabled never prompts for OTP. Fix the token first.
+
+**Skip any step the user has already completed.** If `npm view` returns a version, the first publish is done -- go straight to OIDC setup or Changesets flow. If GitHub secrets already include `NPM_TOKEN`, don't ask them to create one.
 
 Check the troubleshooting routing table first. It maps specific symptoms to causes, fixes, and the config files involved.
 
@@ -161,11 +174,12 @@ Determine if the issue is:
 
 ### "I can't publish to npm" / "Help me publish"
 
-1. **Check state first** — run `npm view <package> version` to see if it's already on npm
-2. If already published: skip local first publish, go to OIDC setup or Changesets
-3. If not published: walk through first publish flow
-4. Load `references/publishing.md`
+1. **Check local auth first** -- run `npm whoami`. If E401, fix `~/.npmrc` from 1Password before anything else
+2. **Check state** -- run `npm view <package> version` to see if it's already on npm
+3. If already published: skip local first publish, go to OIDC setup or Changesets
+4. If not published: walk through first publish flow (see `references/publishing.md`)
 5. Check `gh secret list` to see what secrets exist before asking user to create them
+6. **Never ask for OTP** -- if `npm publish` prompts for OTP, the token is bad. Fix the token, don't chase 2FA codes
 
 ### Creating Changesets (Agent Mode)
 
