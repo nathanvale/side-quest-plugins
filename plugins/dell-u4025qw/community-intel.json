@@ -1,0 +1,13 @@
+{
+	"topics": [
+		"Dell U4025QW firmware update issues",
+		"Dell U4025QW macOS color calibration Display P3 settings",
+		"Dell U4025QW KVM switching multiple Mac computers",
+		"Dell U4025QW sleep wake disconnect Thunderbolt macOS",
+		"Dell U4025QW BetterDisplay Lunar MonitorControl m1ddc macOS",
+		"Dell U4025QW HiDPI scaling resolution macOS"
+	],
+	"refreshIntervalDays": 30,
+	"thinCacheIntervalDays": 7,
+	"context": "Knowledge-bank skill for the Dell U4025QW 40-inch curved Thunderbolt hub monitor. Focus on firmware updates, macOS compatibility, KVM switching, sleep/wake issues, DDC automation, HiDPI scaling, and software tools."
+}
