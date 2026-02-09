@@ -6,6 +6,8 @@
  * SessionStart hook that loads git context at startup.
  */
 
+import { parsePorcelainStatus } from './git-status-parser'
+
 interface SessionStartHookInput {
 	cwd: string
 	source: string
@@ -28,7 +30,7 @@ async function runGit(
 	const proc = Bun.spawn(['git', ...args], {
 		cwd,
 		stdout: 'pipe',
-		stderr: 'pipe',
+		stderr: 'ignore',
 	})
 	const stdout = await new Response(proc.stdout).text()
 	const exitCode = await proc.exited
@@ -38,43 +40,6 @@ async function runGit(
 async function isGitRepo(cwd: string): Promise<boolean> {
 	const { exitCode } = await runGit(['rev-parse', '--git-dir'], cwd)
 	return exitCode === 0
-}
-
-export function parseGitStatus(statusOut: string) {
-	const lines = statusOut.split('\n')
-	const branchLine = lines.find((line) => line.startsWith('##'))
-	let branch = '(detached)'
-	if (branchLine) {
-		const parsed = branchLine.slice(3).split('...')[0]
-		if (parsed) {
-			branch = parsed.trim()
-		}
-	}
-
-	let staged = 0
-	let modified = 0
-	let untracked = 0
-
-	for (const line of lines) {
-		if (!line.trim() || line.startsWith('##')) {
-			continue
-		}
-
-		const code = line.slice(0, 2)
-		if (code.startsWith('?') || code === '??') {
-			untracked++
-			continue
-		}
-
-		if (code[0] !== ' ' && code[0] !== '?') {
-			staged++
-		}
-		if (code[1] !== ' ' && code[1] !== '?') {
-			modified++
-		}
-	}
-
-	return { branch, status: { staged, modified, untracked } }
 }
 
 async function getGitContext(cwd: string): Promise<GitContext | null> {
@@ -87,7 +52,7 @@ async function getGitContext(cwd: string): Promise<GitContext | null> {
 		return null
 	}
 
-	const { branch, status } = parseGitStatus(statusResult.stdout)
+	const { branch, counts } = parsePorcelainStatus(statusResult.stdout)
 
 	const commitsResult = await runGit(
 		['log', '--oneline', '-5', '--format=%h %s (%ar)'],
@@ -104,7 +69,7 @@ async function getGitContext(cwd: string): Promise<GitContext | null> {
 
 	return {
 		branch: branch || '(detached)',
-		status,
+		status: counts,
 		recentCommits,
 	}
 }

@@ -7,47 +7,13 @@
  */
 
 import { readFile } from 'node:fs/promises'
+import type { FileStatusCounts } from './git-status-parser'
+import { parsePorcelainStatus } from './git-status-parser'
 
 interface StopHookInput {
 	cwd: string
 	transcript_path: string
 	stop_hook_active?: boolean
-}
-
-interface GitStatus {
-	staged: number
-	modified: number
-	untracked: number
-}
-
-export function parseGitStatus(output: string): GitStatus {
-	const lines = output.split('\n').filter((line) => line.trim() !== '')
-	let staged = 0
-	let modified = 0
-	let untracked = 0
-
-	for (const line of lines) {
-		if (line.startsWith('##')) {
-			continue
-		}
-
-		const indexStatus = line[0]
-		const workTreeStatus = line[1]
-
-		if (indexStatus === '?' || line.startsWith('??')) {
-			untracked++
-			continue
-		}
-
-		if (indexStatus !== ' ' && indexStatus !== '?') {
-			staged++
-		}
-		if (workTreeStatus !== ' ' && workTreeStatus !== '?') {
-			modified++
-		}
-	}
-
-	return { staged, modified, untracked }
 }
 
 async function runGit(
@@ -57,19 +23,21 @@ async function runGit(
 	const proc = Bun.spawn(['git', ...args], {
 		cwd,
 		stdout: 'pipe',
-		stderr: 'pipe',
+		stderr: 'ignore',
 	})
 	const stdout = await new Response(proc.stdout).text()
 	const exitCode = await proc.exited
 	return { stdout, exitCode }
 }
 
-export async function getGitStatus(cwd: string): Promise<GitStatus | null> {
+export async function getGitStatus(
+	cwd: string,
+): Promise<FileStatusCounts | null> {
 	const result = await runGit(['status', '--porcelain'], cwd)
 	if (result.exitCode !== 0) {
 		return null
 	}
-	return parseGitStatus(result.stdout)
+	return parsePorcelainStatus(result.stdout).counts
 }
 
 export async function getLastUserPrompt(
@@ -105,14 +73,15 @@ export function truncateForSubject(text: string, maxLen: number): string {
 }
 
 export function generateCommitMessage(prompt: string | null): string {
-	const subjectMaxLen = 50
+	const prefix = 'chore(wip): '
+	const subjectMaxLen = 50 - prefix.length
 	const effectivePrompt =
 		typeof prompt === 'string' && prompt.trim() !== ''
 			? prompt
 			: 'session checkpoint'
 	const truncatedPrompt = truncateForSubject(effectivePrompt, subjectMaxLen)
 
-	return `chore(wip): ${truncatedPrompt}\n\nSession work in progress - run /git:commit to squash.`
+	return `${prefix}${truncatedPrompt}\n\nSession work in progress - run /git:commit to squash.`
 }
 
 export async function createAutoCommit(

@@ -77,7 +77,7 @@ If a hook blocks an action, resolve the underlying git safety issue rather than 
 
 ## Commit Format
 
-```
+```text
 <type>(<scope>): <subject>
 ```
 
