@@ -155,11 +155,7 @@ if (import.meta.main) {
 			process.exit(0)
 		}
 
-		if (
-			status.staged === 0 &&
-			status.modified === 0 &&
-			status.untracked === 0
-		) {
+		if (status.staged === 0 && status.modified === 0) {
 			process.exit(0)
 		}
 
