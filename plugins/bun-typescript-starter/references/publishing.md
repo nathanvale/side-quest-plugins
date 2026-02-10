@@ -393,7 +393,7 @@ Can be used as a drop-in replacement for the publish step if Changesets' publish
 - `git tag` and `gh release create` are not idempotent — they fail if the tag/release already exists
 - **Fix:** Guard both with existence checks (`git rev-parse` for tags, `gh release view` for releases)
 - The pre-release path already had the tag check; stable path and `release.yml` were missing it
-- **Fixed in template** — ensure your `publish.yml` and `release.yml` use the idempotent pattern
+- **Fixed in template** -- ensure your `publish.yml` uses the idempotent pattern (`release.yml` was consolidated into `publish.yml`)
 
 ### NPM_TOKEN set but publish still fails with ENEEDAUTH or E404
 

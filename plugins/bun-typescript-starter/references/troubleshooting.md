@@ -64,6 +64,8 @@ Master routing table for diagnosing issues in repos created from `nathanvale/bun
 | Dependabot PR not auto-merging | Missing label | Add `dev-dependencies` label | `dependabot-auto-merge.yml` |
 | Auto-merge fails on version PR | Needs elevated permissions | Add `APP_ID` variable and `APP_PRIVATE_KEY` secret to repo settings | `version-packages-auto-merge.yml` |
 | Version PR created but auto-merge never triggers | `publish.yml` uses `GITHUB_TOKEN` -- pushes don't fire `pull_request_target` (GitHub anti-recursion) | Use GitHub App token via `vars.APP_ID` + `secrets.APP_PRIVATE_KEY` in `publish.yml` (`create-github-app-token` action, replace all `GITHUB_TOKEN` env refs with `steps.app-token.outputs.token`) | `publish.yml` |
+| `ERR_OSSL_UNSUPPORTED` in `create-github-app-token` | `APP_PRIVATE_KEY` has corrupted PEM format (quotes wrapping the key) | Re-set secret using `op --format json` extraction (see `ci-cd-pipelines.md`) | GitHub repo secret |
+| Publish fails with `OP_SERVICE_ACCOUNT_TOKEN` empty | Old template version used 1Password in CI | Migrate to direct `vars.APP_ID` + `secrets.APP_PRIVATE_KEY`, sync `publish.yml` and `version-packages-auto-merge.yml` from template | `publish.yml` |
 | CodeQL timeout | Analysis too slow | Increase timeout or exclude dirs | `codeql.yml` |
 | SBOM not generated | anchore/sbom-action issue | Check action version is pinned to valid SHA | `tag-assets.yml` |
 | `Cannot find module '@scope/pkg/subpath'` in CI | Cleanup step deletes `node_modules/.bun` | Remove `node_modules/.bun` from `rm -rf` in cleanup steps | `publish.yml`, `pr-quality.yml` |

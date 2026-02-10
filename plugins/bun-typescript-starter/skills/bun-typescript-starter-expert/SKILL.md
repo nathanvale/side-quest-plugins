@@ -224,4 +224,47 @@ Never run bare `changeset` or `bun version:gen` without flags in agent context â
 
 1. Load `references/downstream-sync.md`
 2. Recommend `actions-template-sync` for automated sync
-3. Show manual alternatives if they prefer control
+3. For manual sync, use the **selective checkout** strategy:
+
+```bash
+# One-time: add template remote
+git remote add template git@github.com:nathanvale/bun-typescript-starter.git
+
+# Fetch latest
+git fetch template main
+
+# Compare infra files only
+git diff main..template/main --stat -- '.github/' '.husky/' '.changeset/config.json'
+
+# Checkout specific files from template (skip project-specific files)
+git checkout template/main -- \
+  .github/workflows/pr-quality.yml \
+  .github/workflows/publish.yml \
+  .husky/pre-push
+# Then git rm any files deleted in template
+```
+
+4. **Intentional divergences to skip**: `.changeset/config.json` (has real repo values), `scripts/setup.ts` (template scaffolding), `node-compat.yml` (if repo has Bun-only deps)
+
+### "Publish workflow failing with 1Password / OP_SERVICE_ACCOUNT_TOKEN"
+
+The template no longer uses 1Password in CI (removed in template PR #60). If a downstream repo still has the `1password/load-secrets-action` step:
+
+1. **Migrate to direct secrets**: Set `APP_ID` (variable) and `APP_PRIVATE_KEY` (secret) on the repo
+2. **Source from 1Password locally** (not in CI):
+   ```bash
+   # Get App ID
+   op item get "chatline-changesets-bot" --vault="API Credentials" --fields label="App ID" --reveal
+   # Set as GitHub variable
+   gh variable set APP_ID --repo <owner>/<repo> --body "<app-id>"
+
+   # Get private key -- IMPORTANT: use --format json to avoid quote wrapping
+   op item get "chatline-changesets-bot" --vault="API Credentials" \
+     --fields label=credential --reveal --format json \
+     | python3 -c "import json,sys; print(json.load(sys.stdin)['value'])" \
+     | gh secret set APP_PRIVATE_KEY --repo <owner>/<repo>
+   ```
+3. **Remove** `OP_SERVICE_ACCOUNT_TOKEN` secret after migration
+4. **Sync** `publish.yml` and `version-packages-auto-merge.yml` from template
+
+**PEM key format gotcha**: `op item get --reveal` wraps multi-line values in quotes (`"-----BEGIN RSA PRIVATE KEY-----`). This corrupts the PEM format, causing `ERR_OSSL_UNSUPPORTED` in the `create-github-app-token` action. Always use `--format json` and extract the `value` field to get the raw PEM.
