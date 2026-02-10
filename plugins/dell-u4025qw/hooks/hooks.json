@@ -7,8 +7,8 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "bun run ${CLAUDE_PLUGIN_ROOT}/scripts/refresh-cache.ts",
-						"timeout": 120,
+						"command": "bunx @side-quest/community-intel-cache refresh --config \"${CLAUDE_PLUGIN_ROOT}/community-intel.json\" --cache-dir \"${CLAUDE_PLUGIN_ROOT}/skills/dell-u4025qw/cache\"",
+						"timeout": 180,
 						"async": true
 					}
 				]
