@@ -44,7 +44,7 @@ The user runs `/tech-support --upgrade` to review staged community findings. The
 
 ## The Architecture
 
-```
+```text
 User invokes /tech-support [--refresh] [--upgrade] [question]
     |
     v
@@ -78,7 +78,7 @@ Steps 2-4: Classify, read references, answer
 
 The background SessionStart hook runs independently:
 
-```
+```text
 Session Start
     |
     v
@@ -261,7 +261,7 @@ The CLI is designed to never break your session:
 
 ## Cache Lifecycle
 
-```
+```text
 Day 0:   First session -> no cache -> async refresh -> cache written (30d interval)
 Day 1:   Session start -> cache fresh -> exit <1ms
 Day 15:  Session start -> cache fresh -> exit <1ms

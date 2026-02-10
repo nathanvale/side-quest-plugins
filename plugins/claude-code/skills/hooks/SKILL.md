@@ -301,7 +301,27 @@ Run via Bash:
 bunx @side-quest/community-intel-cache extract --cache-dir "${CLAUDE_PLUGIN_ROOT}/skills/hooks/cache"
 ```
 
-Parse JSON output. If status is "no_new" or "no_staged":
+The command outputs JSON with this shape:
+
+```json
+{
+  "status": "has_new",
+  "findings": [
+    {
+      "hash": "a1b2c3...",
+      "type": "reddit",
+      "topic": "Claude Code hooks...",
+      "title": "SessionEnd not firing on Ctrl+C",
+      "summary": "Users report...",
+      "url": "https://reddit.com/...",
+      "score": 35,
+      "date": "2026-01-28"
+    }
+  ]
+}
+```
+
+Parse the JSON. If status is "no_new" or "no_staged":
   Tell user: "No new community findings to review. Your intel is up to date."
   Stop.
 
@@ -309,7 +329,7 @@ Parse JSON output. If status is "no_new" or "no_staged":
 
 Display all findings as a numbered list:
 
-```
+```text
 Found N new community findings:
 
 1. [reddit] **Title** (score: 42)
