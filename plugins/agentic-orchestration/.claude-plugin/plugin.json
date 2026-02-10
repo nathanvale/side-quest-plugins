@@ -1,0 +1,25 @@
+{
+	"name": "agentic-orchestration",
+	"description": "Agentic orchestration patterns - Builder/Validator, Agent Teams, multi-agent coordination, hook-based self-validation, task dependency chains, meta-prompts, sub-agent architecture. Based on IndyDevDan's claude-code-hooks-mastery and Anthropic's Agent Teams.",
+	"version": "1.0.0",
+	"author": {
+		"name": "Nathan Vale",
+		"email": "hi@nathanvale.com"
+	},
+	"keywords": [
+		"agentic",
+		"orchestration",
+		"builder-validator",
+		"agent-teams",
+		"multi-agent",
+		"sub-agents",
+		"hooks",
+		"task-system",
+		"meta-prompt",
+		"indydevdan"
+	],
+	"license": "MIT",
+	"skills": ["./skills/agentic-orchestration"],
+	"commands": ["./commands/plan-with-team.md"],
+	"hooks": ["./hooks/hooks.json"]
+}
