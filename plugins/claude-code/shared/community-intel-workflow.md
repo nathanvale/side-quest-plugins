@@ -1,0 +1,1 @@
+../../research/skills/community-intel/SKILL.md

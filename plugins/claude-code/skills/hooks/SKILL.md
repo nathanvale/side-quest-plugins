@@ -17,25 +17,22 @@ allowed-tools: Bash, Read, Write, Glob, Grep, WebSearch, AskUserQuestion
 
 Expert guidance for Claude Code hooks -- event lifecycle, hook types (command, prompt, agent), configuration, community patterns, best practices, and troubleshooting.
 
-## Community Intel Configuration
+## Community Intel (Shared HALT Workflow)
 
-| Variable | Value |
-|----------|-------|
-| SKILL_NAME | `hooks` |
-| CACHE_DIR | `${CLAUDE_PLUGIN_ROOT}/skills/hooks/cache` |
-| CONFIG_PATH | `${CLAUDE_PLUGIN_ROOT}/community-intel.json` |
-| VERIFIED_INTEL_PATH | `${CLAUDE_PLUGIN_ROOT}/skills/hooks/references/verified-intel.md` |
-| SMART_REFRESH_KEYWORDS | not working, not firing, debug, error, broken, help |
+This skill delegates all community-intel behavior to shared files. Keep this block minimal and consistent across skills.
 
-## Steps 0 and 1: Community Intel
-
-Check if `../../shared/community-intel-workflow.md` exists (relative to this file).
-
-If it does NOT exist, community intel is unavailable. Tell the user: "Community intel requires the research plugin. Reinstall this plugin after adding the research plugin to your marketplace." Then skip to Step 2 without community intel footers.
-
-If it exists, read and follow the workflow. Use the configuration values from the table above.
-After Step 1 completes, return here and proceed to Step 2.
-If --upgrade mode, follow Step 5 in the community intel workflow and stop.
+1. Read `../../shared/community-intel.adapter.json` (relative to this file).
+2. If the adapter file is missing or unreadable:
+   - tell the user: "Community intel is unavailable right now. Answering from reference files only."
+   - continue to Step 2 with no HALT status line.
+3. Check whether `../../shared/community-intel-workflow.md` exists.
+4. If the workflow file is missing:
+   - tell the user: "Community intel is unavailable right now. Answering from reference files only."
+   - continue to Step 2 with no HALT status line.
+5. If the workflow file exists:
+   - read it and execute Step 0 + Step 1 using adapter values
+   - if `--upgrade` was passed, follow workflow sync-report behavior and stop
+   - otherwise return here and continue to Step 2
 
 ## Step 2: Classify the Question
 
@@ -50,7 +47,7 @@ If a question spans multiple categories, identify the primary concern and second
 | **Decision & Control** | block, allow, deny, exit code, output, permission, modify input, decision, hookSpecificOutput, context injection | [decision-control.md](references/decision-control.md) |
 | **Recipes & Patterns** | auto-format, guard, firewall, notify, checkpoint, how do I, example, recipe, pattern | [community-patterns.md](references/community-patterns.md) |
 | **Best Practices** | best practice, performance, architecture, should I, anti-pattern, when to use, security | [best-practices.md](references/best-practices.md) |
-| **Troubleshooting** | not working, not firing, debug, error, broken, help, infinite loop, JSON failed | [troubleshooting.md](references/troubleshooting.md) |
+| **Troubleshooting** | not working, not firing, isn't firing, isnt firing, debug, error, broken, help, infinite loop, JSON failed | [troubleshooting.md](references/troubleshooting.md) |
 | **Plugins & Skills** | plugin hook, skill hook, hooks.json, CLAUDE_PLUGIN_ROOT, agent hook lifecycle, frontmatter, managed policy | [hooks-in-plugins.md](references/hooks-in-plugins.md) |
 
 ## Step 3: Read Reference Files
@@ -125,7 +122,8 @@ Every response should follow this structure:
 - **Be direct** -- answer the question first, then provide context
 - **Tables for comparisons** -- use tables when comparing event types, hook types, or decision patterns
 - **JSON schemas** -- show the exact JSON structure for inputs and outputs
-- **Cache age footer** -- if CACHE_AGE_NOTE is set, include it as an italicized footer at the end of the response
+- **HALT status line** -- if `HALT_STATUS_LINE` is set by the shared workflow, place it at the top of the response before the answer
+- **Inline attribution** -- when a claim is informed by verified intel, cite it inline as `(from community intel, MMM YYYY)`
 
 ## Examples
 
@@ -183,8 +181,8 @@ PreToolUse fires before execution, so the command never runs.
 ```text
 User: My hook isn't firing
 
-Skill: [Detects Troubleshooting, cache stale -> smart refresh]
-Skill: "Refreshing community intel -- this takes about 60 seconds."
+Skill: [Detects Troubleshooting intent -> force refresh]
+Skill: "Refreshing community intel - this takes about 60 seconds."
 Skill: [Reads troubleshooting.md + hook-types-and-config.md + verified-intel.md]
 
 Common causes in order of likelihood:
@@ -205,17 +203,16 @@ Toggle verbose mode with `Ctrl+O`.
 
 [Includes relevant verified intel findings]
 
-*Community intel last updated 3 days ago. Run `/hooks --refresh` for latest.*
-*5 new community findings available. Run `/hooks --upgrade` to review.*
+Community intel synced: auto-promoted 1 new finding across 1 topic.
+*(from community intel, Jan 2026)*
 ```
 
-### Example 4: Upgrade mode
+### Example 4: Optional manual sync report
 
 ```text
 User: /hooks --upgrade
 
-Skill: [Detects --upgrade flag, delegates to community intel workflow]
-Skill: [Runs extract command, gets 2 new findings]
-Skill: [Auto-accepts all findings, appends to verified-intel.md, records hashes]
-Skill: "Auto-accepted 2 new findings across 2 topics."
+Skill: [Detects --upgrade flag, runs shared workflow in sync-report mode]
+Skill: [Refreshes + auto-promotes findings]
+Skill: "Community intel sync complete for /hooks. Auto-promoted 2 findings across 2 topics."
 ```

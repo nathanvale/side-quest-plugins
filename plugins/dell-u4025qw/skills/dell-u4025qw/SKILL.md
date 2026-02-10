@@ -15,25 +15,22 @@ allowed-tools: Bash, Read, Write, Glob, Grep, WebSearch, AskUserQuestion
 
 Expert guidance for the Dell UltraSharp U4025QW 40" curved 5K2K Thunderbolt hub monitor. Covers multi-computer switching (up to 3 Macs), macOS software control, DDC automation, firmware, and troubleshooting.
 
-## Community Intel Configuration
+## Community Intel (Shared HALT Workflow)
 
-| Variable | Value |
-|----------|-------|
-| SKILL_NAME | `tech-support` |
-| CACHE_DIR | `${CLAUDE_PLUGIN_ROOT}/skills/dell-u4025qw/cache` |
-| CONFIG_PATH | `${CLAUDE_PLUGIN_ROOT}/community-intel.json` |
-| VERIFIED_INTEL_PATH | `${CLAUDE_PLUGIN_ROOT}/skills/dell-u4025qw/references/verified-intel.md` |
-| SMART_REFRESH_KEYWORDS | not working, flickering, disconnect, black screen, wake, sleep, firmware, update, version, M3T |
+This skill delegates all community-intel behavior to shared files. Keep this block minimal and consistent across skills.
 
-## Steps 0 and 1: Community Intel
-
-Check if `../../shared/community-intel-workflow.md` exists (relative to this file).
-
-If it does NOT exist, community intel is unavailable. Tell the user: "Community intel requires the research plugin. Reinstall this plugin after adding the research plugin to your marketplace." Then skip to Step 2 without community intel footers.
-
-If it exists, read and follow the workflow. Use the configuration values from the table above.
-After Step 1 completes, return here and proceed to Step 2.
-If --upgrade mode, follow Step 5 in the community intel workflow and stop.
+1. Read `../../shared/community-intel.adapter.json` (relative to this file).
+2. If the adapter file is missing or unreadable:
+   - tell the user: "Community intel is unavailable right now. Answering from reference files only."
+   - continue to Step 2 with no HALT status line.
+3. Check whether `../../shared/community-intel-workflow.md` exists.
+4. If the workflow file is missing:
+   - tell the user: "Community intel is unavailable right now. Answering from reference files only."
+   - continue to Step 2 with no HALT status line.
+5. If the workflow file exists:
+   - read it and execute Step 0 + Step 1 using adapter values
+   - if `--upgrade` was passed, follow workflow sync-report behavior and stop
+   - otherwise return here and continue to Step 2
 
 ## Step 2: Classify the Question
 
@@ -166,7 +163,8 @@ When answering setup questions, explain this convention and tell the user they c
 - **Port diagrams when relevant** - when the answer involves physical ports, cables, or wiring, include the ManualsLib diagram links so the user can visually locate ports:
   - [Back View (page 15)](https://www.manualslib.com/manual/3407628/Dell-Thunderbolt-U4025qw.html?page=15)
   - [Bottom View (page 16)](https://www.manualslib.com/manual/3407628/Dell-Thunderbolt-U4025qw.html?page=16)
-- **Cache age footer** - if CACHE_AGE_NOTE is set, include it as an italicized footer at the end of the response
+- **HALT status line** - if `HALT_STATUS_LINE` is set by the shared workflow, place it at the top of the response before the answer
+- **Inline attribution** - when a claim is informed by verified intel, cite it inline as `(from community intel, MMM YYYY)`
 
 ## Examples
 
@@ -230,12 +228,12 @@ displayed. You press the hotkey on the machine you're switching
 AWAY from, not the one you're switching to.
 ```
 
-### Example 3: Troubleshooting (with smart refresh)
+### Example 3: Troubleshooting (with forced refresh)
 
 ```text
 User: My monitor keeps disconnecting when my Mac wakes from sleep
 
-Skill: [Detects Troubleshooting category, cache is stale]
+Skill: [Detects Troubleshooting/Firmware intent -> force refresh]
 Skill: "Refreshing community intel - this takes about 60 seconds."
 Skill: [Runs refresh, reads troubleshooting.md + firmware.md + verified-intel.md]
 
@@ -258,8 +256,8 @@ sleep/wake cycles.
 
 [Includes relevant verified-intel.md findings]
 
-*Community intel last updated 15 days ago. Run `/tech-support --refresh` for latest.*
-*3 new community findings available. Run `/tech-support --upgrade` to review.*
+Community intel synced: auto-promoted 2 new findings across 2 topics.
+*(from community intel, Jan 2026)*
 ```
 
 ### Example 4: On-demand refresh
@@ -271,17 +269,15 @@ Skill: [Detects --refresh flag, forces refresh regardless of cache status]
 Skill: "Refreshing community intel - this takes about 60 seconds."
 Skill: [Runs refresh, reads firmware.md + verified-intel.md]
 
-[Answers with freshly updated community data, no cache footer needed]
+[Answers with freshly updated community data and inline community attribution when relevant]
 ```
 
-### Example 5: Upgrade mode
+### Example 5: Optional manual sync report
 
 ```text
 User: /tech-support --upgrade
 
-Skill: [Detects --upgrade flag, delegates to community intel workflow]
-Skill: [Runs extract command, gets 3 new findings]
-Skill: [Auto-accepts all findings, appends to verified-intel.md, records hashes]
-Skill: "Auto-accepted 3 new findings across 2 topics."
+Skill: [Detects --upgrade flag, runs shared workflow in sync-report mode]
+Skill: [Refreshes + auto-promotes findings]
+Skill: "Community intel sync complete for /tech-support. Auto-promoted 3 findings across 2 topics."
 ```
-
