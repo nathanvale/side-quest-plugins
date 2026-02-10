@@ -1,6 +1,6 @@
 # How the Claude Code Hooks Community Intelligence System Works
 
-*Accumulative community knowledge with human curation - never loses verified findings.*
+*Accumulative community knowledge with auto-accept upgrades - never loses verified findings.*
 
 ---
 
@@ -13,13 +13,13 @@ Two challenges:
 1. **7-day window is lossy** - Each refresh overwrites the previous one. Important findings (community patterns, confirmed workarounds) vanish when they age out of the search window.
 2. **Unverified web content in trusted context** - Raw community data auto-injected alongside hand-authored reference files creates prompt injection risk.
 
-## The Solution: Staged Refresh + Human Curation
+## The Solution: Staged Refresh + Auto-Accept Upgrades
 
 The system has three layers:
 
 1. **Background hook** - A SessionStart hook silently refreshes the cache every 7 days using `@side-quest/community-intel-cache`. You never see it, you never wait for it.
 2. **Verified intel** - Accepted community findings live in `references/verified-intel.md`, committed to git. This is the only community data loaded during normal Q&A.
-3. **Upgrade flow** - Run `/hooks --upgrade` to review staged findings, accept or reject them. Accepted findings are appended to verified-intel.md and persist forever.
+3. **Upgrade flow** - Run `/hooks --upgrade` to auto-accept all staged findings into verified-intel.md. Signal-to-noise is controlled upstream via well-tuned `community-intel.json` topics, so manual per-finding curation is unnecessary friction.
 
 ---
 
@@ -43,16 +43,39 @@ The user passes `--refresh` (e.g., `/hooks --refresh why isn't my hook firing?`)
 
 ## The Architecture
 
+### Shared Workflow (symlink-based)
+
+The community intel lifecycle (Steps 0, 1, and 5) is defined once in the research plugin and shared via symlinks:
+
+```
+plugins/
+  research/
+    skills/
+      community-intel/
+        SKILL.md                    <-- canonical shared workflow (single source of truth)
+
+  claude-code/
+    shared/
+      community-intel-workflow.md   <-- symlink -> ../../research/skills/community-intel/SKILL.md
+    skills/hooks/
+      SKILL.md                      <-- delegates to shared workflow, owns Steps 2-4
+```
+
+At marketplace install time, Claude Code follows symlinks and copies the content into each plugin's cache. This gives DRY authoring with self-contained runtime. The hooks skill's SKILL.md contains a config table (SKILL_NAME, CACHE_DIR, CONFIG_PATH, VERIFIED_INTEL_PATH, SMART_REFRESH_KEYWORDS) and a delegation block that reads the shared workflow. If the research plugin wasn't present at install time, the skill gracefully skips community intel and answers from reference files only.
+
 ### Normal Q&A Flow
 
 ```
 User invokes /hooks [--refresh] [question]
     |
     v
-Step 0: Parse --refresh / --upgrade flags
+Delegation: Read shared/community-intel-workflow.md
     |
     v
-Step 1a: Read cache/last-updated.json
+Step 0: Parse --refresh / --upgrade flags (shared workflow)
+    |
+    v
+Step 1a: Read cache/last-updated.json (shared workflow)
     |
     +-- FORCE_REFRESH?  ---------> Refresh (on-demand)
     |
@@ -67,6 +90,9 @@ Step 1d: Read references/verified-intel.md (curated, trusted)
     |
     v
 Step 1f: Check for staged findings, nudge if new ones available
+    |
+    v
+Return to hooks SKILL.md
     |
     v
 Steps 2-4: Classify, read references, answer
@@ -95,23 +121,28 @@ Write cache/staged-intel.md + cache/staged-raw.json + cache/last-updated.json
 Done (next check in 3-7 days based on success ratio)
 ```
 
-### Upgrade Flow
+### Upgrade Flow (Auto-Accept)
 
 ```
 User: /hooks --upgrade
     |
     v
+Delegation: Read shared/community-intel-workflow.md -> Step 5
+    |
+    v
 Extract unreviewed findings from staged-raw.json
     |
     v
-Present batch summary (numbered list)
+Auto-accept ALL findings (no manual curation)
     |
     v
-User picks: "All", "None", or "1,3,4"
+Append to references/verified-intel.md
     |
     v
-Accepted -> appended to references/verified-intel.md (git-committed)
-All decisions -> recorded in cache/reviewed-hashes.json (prevents re-surfacing)
+Record hashes via: bunx ... review --hashes <comma-separated>
+    |
+    v
+"Auto-accepted X new findings across Y topics."
 ```
 
 ---
@@ -133,6 +164,10 @@ Seven reference files under `skills/hooks/references/` cover the complete hooks 
 | `hooks-in-plugins.md` | Plugin hooks, skill hooks, agent hooks |
 
 These are the source of truth. They're written from the official Claude Code documentation and don't change unless the hooks API changes.
+
+### `shared/community-intel-workflow.md` - The shared workflow
+
+A symlink to `../../research/skills/community-intel/SKILL.md`. Contains the canonical community intel lifecycle (Steps 0, 1, and 5) used by all knowledge-bank plugins. The hooks SKILL.md delegates to this file, passing config values from its config table.
 
 ### `hooks/hooks.json` - The background trigger
 
@@ -186,7 +221,9 @@ The refresh interval scales:
 
 ### `skills/hooks/SKILL.md` - The consumer
 
-The skill's Step 0 parses flags (`--refresh`, `--upgrade`). Normal Q&A loads `references/verified-intel.md` (curated), not staged data. A footer nudge appears when unreviewed staged findings exist. The `--upgrade` flow lets you batch-review findings.
+The skill delegates Steps 0, 1, and 5 to the shared community intel workflow via `shared/community-intel-workflow.md`. A config table provides plugin-specific values (SKILL_NAME, CACHE_DIR, CONFIG_PATH, VERIFIED_INTEL_PATH, SMART_REFRESH_KEYWORDS). Steps 2-4 (classify, read references, synthesize) remain in the hooks SKILL.md because they're 100% domain-specific.
+
+If the shared workflow file is missing (research plugin wasn't installed), the skill skips community intel gracefully and answers from reference files only.
 
 ### `references/verified-intel.md` - Permanent knowledge
 
@@ -212,13 +249,16 @@ The original skill prompted users with "Community intel is refreshing. Want to w
 2. **ADHD-hostile** - A 90-second "wait for it" path with no progress feedback is a focus killer
 3. **"Come back later" pattern** - The "answer now" path suggested trying again later, which meant the user might never get community data
 
-### Current design (v2): Silent by default, smart when it matters
+### Previous design (v2): Silent refresh + manual curation
 
-The three-mode system eliminates the prompt entirely:
+The three-mode system eliminated the cache prompt. The upgrade flow presented findings and asked the user to pick which ones to accept. This worked but added unnecessary friction - per-finding triage is ADHD-hostile when signal-to-noise is already controlled upstream.
 
-- Most questions work fine with slightly stale data (silent mode)
-- Critical questions (troubleshooting) get auto-refreshed (smart mode)
-- Users who want explicit control have `--refresh` (on-demand mode)
+### Current design (v3): Silent refresh + auto-accept + shared workflow
+
+The current design adds two improvements:
+
+1. **Auto-accept upgrades** - `/hooks --upgrade` accepts all extracted findings automatically. Signal-to-noise is tuned via `community-intel.json` topics. The LLM filters relevance at query time, so 1-2 slightly off-topic findings don't matter.
+2. **Shared workflow via symlinks** - The community intel lifecycle is defined once in the research plugin and shared via symlinks. Adding community intel to a new skill takes ~5 minutes (symlink + 25-line config block) instead of copying 170 lines.
 
 ---
 
@@ -269,12 +309,12 @@ Day 0:   First session -> no cache -> async refresh -> staged files written (7d 
 Day 1:   Session start -> cache fresh -> exit <1ms
 Day 1:   /hooks "hook not firing?" -> answers from reference files + verified-intel.md
          Footer: "3 new community findings available. Run /hooks --upgrade to review."
-Day 1:   /hooks --upgrade -> reviews findings -> 2 accepted to verified-intel.md
+Day 1:   /hooks --upgrade -> auto-accepts all findings -> appended to verified-intel.md
 Day 4:   Session start -> cache fresh -> exit <1ms
 Day 7:   Session start -> cache stale -> async refresh -> new staged files
 Day 7:   /hooks "hook not firing" before hook finishes
          -> stale + troubleshooting -> smart refresh (~60s) -> answer
-Day 8:   /hooks --upgrade -> reviews new batch of findings
+Day 8:   /hooks --upgrade -> auto-accepts new batch of findings
 ...
 ```
 

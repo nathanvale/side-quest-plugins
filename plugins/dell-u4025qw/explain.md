@@ -1,6 +1,6 @@
 # How the Dell U4025QW Cache Refresh Hook Works
 
-*A background process that keeps community knowledge fresh without you ever noticing.*
+*A background process that keeps community knowledge fresh with auto-accept upgrades.*
 
 ---
 
@@ -16,7 +16,7 @@ The system has three layers:
 
 1. **Background hook** - A SessionStart hook silently refreshes the cache every 30 days. You never see it, you never wait for it.
 2. **Skill-level intelligence** - When the skill is invoked, it decides whether the cached data is good enough or whether a fresh refresh is needed, based on what you're asking about.
-3. **Verified intel** - A `--upgrade` mode lets you batch-review staged findings and accept them into a permanent `verified-intel.md` file. Accepted findings persist forever in git. The skill only loads verified content during normal Q&A.
+3. **Verified intel** - A `--upgrade` mode auto-accepts all staged findings into a permanent `verified-intel.md` file. Accepted findings persist forever in git. The skill only loads verified content during normal Q&A.
 
 ---
 
@@ -38,22 +38,47 @@ The user passes `--refresh` (e.g., `/tech-support --refresh what firmware should
 
 ### Upgrade Mode
 
-The user runs `/tech-support --upgrade` to review staged community findings. The skill extracts unreviewed findings from the cache, presents them as a numbered list, and lets you accept or reject each one. Accepted findings are appended to `references/verified-intel.md` (git-committed, permanent). Rejected findings are recorded so they don't re-surface.
+The user runs `/tech-support --upgrade` to auto-accept all staged community findings. The skill extracts unreviewed findings from the cache and automatically appends them to `references/verified-intel.md`. Signal-to-noise is controlled upstream via well-tuned `community-intel.json` topics, so manual per-finding curation is unnecessary friction.
 
 ---
 
 ## The Architecture
 
+### Shared Workflow (symlink-based)
+
+The community intel lifecycle (Steps 0, 1, and 5) is defined once in the research plugin and shared via symlinks:
+
+```text
+plugins/
+  research/
+    skills/
+      community-intel/
+        SKILL.md                    <-- canonical shared workflow (single source of truth)
+
+  dell-u4025qw/
+    shared/
+      community-intel-workflow.md   <-- symlink -> ../../research/skills/community-intel/SKILL.md
+    skills/dell-u4025qw/
+      SKILL.md                      <-- delegates to shared workflow, owns Steps 2-4
+```
+
+At marketplace install time, Claude Code follows symlinks and copies the content into each plugin's cache. This gives DRY authoring with self-contained runtime. The tech-support skill's SKILL.md contains a config table (SKILL_NAME, CACHE_DIR, CONFIG_PATH, VERIFIED_INTEL_PATH, SMART_REFRESH_KEYWORDS) and a delegation block that reads the shared workflow. If the research plugin wasn't present at install time, the skill gracefully skips community intel and answers from reference files only.
+
+### Normal Q&A Flow
+
 ```text
 User invokes /tech-support [--refresh] [--upgrade] [question]
     |
     v
-Step 0: Parse --refresh and --upgrade flags
+Delegation: Read shared/community-intel-workflow.md
     |
-    +-- UPGRADE_MODE? ----------> Step 5: Upgrade Flow
+    +-- UPGRADE_MODE? ----------> Step 5: Auto-Accept Upgrade Flow
     |
     v
-Step 1a: Read cache/last-updated.json
+Step 0: Parse --refresh flag (shared workflow)
+    |
+    v
+Step 1a: Read cache/last-updated.json (shared workflow)
     |
     +-- FORCE_REFRESH?  ---------> Refresh (on-demand)
     |
@@ -71,6 +96,9 @@ Step 1e: Set cache age footer note
     |
     v
 Step 1f: Check for unreviewed staged findings (nudge)
+    |
+    v
+Return to dell SKILL.md
     |
     v
 Steps 2-4: Classify, read references, answer
@@ -105,9 +133,37 @@ Write cache/staged-intel.md + cache/staged-raw.json + cache/last-updated.json (a
 Done (next check in 7-30 days based on success ratio)
 ```
 
+### Upgrade Flow (Auto-Accept)
+
+```text
+User: /tech-support --upgrade
+    |
+    v
+Delegation: Read shared/community-intel-workflow.md -> Step 5
+    |
+    v
+Extract unreviewed findings from staged-raw.json
+    |
+    v
+Auto-accept ALL findings (no manual curation)
+    |
+    v
+Append to references/verified-intel.md
+    |
+    v
+Record hashes via: bunx ... review --hashes <comma-separated>
+    |
+    v
+"Auto-accepted X new findings across Y topics."
+```
+
 ---
 
 ## The Files
+
+### `shared/community-intel-workflow.md` - The shared workflow
+
+A symlink to `../../research/skills/community-intel/SKILL.md`. Contains the canonical community intel lifecycle (Steps 0, 1, and 5) used by all knowledge-bank plugins. The tech-support SKILL.md delegates to this file, passing config values from its config table.
 
 ### `hooks/hooks.json` - The background trigger
 
@@ -177,13 +233,13 @@ The refresh interval scales:
 
 ### `skills/dell-u4025qw/SKILL.md` - The consumer
 
-The skill's Step 0 parses the `--refresh` and `--upgrade` flags. Step 1 reads the cache metadata, decides whether to refresh (using the decision table), loads verified intel, and sets a cache age footer note. Step 1f checks for unreviewed staged findings and appends a nudge footer. The skill never prompts the user about cache status - it either proceeds silently or refreshes inline with a brief "this takes about 60 seconds" message.
+The skill delegates Steps 0, 1, and 5 to the shared community intel workflow via `shared/community-intel-workflow.md`. A config table provides plugin-specific values (SKILL_NAME, CACHE_DIR, CONFIG_PATH, VERIFIED_INTEL_PATH, SMART_REFRESH_KEYWORDS). Steps 2-4 (classify, read references, synthesize) remain in the dell SKILL.md because they're 100% domain-specific.
 
-If the cache is missing or the refresh fails, the skill proceeds with reference files only. No error, no "come back later," just graceful degradation.
+If the shared workflow file is missing (research plugin wasn't installed), the skill skips community intel gracefully and answers from reference files only.
 
 ### `references/verified-intel.md` - Curated community knowledge
 
-Reviewed and accepted findings live here permanently. This file is git-committed and loaded as trusted reference material during normal Q&A. It grows over time as you run `--upgrade` and accept findings.
+Reviewed and accepted findings live here permanently. This file is git-committed and loaded as trusted reference material during normal Q&A. It grows over time as you run `--upgrade` and auto-accept findings.
 
 ### Cache files (gitignored)
 
@@ -206,21 +262,16 @@ The original skill prompted users with "Community intel is refreshing. Want to w
 2. **ADHD-hostile** - A 90-second "wait for it" path with no progress feedback is a focus killer
 3. **"Come back later" pattern** - The "answer now" path suggested trying again later, which meant the user might never get community data
 
-### Previous design (v2): Auto-inject all community intel
+### Previous design (v2): Silent refresh + manual curation
 
-The background refresh worked well, but all community findings were automatically injected into the skill's context. Problems:
+The background refresh worked well, but the upgrade flow presented findings and asked the user to pick which ones to accept. This added unnecessary friction - per-finding triage is ADHD-hostile when signal-to-noise is already controlled upstream.
 
-1. **30-day window is lossy** - Each refresh overwrites the previous one. Important findings vanish when they age out.
-2. **Prompt injection risk** - Unverified web content auto-injected into trusted context.
+### Current design (v3): Silent refresh + auto-accept + shared workflow
 
-### Current design (v3): Silent refresh + verified intel + upgrade mode
+The current design adds two improvements:
 
-The three-layer system addresses all issues:
-
-- Background refresh gathers staged findings silently
-- Normal Q&A uses only verified (human-reviewed) intel
-- `--upgrade` mode provides a batch review workflow for curating findings
-- Verified intel accumulates permanently in git
+1. **Auto-accept upgrades** - `/tech-support --upgrade` accepts all extracted findings automatically. Signal-to-noise is tuned via `community-intel.json` topics. The LLM filters relevance at query time, so 1-2 slightly off-topic findings don't matter.
+2. **Shared workflow via symlinks** - The community intel lifecycle is defined once in the research plugin and shared via symlinks. Adding community intel to a new skill takes ~5 minutes (symlink + 25-line config block) instead of copying 170 lines.
 
 ---
 
@@ -269,12 +320,8 @@ Day 15:  /tech-support "my monitor disconnects" -> stale? no -> silent mode
 Day 30:  Session start -> cache stale -> async refresh -> new cache
 Day 30:  /tech-support "my monitor disconnects" before hook finishes
          -> stale + troubleshooting -> smart refresh (~60s) -> answer
-Day 31:  /tech-support --upgrade
-         -> shows 12 new findings -> accept 8, reject 4
-         -> 8 findings appended to verified-intel.md
-Day 60:  /tech-support --upgrade
-         -> shows 6 new findings (previous 8 are in verified-intel, 4 rejected)
-         -> accept 3, reject 3
+Day 31:  /tech-support --upgrade -> auto-accepts all findings -> appended to verified-intel.md
+Day 60:  /tech-support --upgrade -> auto-accepts new findings
 ...
 ```
 
