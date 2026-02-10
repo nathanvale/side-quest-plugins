@@ -191,6 +191,16 @@ bun version:gen --bump <patch|minor|major> --summary "<description>"
 
 Never run bare `changeset` or `bun version:gen` without flags in agent context — it will hang waiting for interactive input.
 
+### "Version PR not auto-merging" / "Auto-merge not triggering"
+
+1. Load `references/ci-cd-pipelines.md` and `references/troubleshooting.md`
+2. The template uses a GitHub App token (not `GITHUB_TOKEN`) in `publish.yml` and `version-packages-auto-merge.yml` to bypass GitHub's anti-recursion policy
+3. **Required repo settings:**
+   - Repository variable `APP_ID` -- the GitHub App's App ID
+   - Repository secret `APP_PRIVATE_KEY` -- the GitHub App's private key
+4. Check: `gh variable list` and `gh secret list` to verify both are configured
+5. **Do NOT prescribe 1Password (`OP_SERVICE_ACCOUNT_TOKEN`) for CI** -- the template uses direct `vars.APP_ID` + `secrets.APP_PRIVATE_KEY` since PR #60
+
 ### "Tests pass locally but fail in CI"
 
 1. Load `references/testing.md` and `references/ci-cd-pipelines.md`
