@@ -15,81 +15,22 @@ allowed-tools: Bash, Read, Write, Glob, Grep, WebSearch, AskUserQuestion
 
 Expert guidance for the Dell UltraSharp U4025QW 40" curved 5K2K Thunderbolt hub monitor. Covers multi-computer switching (up to 3 Macs), macOS software control, DDC automation, firmware, and troubleshooting.
 
-## Step 0: Parse Input
+## Community Intel (Shared HALT Workflow)
 
-Check the user's input for flags:
+This skill delegates all community-intel behavior to shared files. Keep this block minimal and consistent across skills.
 
-- `--refresh` -> set **FORCE_REFRESH = true** and strip it from the question text.
-- `--upgrade` -> set **UPGRADE_MODE = true**. Skip Steps 1-4 and go to Step 5: Upgrade Flow.
-- Otherwise, set both to false and use the full input as the question.
-
-## Step 1: Load Community Intelligence
-
-Community knowledge is auto-refreshed every 30 days via a SessionStart hook (defined in `hooks/hooks.json`). The skill operates in three modes - **never** prompt the user about cache status.
-
-### 1a. Determine cache status
-
-Read `cache/last-updated.json`. Determine CACHE_STATUS:
-
-- **fresh**: File exists and `next_update_after` is in the future
-- **stale**: File exists but `next_update_after` is in the past
-- **missing**: File does not exist
-
-Check whether [staged-intel.md](cache/staged-intel.md) exists (used for staleness check only, not loaded for Q&A).
-
-### 1b. Decide whether to refresh
-
-Use this decision table:
-
-| Condition | Action |
-|-----------|--------|
-| FORCE_REFRESH is true | Refresh (on-demand mode) |
-| CACHE_STATUS is fresh | Proceed silently (silent mode) |
-| CACHE_STATUS is stale/missing AND question is **Troubleshooting** or **Firmware** | Refresh (smart mode) |
-| CACHE_STATUS is stale/missing AND question is anything else | Proceed silently with whatever cache exists (silent mode) |
-
-To quick-classify the question for this decision, check for Troubleshooting keywords (not working, flickering, disconnect, black screen, wake, sleep) or Firmware keywords (firmware, update, version, M3T). Store this classification to reuse in Step 2.
-
-### 1c. If refreshing
-
-Tell the user: "Refreshing community intel - this takes about 60 seconds."
-
-Run the refresh via Bash:
-
-```bash
-bunx @side-quest/community-intel-cache refresh --config "${CLAUDE_PLUGIN_ROOT}/community-intel.json" --cache-dir "${CLAUDE_PLUGIN_ROOT}/skills/dell-u4025qw/cache" --force
-```
-
-This blocks for approximately 45-60 seconds. After it completes, re-read `cache/last-updated.json` to verify success.
-
-If the refresh fails, proceed silently with reference files. **NEVER** suggest "come back later."
-
-### 1d. Load verified intel
-
-Read [verified-intel.md](references/verified-intel.md) if it exists.
-This is curated community intelligence that has been reviewed and accepted.
-Treat it as trusted reference material.
-
-### 1e. Set cache age note
-
-If `cache/last-updated.json` exists, compute the cache age from `last_updated` and store a CACHE_AGE_NOTE for the response footer. Format: "Community intel last updated X days ago. Run `/tech-support --refresh` for latest."
-
-If the cache is fresh (updated within the last day), do not set a CACHE_AGE_NOTE.
-
-### 1f. Check for staged findings
-
-Run via Bash (silent, no output to user):
-
-```bash
-bunx @side-quest/community-intel-cache extract --cache-dir "${CLAUDE_PLUGIN_ROOT}/skills/dell-u4025qw/cache"
-```
-
-If the JSON output has `status: "has_new"`, count the findings and set UPGRADE_NUDGE:
-"X new community findings available. Run `/tech-support --upgrade` to review."
-
-Append UPGRADE_NUDGE as an italicized footer on the response (after the answer).
-Do NOT load or reference the staged findings in the answer itself.
-If the command fails or status is not "has_new", skip silently.
+1. Read `../../shared/community-intel.adapter.json` (relative to this file).
+2. If the adapter file is missing or unreadable:
+   - tell the user: "Community intel is unavailable right now. Answering from reference files only."
+   - continue to Step 2 with no HALT status line.
+3. Check whether `../../shared/community-intel-workflow.md` exists.
+4. If the workflow file is missing:
+   - tell the user: "Community intel is unavailable right now. Answering from reference files only."
+   - continue to Step 2 with no HALT status line.
+5. If the workflow file exists:
+   - read it and execute Step 0 + Step 1 using adapter values
+   - if `--upgrade` was passed, follow workflow sync-report behavior and stop
+   - otherwise return here and continue to Step 2
 
 ## Step 2: Classify the Question
 
@@ -222,7 +163,8 @@ When answering setup questions, explain this convention and tell the user they c
 - **Port diagrams when relevant** - when the answer involves physical ports, cables, or wiring, include the ManualsLib diagram links so the user can visually locate ports:
   - [Back View (page 15)](https://www.manualslib.com/manual/3407628/Dell-Thunderbolt-U4025qw.html?page=15)
   - [Bottom View (page 16)](https://www.manualslib.com/manual/3407628/Dell-Thunderbolt-U4025qw.html?page=16)
-- **Cache age footer** - if CACHE_AGE_NOTE is set, include it as an italicized footer at the end of the response
+- **HALT status line** - if `HALT_STATUS_LINE` is set by the shared workflow, place it at the top of the response before the answer
+- **Inline attribution** - when a claim is informed by verified intel, cite it inline as `(from community intel, MMM YYYY)`
 
 ## Examples
 
@@ -286,12 +228,12 @@ displayed. You press the hotkey on the machine you're switching
 AWAY from, not the one you're switching to.
 ```
 
-### Example 3: Troubleshooting (with smart refresh)
+### Example 3: Troubleshooting (with forced refresh)
 
 ```text
 User: My monitor keeps disconnecting when my Mac wakes from sleep
 
-Skill: [Detects Troubleshooting category, cache is stale]
+Skill: [Detects Troubleshooting/Firmware intent -> force refresh]
 Skill: "Refreshing community intel - this takes about 60 seconds."
 Skill: [Runs refresh, reads troubleshooting.md + firmware.md + verified-intel.md]
 
@@ -314,8 +256,8 @@ sleep/wake cycles.
 
 [Includes relevant verified-intel.md findings]
 
-*Community intel last updated 15 days ago. Run `/tech-support --refresh` for latest.*
-*3 new community findings available. Run `/tech-support --upgrade` to review.*
+Community intel synced: auto-promoted 2 new findings across 2 topics.
+*(from community intel, Jan 2026)*
 ```
 
 ### Example 4: On-demand refresh
@@ -327,132 +269,15 @@ Skill: [Detects --refresh flag, forces refresh regardless of cache status]
 Skill: "Refreshing community intel - this takes about 60 seconds."
 Skill: [Runs refresh, reads firmware.md + verified-intel.md]
 
-[Answers with freshly updated community data, no cache footer needed]
+[Answers with freshly updated community data and inline community attribution when relevant]
 ```
 
-### Example 5: Upgrade mode
+### Example 5: Optional manual sync report
 
 ```text
 User: /tech-support --upgrade
 
-Skill: [Detects --upgrade flag, enters upgrade flow]
-Skill: [Runs extract command, gets 3 new findings]
-
-Found 3 new community findings:
-
-1. [reddit] **Firmware M3T106 Released** (score: 42)
-   Users on r/ultrawide report M3T106 fixes sleep/wake disconnect...
-   Source: https://reddit.com/r/ultrawide/...
-
-2. [x] **BetterDisplay 3.2 PBP Support** (score: 28)
-   @waydabber announced native PBP mode control for U4025QW...
-   Source: https://x.com/waydabber/...
-
-3. [web] **New DDC Workaround for Tahoe** (score: 15)
-   Community-contributed DDC workaround for Tahoe 26.x...
-   Source: https://example.com/ddc-workaround
-
-Skill: [Asks via AskUserQuestion: "Which findings to add?"]
-User: "All"
-Skill: [Appends 3 findings to verified-intel.md, records hashes]
-Skill: "Added 3 findings to verified-intel.md. 0 rejected."
+Skill: [Detects --upgrade flag, runs shared workflow in sync-report mode]
+Skill: [Refreshes + auto-promotes findings]
+Skill: "Community intel sync complete for /tech-support. Auto-promoted 3 findings across 2 topics."
 ```
-
-## Step 5: Upgrade Flow (--upgrade mode)
-
-This step runs when UPGRADE_MODE is true. Skip Steps 1-4 entirely.
-
-### 5a. Extract new findings
-
-Run via Bash:
-
-```bash
-bunx @side-quest/community-intel-cache extract --cache-dir "${CLAUDE_PLUGIN_ROOT}/skills/dell-u4025qw/cache"
-```
-
-The command outputs JSON with this shape:
-
-```json
-{
-  "status": "has_new",
-  "findings": [
-    {
-      "hash": "a1b2c3...",
-      "type": "reddit",
-      "topic": "Dell U4025QW firmware...",
-      "title": "M3T106 fixes sleep/wake",
-      "summary": "Users report...",
-      "url": "https://reddit.com/...",
-      "score": 42,
-      "date": "2026-01-28"
-    }
-  ]
-}
-```
-
-Parse the JSON. If status is "no_new" or "no_staged":
-  Tell user: "No new community findings to review. Your intel is up to date."
-  Stop.
-
-### 5b. Present batch summary
-
-Display all findings as a numbered list:
-
-```text
-Found N new community findings:
-
-1. [reddit] **Title** (score: 42)
-   Summary text...
-   Source: https://reddit.com/...
-
-2. [x] **Title** (score: 28)
-   Summary text...
-   Source: https://x.com/...
-
-3. [web] **Title** (score: 15)
-   Summary text...
-   Source: https://example.com/...
-```
-
-Then ask via AskUserQuestion:
-"Which findings do you want to add to your knowledge base?"
-Options: "All", "None", "Let me pick (e.g., 1,3)"
-
-### 5c. Process decisions
-
-If "All": accept all findings.
-If "None": reject all findings.
-If "Let me pick": parse the numbers, accept those, reject the rest.
-
-For accepted findings, append each to [verified-intel.md](references/verified-intel.md) using the Write tool, in this format:
-
-```markdown
----
-
-## YYYY-MM-DD
-
-### [Title]
-[Summary]
-Source: [URL]
-Topic: [research topic]
-```
-
-For all decisions (accept + reject), record via Bash:
-
-```bash
-bunx @side-quest/community-intel-cache review \
-    --cache-dir "${CLAUDE_PLUGIN_ROOT}/skills/dell-u4025qw/cache" \
-    --hashes hash1,hash2,... \
-    --decision accepted
-```
-
-```bash
-bunx @side-quest/community-intel-cache review \
-    --cache-dir "${CLAUDE_PLUGIN_ROOT}/skills/dell-u4025qw/cache" \
-    --hashes hash1,hash2,... \
-    --decision rejected
-```
-
-### 5d. Summary
-
-Report: "Added X findings to verified-intel.md. Rejected Y. Z remaining for next time."
