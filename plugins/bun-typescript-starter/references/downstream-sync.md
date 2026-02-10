@@ -68,9 +68,60 @@ ignore_path_pattern: |
 
 This syncs only infrastructure files (workflows, configs, hooks) while ignoring your project-specific code.
 
-## Strategy 2: Git Remote Upstream
+## Strategy 2: Selective File Checkout (Recommended for Manual Sync)
 
-Manual approach using git remotes.
+Precise control over which files to sync, skipping project-specific divergences.
+
+### Setup (one-time)
+
+```bash
+git remote add template git@github.com:nathanvale/bun-typescript-starter.git
+```
+
+### Sync Workflow
+
+```bash
+# 1. Fetch latest template
+git fetch template main
+
+# 2. Compare infra files only (skip src/, tests/, package.json)
+git diff main..template/main --stat -- '.github/' '.husky/' '.changeset/config.json'
+
+# 3. Review the full diff to understand changes
+git diff main..template/main -- '.github/' '.husky/'
+
+# 4. Create a sync branch
+git checkout -b chore/sync-template-upstream
+
+# 5. Checkout specific files from template
+git checkout template/main -- \
+  .github/workflows/pr-quality.yml \
+  .github/workflows/publish.yml \
+  .github/workflows/version-packages-auto-merge.yml \
+  .husky/pre-push
+
+# 6. Delete files removed in template
+git rm .github/workflows/release.yml  # if present
+
+# 7. Commit, push, PR
+git commit -m "chore: sync workflow and husky files from template"
+git push -u origin chore/sync-template-upstream
+gh pr create --title "chore: sync with upstream template"
+```
+
+### Common Intentional Divergences (Skip These)
+
+| File | Reason |
+|------|--------|
+| `.changeset/config.json` | Has real repo name vs template `{{PLACEHOLDER}}` |
+| `scripts/setup.ts` | Template scaffolding, not needed in real projects |
+| `node-compat.yml` | Remove if repo has Bun-only dependencies |
+| `package.json` | Project-specific deps, scripts, exports |
+| `src/**`, `tests/**` | Project code |
+
+## Strategy 3: Git Remote Upstream (Full Merge)
+
+Merges all template changes. Use when divergences are minimal.
 
 ### Setup (one-time)
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-17 GitHub Actions workflows organized into quality gates, release automation, and security scanning.
+15 GitHub Actions workflows organized into quality gates, release automation, and security scanning.
 
 ## Workflow Inventory
 
@@ -14,15 +14,13 @@
 | `pr-title.yml` | PR (opened/edited) | Validate PR title follows conventional commit format |
 | `commitlint.yml` | PR + push to main | Validate commit messages |
 | `package-hygiene.yml` | PR + push to main | publint, are-the-types-wrong, dry-pack artifact |
-| `node-compat.yml` | PR (src/config changes) | Verify build output works on Node.js |
 | `workflow-lint.yml` | PR (workflow changes) | actionlint + schema validation on workflow YAML |
 
 ### Release Automation
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `publish.yml` | Push to main + manual | **Primary release**: version PR or publish (Changesets) |
-| `release.yml` | Manual only | Full release with SBOM generation |
+| `publish.yml` | Push to main + manual | **Primary release**: version PR, publish, pre-release, snapshot (consolidated) |
 | `pre-mode.yml` | Manual only | Toggle Changesets pre-release mode (beta/rc/next) |
 | `alpha-snapshot.yml` | Daily cron + manual | Publish alpha snapshots when in pre-mode |
 | `tag-assets.yml` | Tag push (`v*.*.*`) | Create GitHub release with SBOM |
@@ -71,7 +69,7 @@ Four intents via `workflow_dispatch`:
 
 Uses OIDC trusted publishing (npm 11.6+ on Node 24). Falls back to `NPM_TOKEN` secret.
 
-**GitHub App token (anti-recursion bypass)**: `publish.yml` uses a 1Password-sourced GitHub App token instead of `GITHUB_TOKEN` for all git operations. This is critical because `GITHUB_TOKEN` pushes don't trigger `pull_request_target` events (GitHub's anti-recursion policy), which would prevent `version-packages-auto-merge.yml` from firing on version packages PRs. The App token bypasses this, completing the automated release chain: publish -> version PR -> auto-merge -> publish.
+**GitHub App token (anti-recursion bypass)**: `publish.yml` uses a GitHub App token (via `vars.APP_ID` + `secrets.APP_PRIVATE_KEY`) instead of `GITHUB_TOKEN` for all git operations. This is critical because `GITHUB_TOKEN` pushes don't trigger `pull_request_target` events (GitHub's anti-recursion policy), which would prevent `version-packages-auto-merge.yml` from firing on version packages PRs. The App token bypasses this, completing the automated release chain: publish -> version PR -> auto-merge -> publish.
 
 **Registry conflict fix**: Removes `bunfig.toml` registry entry that conflicts with npm's auth:
 ```yaml
@@ -81,20 +79,9 @@ Uses OIDC trusted publishing (npm 11.6+ on Node 24). Falls back to `NPM_TOKEN` s
 
 **Note**: Uses Linux `sed -i` syntax (no empty string arg) since this runs on `ubuntu-latest`. macOS BSD sed requires `sed -i ''` instead.
 
-### `release.yml` (Full Release)
-
-Manual-only, elevated permissions via GitHub App:
-1. Quality check (lint + types)
-2. Build
-3. SBOM generation (CycloneDX via `anchore/sbom-action`)
-4. Changesets publish with provenance
-5. GitHub release creation
-
-Uses 1Password (`OP_SERVICE_ACCOUNT_TOKEN`) to load GitHub App credentials for the `chatline-changesets-bot`.
-
 ## Security Hardening
 
-All 17 workflows follow these patterns:
+All workflows follow these patterns:
 - **Harden Runner**: `step-security/harden-runner` with `egress-policy: audit`
 - **Pinned actions**: All action refs use full SHA hashes (not tags)
 - **Minimal permissions**: Each workflow declares only needed permissions
@@ -105,8 +92,36 @@ All 17 workflows follow these patterns:
 | Secret | Used By | Purpose |
 |--------|---------|---------|
 | `GITHUB_TOKEN` | Most workflows | Default GitHub token |
-| `NPM_TOKEN` | publish, release, alpha-snapshot | npm auth (fallback for OIDC) |
-| `OP_SERVICE_ACCOUNT_TOKEN` | publish, release, version-packages-auto-merge | 1Password GitHub App credentials |
+| `NPM_TOKEN` | publish, alpha-snapshot | npm auth (fallback for OIDC) |
+| `APP_PRIVATE_KEY` (secret) | publish, version-packages-auto-merge | GitHub App private key for anti-recursion token |
+| `APP_ID` (variable) | publish, version-packages-auto-merge | GitHub App ID for anti-recursion token |
+
+### Setting Up APP_ID and APP_PRIVATE_KEY
+
+Source from 1Password (the `chatline-changesets-bot` item):
+
+```bash
+# App ID (stored as GitHub variable, not secret)
+op item get "chatline-changesets-bot" --vault="API Credentials" --fields label="App ID" --reveal
+gh variable set APP_ID --repo <owner>/<repo> --body "<app-id>"
+
+# Private key -- MUST use --format json to avoid quote wrapping
+op item get "chatline-changesets-bot" --vault="API Credentials" \
+  --fields label=credential --reveal --format json \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['value'])" \
+  | gh secret set APP_PRIVATE_KEY --repo <owner>/<repo>
+```
+
+**PEM key gotcha**: `op item get --reveal` (without `--format json`) wraps multi-line values in double quotes, corrupting the PEM format. The `create-github-app-token` action then fails with `ERR_OSSL_UNSUPPORTED: DECODER routines::unsupported`. Always extract via `--format json` and parse the `value` field.
+
+### Removed Workflows
+
+These were present in earlier template versions but have been consolidated or removed:
+
+| Workflow | Disposition |
+|----------|-------------|
+| `release.yml` | Consolidated into `publish.yml` (handles all release intents) |
+| `node-compat.yml` | Removed -- downstream repos may keep if they need Node.js compat |
 
 ## Composite Actions
 
@@ -114,5 +129,4 @@ All 17 workflows follow these patterns:
 |--------|---------|
 | `standard-ci-env` | Sets `TZ=UTC` and `TF_BUILD=true` |
 | `setup-bun` | Installs Bun with dependency caching |
-| `setup-pnpm` | Installs pnpm + Node (for npm publish) |
 | `coverage-comment` | Posts sticky coverage comment on PRs |

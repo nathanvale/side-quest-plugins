@@ -370,12 +370,12 @@ Can be used as a drop-in replacement for the publish step if Changesets' publish
 ### Version PR opens but auto-merge never triggers
 
 - **Root cause**: `publish.yml` was using `GITHUB_TOKEN` for the changesets action. When changesets pushes to `changeset-release/main`, GitHub's anti-recursion policy prevents `GITHUB_TOKEN` pushes from triggering `pull_request_target` events. The `version-packages-auto-merge.yml` workflow never fires.
-- **Fix**: Replace `secrets.GITHUB_TOKEN` with a GitHub App token sourced from 1Password in `publish.yml`:
-  1. Add `OP_SERVICE_ACCOUNT_TOKEN` secret to the repo: `op item get <id> --vault="API Credentials" --fields label=credential --reveal | gh secret set OP_SERVICE_ACCOUNT_TOKEN`
-  2. Add 1Password load-secrets and create-github-app-token steps before the changesets action
-  3. Replace all `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` with `GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}`
+- **Fix**: Replace `secrets.GITHUB_TOKEN` with a GitHub App token in `publish.yml`:
+  1. Add repository variable `APP_ID` with your GitHub App's App ID
+  2. Add repository secret `APP_PRIVATE_KEY` with your GitHub App's private key
+  3. Use `actions/create-github-app-token` with `app-id: ${{ vars.APP_ID }}` and `private-key: ${{ secrets.APP_PRIVATE_KEY }}`
+  4. Replace all `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` with `GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}`
 - **Fixed in template** -- `publish.yml` now uses App token for all git operations
-- The `release.yml` already used this pattern; `publish.yml` was the only workflow still using `GITHUB_TOKEN`
 
 ### Pre-release versions leaking to stable
 
@@ -393,7 +393,7 @@ Can be used as a drop-in replacement for the publish step if Changesets' publish
 - `git tag` and `gh release create` are not idempotent — they fail if the tag/release already exists
 - **Fix:** Guard both with existence checks (`git rev-parse` for tags, `gh release view` for releases)
 - The pre-release path already had the tag check; stable path and `release.yml` were missing it
-- **Fixed in template** — ensure your `publish.yml` and `release.yml` use the idempotent pattern
+- **Fixed in template** -- ensure your `publish.yml` uses the idempotent pattern (`release.yml` was consolidated into `publish.yml`)
 
 ### NPM_TOKEN set but publish still fails with ENEEDAUTH or E404
 
