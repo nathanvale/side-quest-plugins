@@ -85,26 +85,19 @@ echo "Edit to add your API keys for enhanced research."
 
 ## Research Execution
 
-**IMPORTANT: The script handles API key detection automatically.** Run it and check the output to determine mode.
+The CLI tool runs automatically below via the `!` preprocessor. Its output is injected directly -- you do NOT need to run Bash yourself.
 
-**Step 1: Run the research script**
-```bash
-bunx --bun @side-quest/last-30-days "$ARGUMENTS" --emit=compact 2>&1
-```
+### CLI Research Output
 
-The script will automatically:
-- Detect available API keys
-- Show a promo banner if keys are missing (this is intentional marketing)
-- Run Reddit/X searches if keys exist
-- Signal if WebSearch is needed
+!`bunx --bun @side-quest/last-30-days "$ARGUMENTS" --emit=compact 2>&1`
 
-**Step 2: Check the output mode**
+### Check the output mode
 
-The script output will indicate the mode:
-- **"Mode: both"** or **"Mode: reddit-only"** or **"Mode: x-only"**: Script found results, WebSearch is supplementary
+The CLI output above will indicate the mode:
+- **"Mode: both"** or **"Mode: reddit-only"** or **"Mode: x-only"**: CLI found results, WebSearch is supplementary
 - **"Mode: web-only"**: No API keys, Claude must do ALL research via WebSearch
 
-**Step 3: Do WebSearch**
+### Supplement with WebSearch
 
 For **ALL modes**, do WebSearch to supplement (or provide all data in web-only mode).
 
@@ -136,12 +129,9 @@ For ALL query types:
   - If user says "ChatGPT image prompting", search for "ChatGPT image prompting"
   - Do NOT add "DALL-E", "GPT-4o", or other terms you think are related
   - Your knowledge may be outdated - trust the user's terminology
-- EXCLUDE reddit.com, x.com, twitter.com (covered by script)
+- EXCLUDE reddit.com, x.com, twitter.com (covered by CLI)
 - INCLUDE: blogs, tutorials, docs, news, GitHub repos
 - **DO NOT output "Sources:" list** - this is noise, we'll show stats at the end
-
-**Step 4: Wait for background script to complete**
-Use TaskOutput to get the script results before proceeding to synthesis.
 
 **Depth options** (passed through from user's command):
 - `--quick` - Faster, fewer sources (8-12 each)
