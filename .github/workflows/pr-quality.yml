@@ -78,10 +78,21 @@ jobs:
     name: All checks passed
     runs-on: ubuntu-latest
     needs: [lint, typecheck, lint-scripts]
+    if: always()
     timeout-minutes: 5
     steps:
-      - name: Aggregate result
-        run: echo "All prerequisite PR quality jobs succeeded." && exit 0
+      - name: Check all jobs
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" || "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "One or more required jobs failed or were cancelled"
+            echo
+            echo "Results:"
+            echo "  Lint: ${{ needs.lint.result }}"
+            echo "  Typecheck: ${{ needs.typecheck.result }}"
+            echo "  Lint Shell Scripts: ${{ needs.lint-scripts.result }}"
+            exit 1
+          fi
+          echo "All prerequisite PR quality jobs succeeded."
       - name: PR summary
         if: always()
         shell: bash
