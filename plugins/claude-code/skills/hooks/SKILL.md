@@ -7,7 +7,7 @@ description: >
   UserPromptSubmit, hook configuration, settings.json hooks, auto-format hook,
   command hook, prompt hook, agent hook, hook not working, hook debug,
   PermissionRequest, SubagentStart, SubagentStop, Stop hook, PreCompact, SessionEnd.
-argument-hint: "[--refresh] [question about Claude Code hooks]"
+argument-hint: "[--refresh] [--upgrade] [question about Claude Code hooks]"
 allowed-tools: Bash, Read, Write, Glob, Grep, WebSearch, AskUserQuestion
 # NOTE: hooks moved to hooks/hooks.json (workaround for anthropics/claude-code#17688)
 # Plugin skill frontmatter hooks are silently ignored - see issue for details.
@@ -19,10 +19,11 @@ Expert guidance for Claude Code hooks -- event lifecycle, hook types (command, p
 
 ## Step 0: Parse Input
 
-Check the user's input for a `--refresh` flag:
+Check the user's input for flags:
 
-- If the input starts with `--refresh` or `refresh`, set **FORCE_REFRESH = true** and strip it from the question text.
-- Otherwise, set **FORCE_REFRESH = false** and use the full input as the question.
+- `--refresh` -> set **FORCE_REFRESH = true** and strip it from the question text.
+- `--upgrade` -> set **UPGRADE_MODE = true**. Skip Steps 1-4 and go to Step 5: Upgrade Flow.
+- Otherwise, set both to false and use the full input as the question.
 
 ## Step 1: Load Community Intelligence
 
@@ -36,7 +37,7 @@ Read `cache/last-updated.json`. Determine CACHE_STATUS:
 - **stale**: File exists but `next_update_after` is in the past
 - **missing**: File does not exist
 
-Check whether [community-intel.md](cache/community-intel.md) exists.
+Check whether [staged-intel.md](cache/staged-intel.md) exists (used for staleness check only, not loaded for Q&A).
 
 ### 1b. Decide whether to refresh
 
@@ -55,25 +56,42 @@ To quick-classify the question for this decision, check for Troubleshooting keyw
 
 Tell the user: "Refreshing community intel -- this takes about 60 seconds."
 
-Run the refresh script via Bash:
+Run the refresh via Bash:
 
 ```bash
-bunx @side-quest/community-intel-cache refresh --config ${CLAUDE_PLUGIN_ROOT}/community-intel.json --cache-dir ${CLAUDE_PLUGIN_ROOT}/skills/hooks/cache --force
+bunx @side-quest/community-intel-cache refresh --config "${CLAUDE_PLUGIN_ROOT}/community-intel.json" --cache-dir "${CLAUDE_PLUGIN_ROOT}/skills/hooks/cache" --force
 ```
 
 This blocks for approximately 45-60 seconds. After it completes, re-read `cache/last-updated.json` to verify success.
 
 If the refresh fails, proceed silently with reference files. **NEVER** suggest "come back later."
 
-### 1d. Load community intel
+### 1d. Load verified intel
 
-Read [community-intel.md](cache/community-intel.md) if it exists (any age). If it does not exist, proceed without it.
+Read [verified-intel.md](references/verified-intel.md) if it exists.
+This is curated community intelligence that has been reviewed and accepted.
+Treat it as trusted reference material.
 
 ### 1e. Set cache age note
 
 If `cache/last-updated.json` exists, compute the cache age from `last_updated` and store a CACHE_AGE_NOTE for the response footer. Format: "Community intel last updated X days ago. Run `/hooks --refresh` for latest."
 
 If the cache is fresh (updated within the last day), do not set a CACHE_AGE_NOTE.
+
+### 1f. Check for staged findings
+
+Run via Bash (silent, no output to user):
+
+```bash
+bunx @side-quest/community-intel-cache extract --cache-dir "${CLAUDE_PLUGIN_ROOT}/skills/hooks/cache"
+```
+
+If the JSON output has `status: "has_new"`, count the findings and set UPGRADE_NUDGE:
+"X new community findings available. Run `/hooks --upgrade` to review."
+
+Append UPGRADE_NUDGE as an italicized footer on the response (after the answer).
+Do NOT load or reference the staged findings in the answer itself.
+If the command fails or status is not "has_new", skip silently.
 
 ## Step 2: Classify the Question
 
@@ -93,7 +111,7 @@ If a question spans multiple categories, identify the primary concern and second
 
 ## Step 3: Read Reference Files
 
-Read the relevant reference files based on the classification. Always read the primary reference file for the category. Community intel was already loaded in Step 1d.
+Read the relevant reference files based on the classification. Always read the primary reference file for the category. Verified intel was already loaded in Step 1d.
 
 For multi-category questions, read all relevant files.
 
@@ -136,7 +154,7 @@ Every response should follow this structure:
 
 1. Match symptoms to the troubleshooting table
 2. Provide debug steps in order of likelihood
-3. Check community-intel.md for recently reported similar issues
+3. Check verified-intel.md for recently accepted community findings
 4. Include the exact debug commands (`claude --debug`, `Ctrl+O`, `/hooks`)
 
 ### For Decision Control Questions
@@ -159,7 +177,7 @@ Every response should follow this structure:
 - **Provide complete configs** -- users should be able to copy/paste settings.json snippets
 - **Include scripts** -- full, executable shell scripts when recipes need them
 - **Warn about pitfalls** -- especially async decision limitations, stop_hook_active, shell profile JSON issues
-- **Include community intel** -- if community-intel.md has relevant recent findings, mention them
+- **Include verified intel** -- if verified-intel.md has relevant accepted findings, mention them
 - **Be direct** -- answer the question first, then provide context
 - **Tables for comparisons** -- use tables when comparing event types, hook types, or decision patterns
 - **JSON schemas** -- show the exact JSON structure for inputs and outputs
@@ -223,7 +241,7 @@ User: My hook isn't firing
 
 Skill: [Detects Troubleshooting, cache stale -> smart refresh]
 Skill: "Refreshing community intel -- this takes about 60 seconds."
-Skill: [Reads troubleshooting.md + hook-types-and-config.md + community-intel.md]
+Skill: [Reads troubleshooting.md + hook-types-and-config.md + verified-intel.md]
 
 Common causes in order of likelihood:
 
@@ -241,7 +259,111 @@ Common causes in order of likelihood:
 Debug: `claude --debug` shows which hooks matched and their output.
 Toggle verbose mode with `Ctrl+O`.
 
-[Includes relevant community intel findings]
+[Includes relevant verified intel findings]
 
 *Community intel last updated 3 days ago. Run `/hooks --refresh` for latest.*
+*5 new community findings available. Run `/hooks --upgrade` to review.*
 ```
+
+### Example 4: Upgrade mode
+
+```text
+User: /hooks --upgrade
+
+Skill: [Detects --upgrade flag, enters upgrade flow]
+Skill: [Runs extract command, gets 2 new findings]
+
+Found 2 new community findings:
+
+1. [reddit] **SessionEnd hook not firing on Ctrl+C** (score: 35)
+   Users report SessionEnd hooks don't fire when terminating with Ctrl+C...
+   Source: https://reddit.com/r/ClaudeAI/...
+
+2. [web] **New PreCompact event in Claude Code 1.0.33** (score: 22)
+   PreCompact event added in latest release, fires before context compaction...
+   Source: https://docs.anthropic.com/...
+
+Skill: [Asks via AskUserQuestion: "Which findings to add?"]
+User: "All"
+Skill: [Appends 2 findings to verified-intel.md, records hashes]
+Skill: "Added 2 findings to verified-intel.md. 0 rejected."
+```
+
+## Step 5: Upgrade Flow (--upgrade mode)
+
+This step runs when UPGRADE_MODE is true. Skip Steps 1-4 entirely.
+
+### 5a. Extract new findings
+
+Run via Bash:
+
+```bash
+bunx @side-quest/community-intel-cache extract --cache-dir "${CLAUDE_PLUGIN_ROOT}/skills/hooks/cache"
+```
+
+Parse JSON output. If status is "no_new" or "no_staged":
+  Tell user: "No new community findings to review. Your intel is up to date."
+  Stop.
+
+### 5b. Present batch summary
+
+Display all findings as a numbered list:
+
+```
+Found N new community findings:
+
+1. [reddit] **Title** (score: 42)
+   Summary text...
+   Source: https://reddit.com/...
+
+2. [x] **Title** (score: 28)
+   Summary text...
+   Source: https://x.com/...
+
+3. [web] **Title** (score: 15)
+   Summary text...
+   Source: https://example.com/...
+```
+
+Then ask via AskUserQuestion:
+"Which findings do you want to add to your knowledge base?"
+Options: "All", "None", "Let me pick (e.g., 1,3)"
+
+### 5c. Process decisions
+
+If "All": accept all findings.
+If "None": reject all findings.
+If "Let me pick": parse the numbers, accept those, reject the rest.
+
+For accepted findings, append each to [verified-intel.md](references/verified-intel.md) using the Write tool, in this format:
+
+```markdown
+---
+
+## YYYY-MM-DD
+
+### [Title]
+[Summary]
+Source: [URL]
+Topic: [research topic]
+```
+
+For all decisions (accept + reject), record via Bash:
+
+```bash
+bunx @side-quest/community-intel-cache review \
+    --cache-dir "${CLAUDE_PLUGIN_ROOT}/skills/hooks/cache" \
+    --hashes hash1,hash2,... \
+    --decision accepted
+```
+
+```bash
+bunx @side-quest/community-intel-cache review \
+    --cache-dir "${CLAUDE_PLUGIN_ROOT}/skills/hooks/cache" \
+    --hashes hash1,hash2,... \
+    --decision rejected
+```
+
+### 5d. Summary
+
+Report: "Added X findings to verified-intel.md. Rejected Y. Z remaining for next time."
