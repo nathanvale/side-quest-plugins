@@ -43,7 +43,7 @@ ps aux | grep -c '[c]hrome-devtools-mcp'
 
 ## After Diagnosis
 
-Load [diagnostics.md](skills/chrome-devtools/references/diagnostics.md) for the scenario table and fix options.
+Load [diagnostics.md](../skills/chrome-devtools/references/diagnostics.md) for the scenario table and fix options.
 
 **If `--check` mode**: Report the diagnosis and stop. Do not take any action.
 
