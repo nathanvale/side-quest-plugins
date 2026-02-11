@@ -20,6 +20,7 @@
 	"commands": [
 		"./commands/create.md",
 		"./commands/fix.md",
+		"./commands/fleet-sync.md",
 		"./commands/sync.md"
 	],
 	"skills": ["./skills/bun-typescript-starter-expert", "./skills/heal-template"]
