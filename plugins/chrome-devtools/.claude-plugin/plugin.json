@@ -1,0 +1,22 @@
+{
+	"name": "chrome-devtools",
+	"description": "Reliable browser automation via Chrome DevTools MCP -- layered health checks, snapshot-first element finding, auth detection, 1Password secret storage, graceful degradation",
+	"version": "1.0.0",
+	"author": { "name": "Nathan Vale" },
+	"keywords": [
+		"chrome",
+		"devtools",
+		"browser",
+		"automation",
+		"screenshots",
+		"performance",
+		"testing"
+	],
+	"license": "MIT",
+	"commands": [
+		"./commands/automate.md",
+		"./commands/screenshot.md",
+		"./commands/fix.md"
+	],
+	"skills": ["./skills/chrome-devtools"]
+}
