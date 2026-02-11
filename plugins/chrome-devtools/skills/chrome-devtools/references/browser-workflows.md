@@ -9,10 +9,10 @@ Generic browser automation workflows using Chrome DevTools MCP tools.
 Capture and analyze Chrome performance traces for Core Web Vitals.
 
 1. `navigate_page` to the target URL
-2. `performance_start_trace` -- begin recording
-3. Interact with the page (scroll, click, navigate) to simulate user behavior
-4. `performance_stop_trace` -- stop recording, returns trace data
-5. `performance_analyze_insight` -- extract CWV metrics and bottlenecks
+2. `performance_start_trace` with `reload: true, autoStop: true` -- reloads the page and automatically stops after load completes. Use `reload: false, autoStop: false` if you need to capture interactions after page load (then manually call `performance_stop_trace` when done).
+3. If `autoStop: false`: interact with the page (scroll, click, navigate) to simulate user behavior, then call `performance_stop_trace`
+4. Review the trace results -- they include CWV scores and a list of available insight sets with IDs
+5. `performance_analyze_insight` with `insightSetId` (from the trace results) and `insightName` (e.g., "LCPBreakdown", "DocumentLatency") -- drill into specific insights
 
 **CWV thresholds** (see [tools.md](tools.md) for full reference):
 - INP <= 200ms good, <= 500ms needs improvement
@@ -37,9 +37,9 @@ Capture and analyze network requests during page interactions.
 4. `get_network_request` -- inspect individual request/response details
 
 **Filtering patterns**:
-- Filter by URL pattern to isolate API calls
-- Filter by resource type (XHR, Fetch, Script, Image)
-- Use `startIndex`/`maxResults` for pagination on busy pages
+- Filter by `resourceTypes` array (e.g., `["xhr", "fetch"]` to isolate API calls)
+- Available types: document, stylesheet, image, media, font, script, xhr, fetch, websocket, and others
+- Use `pageIdx`/`pageSize` for pagination on busy pages
 
 **HAR-style export**: Use `filePath` param to write request data to disk for offline analysis.
 
@@ -75,7 +75,7 @@ General-purpose browser interaction pattern.
 Every automation follows this sequence:
 
 1. `navigate_page` to the target URL
-2. `wait_for` the page to load (check for a key element by text or URL)
+2. `wait_for` the page to load (check for expected text on the page)
 3. `take_snapshot` to get the accessibility tree
 4. Identify target elements by **text content and role** (never hardcoded coordinates)
 5. Perform action (`click`, `fill`, `press_key`)
@@ -133,10 +133,10 @@ Test responsive designs and mobile experiences.
 - iPad: 810x1080, deviceScaleFactor 2, tablet user agent
 - Desktop: 1920x1080, no mobile emulation
 
-**Network throttling**:
-- 3G: 1.5 Mbps down, 750 Kbps up, 400ms latency
-- 4G: 4 Mbps down, 3 Mbps up, 100ms latency
-- Offline: 0 throughput (test offline behavior)
+**Network throttling** (via `networkConditions` param):
+- `"Slow 3G"`, `"Fast 3G"`, `"Slow 4G"`, `"Fast 4G"`
+- `"Offline"` -- test offline behavior
+- `"No emulation"` -- reset to default
 
 ---
 
@@ -145,7 +145,7 @@ Test responsive designs and mobile experiences.
 Take screenshots for documentation or verification.
 
 1. `navigate_page` to the target URL
-2. `wait_for` the page to fully load (text, element, or network idle)
+2. `wait_for` expected text to appear on the page (confirming load is complete)
 3. `take_screenshot` -- captures the visible viewport
 
 **Full-page capture**: Use the screenshot tool's full-page option if available.

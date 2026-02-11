@@ -10,15 +10,15 @@ High-signal Chrome DevTools MCP tools. These 10 cover 90%+ of use cases.
 
 Navigate to a URL in the active tab.
 
-**Key params**: `url` (required), `waitUntil` (optional: "load", "domcontentloaded", "networkidle")
-**When to use**: Starting any workflow, navigating between pages.
-**Common mistake**: Not waiting for load to complete before taking snapshots.
+**Key params**: `url` (required with `type: "url"`), `type` (optional: "url", "back", "forward", "reload"), `timeout` (optional: ms)
+**When to use**: Starting any workflow, navigating between pages. Use `type: "reload"` to refresh.
+**Common mistake**: Not calling `wait_for` after navigation to ensure the page has loaded before taking snapshots.
 
 ### 2. take_snapshot
 
 Get the accessibility tree for the active page. Returns element UIDs for interaction.
 
-**Key params**: `random` (optional: return a random subset for large pages)
+**Key params**: `verbose` (optional: include full a11y tree detail), `filePath` (optional: save to file)
 **When to use**: Before ANY element interaction. This is your primary element discovery tool.
 **Common mistake**: Using `take_screenshot` for element finding instead of snapshot.
 
@@ -34,7 +34,7 @@ Capture a visual screenshot of the active page.
 
 Click an element identified by UID from a snapshot.
 
-**Key params**: `uid` (required: from take_snapshot), `button` (optional: "left", "right", "middle")
+**Key params**: `uid` (required: from take_snapshot), `dblClick` (optional: true for double-click), `includeSnapshot` (optional: return updated snapshot)
 **When to use**: After take_snapshot identifies the target element.
 **Common mistake**: Using stale UIDs from a previous snapshot after page state changed.
 
@@ -48,10 +48,10 @@ Type text into an input element identified by UID.
 
 ### 6. wait_for
 
-Wait for a condition to be met before proceeding.
+Wait for text to appear on the page before proceeding.
 
-**Key params**: `text` (wait for text), `url` (wait for URL), `timeout` (ms)
-**When to use**: After navigation, form submission, or any async operation.
+**Key params**: `text` (required: text to wait for), `timeout` (optional: ms, 0 for default)
+**When to use**: After navigation, form submission, or any async operation. Always use after `navigate_page`.
 **Common mistake**: Setting timeout too low for slow pages.
 
 ### 7. list_pages
@@ -72,19 +72,19 @@ Switch the active tab by pageId.
 
 ### 9. evaluate_script
 
-Execute JavaScript in the page context. Returns the result.
+Execute a JavaScript function in the page context. Returns JSON-serializable results.
 
-**Key params**: `script` (required: JS code string)
+**Key params**: `function` (required: JS function declaration, e.g., `() => document.title`), `args` (optional: array of `{uid}` objects to pass snapshot elements as arguments)
 **When to use**: Reading page state, extracting data, triggering JS-only interactions.
-**Common mistake**: Running destructive scripts without user confirmation.
+**Common mistake**: Running destructive scripts without user confirmation. Return values must be JSON-serializable.
 
 ### 10. list_network_requests
 
 List captured network requests with filtering.
 
-**Key params**: `urlPattern` (optional: filter by URL), `resourceType` (optional), `startIndex`/`maxResults` (pagination)
+**Key params**: `resourceTypes` (optional: array of types like `["xhr", "fetch"]`), `pageIdx`/`pageSize` (pagination), `includePreservedRequests` (optional: include requests from last 3 navigations)
 **When to use**: Network monitoring, API debugging, performance analysis.
-**Common mistake**: Not paginating on busy pages (can return hundreds of entries).
+**Common mistake**: Not paginating with `pageIdx`/`pageSize` on busy pages (can return hundreds of entries).
 
 ---
 
@@ -111,9 +111,9 @@ List captured network requests with filtering.
 
 ### Performance
 
-- **performance_start_trace** -- begin recording a performance trace
-- **performance_stop_trace** -- stop recording and get trace data
-- **performance_analyze_insight** -- analyze trace data for CWV and bottlenecks
+- **performance_start_trace** -- begin recording. Requires `reload` (bool) and `autoStop` (bool). Optional `filePath` for raw trace data.
+- **performance_stop_trace** -- stop recording and get trace data. Optional `filePath`.
+- **performance_analyze_insight** -- drill into a specific insight. Requires `insightSetId` and `insightName` (from trace results).
 
 ### Network
 

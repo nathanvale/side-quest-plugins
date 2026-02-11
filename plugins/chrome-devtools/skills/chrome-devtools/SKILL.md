@@ -59,7 +59,7 @@ ps aux | grep -c '[c]hrome-devtools-mcp'
 - **Page selection**: `list_pages` -> `select_page` by URL or title
 - **Element interaction**: `take_snapshot` for accessibility UIDs, then `click`/`fill` by UID
 - **Large outputs**: Use `filePath` param to write results to disk instead of stdout
-- **Pagination**: Use `startIndex`/`maxResults` for list tools with many entries
+- **Pagination**: Use `pageIdx`/`pageSize` for list tools with many entries
 
 ## 3. Workflow Routing
 
