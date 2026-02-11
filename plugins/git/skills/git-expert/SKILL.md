@@ -54,8 +54,8 @@ These are non-negotiable:
 - **NEVER** `git checkout .` or `git restore .` without user confirmation
 - **NEVER** commit secrets (`.env`, credentials, API keys)
 - **NEVER** use `git add .` or `git add -A` — always stage specific files
-- **NEVER** skip hooks (`--no-verify`) except for WIP/checkpoint commits
-- **ALWAYS** check branch before committing -- if on `main`/`master`, create a feature branch first
+- **NEVER** skip hooks (`--no-verify`) except for WIP/checkpoint commits on feature branches
+- **ALWAYS** check branch before committing -- if on `main`/`master`, create a feature branch first (no exceptions, including WIP checkpoints)
 - **ALWAYS** verify on feature branch before squash (abort if `main`)
 - **ALWAYS** use HEREDOC format for multi-line commit messages
 - **ASK** user if commit scope or message is unclear
@@ -68,10 +68,10 @@ This plugin runs 5 hooks that fire automatically — you don't invoke them, but 
 | Hook | Event | What It Does |
 |------|-------|--------------|
 | `session-start` | SessionStart | Loads git context (branch, recent commits, status) |
-| `git-safety` | PreToolUse | Blocks destructive git commands and protected file edits |
+| `git-safety` | PreToolUse | Blocks destructive git commands, all commits on main/master, --no-verify on non-WIP commits, and protected file edits |
 | `command-logger` | PostToolUse | Logs Bash commands to ~/.claude/logs/git-command-log.jsonl |
 | `session-summary` | PreCompact | Extracts salient transcript items and saves git compaction summary |
-| `auto-commit` | Stop | Creates WIP checkpoint commit for tracked changes on stop |
+| `auto-commit` | Stop | Creates WIP checkpoint commit for tracked changes on stop (feature branches only) |
 
 If a hook blocks an action, resolve the underlying git safety issue rather than bypassing hook behavior.
 
