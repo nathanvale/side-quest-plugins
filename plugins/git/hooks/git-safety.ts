@@ -24,6 +24,12 @@ interface PreToolUseHookSpecificOutput {
 
 const PROTECTED_BRANCHES = ['main', 'master']
 
+/**
+ * Patterns that identify a commit as a legitimate WIP checkpoint.
+ * Only commits matching these patterns may use --no-verify.
+ */
+const WIP_MESSAGE_PATTERNS = [/chore\(wip\):/, /wip:/i]
+
 const PROTECTED_FILE_PATTERNS: Array<{ pattern: RegExp; reason: string }> = [
 	{
 		pattern: /\.env($|\.)/,
@@ -91,16 +97,25 @@ export function checkFileEdit(filePath: string): {
 	return { blocked: false }
 }
 
+/**
+ * Analyzes a command to determine if it's a git commit and what kind.
+ * A legitimate WIP checkpoint requires both --no-verify AND a WIP message pattern.
+ */
 export function isCommitCommand(command: string): {
 	isCommit: boolean
-	isWip: boolean
+	hasNoVerify: boolean
+	hasWipMessage: boolean
 } {
 	const commitPattern = /(?:^|&&\s*|;\s*)git\s+commit(?:\s|$)/
 	const isCommit = commitPattern.test(command)
 	if (!isCommit) {
-		return { isCommit: false, isWip: false }
+		return { isCommit: false, hasNoVerify: false, hasWipMessage: false }
 	}
-	return { isCommit: true, isWip: command.includes('--no-verify') }
+
+	const hasNoVerify = command.includes('--no-verify')
+	const hasWipMessage = WIP_MESSAGE_PATTERNS.some((p) => p.test(command))
+
+	return { isCommit: true, hasNoVerify, hasWipMessage }
 }
 
 async function runGit(
@@ -181,7 +196,11 @@ if (import.meta.main) {
 		}
 
 		const commitCheck = isCommitCommand(command)
-		if (commitCheck.isCommit && !commitCheck.isWip) {
+		if (commitCheck.isCommit) {
+			const isLegitimateWip =
+				commitCheck.hasNoVerify && commitCheck.hasWipMessage
+
+			// Block ALL commits on protected branches (including WIP checkpoints)
 			const branch = await getCurrentBranch(input.cwd)
 			if (branch && PROTECTED_BRANCHES.includes(branch)) {
 				const hookSpecificOutput: PreToolUseHookSpecificOutput = {
@@ -194,7 +213,23 @@ if (import.meta.main) {
 						'  git checkout -b <type>/<description>',
 						'',
 						'Then commit on the new branch.',
-						'WIP checkpoints (--no-verify) are still allowed as a safety net.',
+					].join('\n'),
+				}
+				console.log(JSON.stringify({ hookSpecificOutput }))
+				process.exit(2)
+			}
+
+			// Block --no-verify on non-WIP commits (prevents bypassing pre-commit hooks)
+			if (commitCheck.hasNoVerify && !isLegitimateWip) {
+				const hookSpecificOutput: PreToolUseHookSpecificOutput = {
+					hookEventName: 'PreToolUse',
+					permissionDecision: 'deny',
+					permissionDecisionReason: [
+						'BLOCKED: --no-verify is only allowed for WIP checkpoint commits.',
+						'',
+						'For regular commits, remove --no-verify so pre-commit hooks run.',
+						'For WIP checkpoints, use a WIP message pattern:',
+						'  git commit --no-verify -m "chore(wip): <description>"',
 					].join('\n'),
 				}
 				console.log(JSON.stringify({ hookSpecificOutput }))

@@ -51,6 +51,8 @@ Quick WIP save — no ceremony.
 
 **Note**: `--no-verify` is acceptable for WIP checkpoints only. Never for final commits.
 
+**Branch restriction**: Checkpoints are blocked on `main`/`master`. Create a feature branch first.
+
 ## PR (Pull Request)
 
 1. **Ensure all changes committed**: `git status --porcelain -b`

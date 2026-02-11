@@ -10,6 +10,8 @@ import { readFile } from 'node:fs/promises'
 import type { FileStatusCounts } from './git-status-parser'
 import { parsePorcelainStatus } from './git-status-parser'
 
+const PROTECTED_BRANCHES = ['main', 'master']
+
 interface StopHookInput {
 	cwd: string
 	transcript_path: string
@@ -28,6 +30,19 @@ async function runGit(
 	const stdout = await new Response(proc.stdout).text()
 	const exitCode = await proc.exited
 	return { stdout, exitCode }
+}
+
+/** Returns the current branch name, or null if not in a git repo. */
+export async function getCurrentBranch(cwd: string): Promise<string | null> {
+	try {
+		const result = await runGit(['branch', '--show-current'], cwd)
+		if (result.exitCode !== 0) {
+			return null
+		}
+		return result.stdout.trim() || null
+	} catch {
+		return null
+	}
 }
 
 export async function getGitStatus(
@@ -125,6 +140,12 @@ if (import.meta.main) {
 		}
 
 		if (status.staged === 0 && status.modified === 0) {
+			process.exit(0)
+		}
+
+		// Skip WIP checkpoint on protected branches
+		const branch = await getCurrentBranch(input.cwd)
+		if (branch && PROTECTED_BRANCHES.includes(branch)) {
 			process.exit(0)
 		}
 

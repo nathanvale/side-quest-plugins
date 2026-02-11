@@ -15,6 +15,8 @@ Provides intelligent git context, history exploration, smart commit capabilities
 
 **PreToolUse** - Git safety guard:
 - Blocks destructive commands (force push, hard reset, clean -f, checkout ., branch -D)
+- Blocks all commits on protected branches (main/master)
+- Blocks --no-verify on non-WIP commits (prevents bypassing pre-commit hooks)
 - Blocks Write/Edit to protected files (.env, credentials, .git/ directory)
 - Returns deny decision with explanation
 
@@ -28,9 +30,10 @@ Provides intelligent git context, history exploration, smart commit capabilities
 - Saves git state summary (append, not overwrite)
 
 **Stop** - Auto-commit check:
-- Creates WIP checkpoint for uncommitted tracked changes
+- Creates WIP checkpoint for uncommitted tracked changes (feature branches only)
 - Uses --no-verify to bypass pre-commit hooks
 - Uses git add -u (tracked files only, avoids staging secrets)
+- Skips on protected branches (main/master) to prevent direct commits
 
 ### Slash Commands
 

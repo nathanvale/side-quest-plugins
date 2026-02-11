@@ -3,14 +3,31 @@
 /**
  * Git Context Loader Hook
  *
- * SessionStart hook that loads git context at startup.
+ * SessionStart hook that injects git repository context into Claude's
+ * conversation. Fires on startup, resume, compact, and clear to ensure
+ * Claude always has current branch/status awareness and knows how to
+ * route git tasks.
+ *
+ * Output: Plain stdout text (avoids plugin hooks.json bug #16538 where
+ * hookSpecificOutput.additionalContext is silently discarded). Structured as:
+ * - Git Repository Context (branch, status, recent commits)
+ * - Git Command Routing (when to use each slash command)
+ * - Git Rules (safety constraints for git operations)
  */
 
 import { parsePorcelainStatus } from './git-status-parser'
 
+type SessionSource = 'startup' | 'resume' | 'compact' | 'clear'
+
 interface SessionStartHookInput {
+	session_id: string
+	hook_event_name: string
 	cwd: string
-	source: string
+	source: SessionSource
+	model: string
+	permission_mode: string
+	transcript_path?: string
+	agent_type?: string
 }
 
 interface GitContext {
@@ -42,7 +59,11 @@ async function isGitRepo(cwd: string): Promise<boolean> {
 	return exitCode === 0
 }
 
-async function getGitContext(cwd: string): Promise<GitContext | null> {
+/** Gathers git state. Uses fewer commits on compact/clear to save context budget. */
+export async function getGitContext(
+	cwd: string,
+	commitCount: number = 5,
+): Promise<GitContext | null> {
 	if (!(await isGitRepo(cwd))) {
 		return null
 	}
@@ -55,7 +76,7 @@ async function getGitContext(cwd: string): Promise<GitContext | null> {
 	const { branch, counts } = parsePorcelainStatus(statusResult.stdout)
 
 	const commitsResult = await runGit(
-		['log', '--oneline', '-5', '--format=%h %s (%ar)'],
+		['log', '--oneline', `-${commitCount}`, '--format=%h %s (%ar)'],
 		cwd,
 	)
 
@@ -74,35 +95,56 @@ async function getGitContext(cwd: string): Promise<GitContext | null> {
 	}
 }
 
-function formatContext(context: GitContext): string {
+/** Formats the additionalContext payload with role framing and routing hints. */
+export function formatAdditionalContext(
+	context: GitContext,
+	source: SessionSource,
+): string {
 	const { branch, status, recentCommits } = context
-	let output = 'Git Context:\n'
-	output += `  Branch: ${branch}\n`
-	output += `  Status: ${status.staged} staged, ${status.modified} modified, ${status.untracked} untracked\n`
-	output += '\nRecent commits:\n'
+	const sections: string[] = []
+
+	// Section 1: Repository state
+	const restoredNote =
+		source === 'compact' ? ' (restored after compaction)' : ''
+	let state = `## Git Repository Context${restoredNote}\n\n`
+	state += `Branch: ${branch}\n`
+	state += `Status: ${status.modified} modified, ${status.untracked} untracked, ${status.staged} staged\n`
 
 	if (recentCommits.length > 0) {
+		state += `\nRecent commits:\n`
 		for (const commit of recentCommits) {
-			output += `  ${commit}\n`
+			state += `- ${commit}\n`
 		}
 	} else {
-		output += '  (no commits yet)\n'
+		state += '\nNo commits yet.\n'
 	}
 
-	output += '\nGit workflow: /git:commit, /git:squash, /git:checkpoint'
-	output +=
-		'\ngit-expert skill handles: commits, PRs, history, worktrees, changelog, branch compare, squash, safety guards'
+	sections.push(state)
 
-	return output
-}
+	// Section 2: Command routing -- tells Claude WHEN to use each command
+	let routing = '## Git Command Routing\n\n'
+	routing += '| Need | Command |\n'
+	routing += '|------|--------|\n'
+	routing +=
+		'| Commit changes | /git:commit (analyzes diff, conventional commit) |\n'
+	routing += '| Quick save | /git:checkpoint (WIP commit, skips hooks) |\n'
+	routing +=
+		'| Squash WIP commits | /git:squash (combines into one clean commit) |\n'
+	routing += '| Create PR | /git:create-pr (push + gh pr create) |\n'
+	routing +=
+		'| Anything else git | git-expert skill (history, worktrees, changelog, compare, review) |'
+	sections.push(routing)
 
-function formatSystemMessage(context: GitContext): string {
-	const { branch, status, recentCommits } = context
-	const totalChanges = status.staged + status.modified + status.untracked
-	const changesSuffix = totalChanges > 0 ? `, ${totalChanges} changes` : ''
-	const lastCommit =
-		recentCommits[0]?.split(' ').slice(1).join(' ') || 'no commits'
-	return `Git: ${branch}${changesSuffix} | Last: ${lastCommit} | /git:commit /git:squash /git:checkpoint`
+	// Section 3: Safety rules -- critical after compaction when Claude loses memory
+	let rules = '## Git Rules\n\n'
+	rules += '- NEVER force push, hard reset, clean -f, or checkout/restore .\n'
+	rules += '- NEVER commit to main/master -- create a feature branch first\n'
+	rules += '- NEVER use git add . or git add -A -- stage specific files\n'
+	rules += '- ALWAYS use conventional commits: type(scope): subject\n'
+	rules += '- ALWAYS use HEREDOC for commit messages'
+	sections.push(rules)
+
+	return sections.join('\n\n')
 }
 
 if (import.meta.main) {
@@ -114,19 +156,27 @@ if (import.meta.main) {
 			process.exit(0)
 		}
 
-		if (input.source === 'startup') {
-			const context = await getGitContext(input.cwd)
-			if (context) {
-				console.log(
-					JSON.stringify({
-						systemMessage: formatSystemMessage(context),
-						hookSpecificOutput: {
-							hookEventName: 'SessionStart',
-							additionalContext: formatContext(context),
-						},
-					}),
-				)
-			}
+		const relevantSources: SessionSource[] = [
+			'startup',
+			'resume',
+			'compact',
+			'clear',
+		]
+		if (!relevantSources.includes(input.source as SessionSource)) {
+			process.exit(0)
+		}
+
+		const commitCount =
+			input.source === 'compact' || input.source === 'clear' ? 3 : 5
+		const context = await getGitContext(input.cwd, commitCount)
+		if (context) {
+			// Use plain stdout instead of JSON hookSpecificOutput.additionalContext.
+			// Plugin hooks.json has a known bug (#16538) where additionalContext
+			// is silently discarded. Plain stdout is reliably injected as context
+			// for SessionStart hooks regardless of source (plugin or user config).
+			console.log(
+				formatAdditionalContext(context, input.source as SessionSource),
+			)
 		}
 	} catch {
 		// never crash the hook
