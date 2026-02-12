@@ -60,3 +60,12 @@ Load [diagnostics.md](../skills/chrome-devtools/references/diagnostics.md) for t
 3. Execute the chosen fix
 4. Re-run Layer 1 to verify the fix worked
 5. If still broken, report and offer next option
+
+## Recommended Fix Priority
+
+When presenting fixes, prefer in this order:
+
+1. **Restart MCP** -- simplest, works for transient issues
+2. **`--browserUrl` with manual Chrome launch** -- most reliable for persistent connection issues. Launch Chrome with `--remote-debugging-port=9222 --user-data-dir="$HOME/.chrome-debug-profile"` and configure `--browserUrl=http://localhost:9222`. No permission dialogs, works with any Chrome version.
+3. **`--isolated`** -- quick workaround for profile locks, loses session state
+4. **`--autoConnect`** -- only suggest if Chrome >= 144 and user needs existing auth/cookies

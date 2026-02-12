@@ -65,19 +65,23 @@ ps aux | grep -c '[c]hrome-devtools-mcp'
 
 ## 3. Recommended Setup
 
-Three connection modes, each with different trade-offs:
+Five connection modes, each with different trade-offs:
 
 | Mode | Best For | Trade-off |
 |------|----------|-----------|
-| Default (auto-launch) | Quick tasks, clean state | Loses auth, separate profile |
-| `--autoConnect` (Chrome 144+) | Auth-gated sites, debugging handoff | Permission dialog every connection |
-| `--browserUrl` + `--user-data-dir` | Persistent sessions, daily driver | Manual Chrome launch required |
+| Default (auto-launch) | Quick tasks, clean state | Separate profile, no existing auth |
+| `--browserUrl` (recommended for existing Chrome) | Daily driver, persistent sessions | Manual Chrome launch required |
+| `--autoConnect` (Chrome 144+) | Auth-gated sites, debugging handoff | Permission dialog every connection, bug-prone |
+| `--wsEndpoint` | Remote/sandboxed browsers, auth endpoints | Requires WebSocket URL |
+| `--isolated` | Clean-slate testing, CI | Loses all state between sessions |
 
 - **Default** is zero-config -- the MCP launches Chrome automatically with a persistent profile. Best for one-off automation and testing.
-- **`--autoConnect`** connects to your already-running Chrome. Best when you need existing cookies/sessions (e.g., authenticated sites). Requires Chrome 144+ and shows a permission dialog on each connection.
-- **`--browserUrl` + `--user-data-dir`** gives you full control: launch Chrome yourself with `--remote-debugging-port=9222` and point the MCP at it. No permission dialogs, works with your main profile. Best for daily development workflows.
+- **`--browserUrl`** is the most reliable method for connecting to an existing browser. Launch Chrome yourself with `--remote-debugging-port=9222` and `--user-data-dir` and point the MCP at it. No permission dialogs, works with any Chrome version. Best for daily development workflows.
+- **`--autoConnect`** connects to your already-running Chrome via Chrome 144+'s native DevTools endpoint. Best when you need existing cookies/sessions (e.g., authenticated sites). Shows a permission dialog on each connection and has known issues with frozen tabs and profile conflicts.
+- **`--wsEndpoint`** connects via a WebSocket URL, useful for remote browsers (Docker, Browserless) or authenticated endpoints. Pair with `--wsHeaders` for auth tokens.
+- **`--isolated`** uses a temporary profile directory, preventing profile locks but losing all session state. Best for CI or clean-state testing.
 
-See [diagnostics.md](references/diagnostics.md) for setup details and known issues for each mode.
+See [diagnostics.md](references/diagnostics.md) for setup details, known issues, and a complete server flags reference.
 
 ## 4. Workflow Routing
 

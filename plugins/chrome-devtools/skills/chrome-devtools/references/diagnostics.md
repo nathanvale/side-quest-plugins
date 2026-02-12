@@ -88,6 +88,35 @@ kill <PID>
   --user-data-dir="$HOME/.chrome-debug-profile"
 ```
 
+### Manual Connection (`--browserUrl`) -- Recommended
+
+The most reliable method for connecting to an existing Chrome instance. You launch Chrome yourself with `--remote-debugging-port` and point the MCP at it. No permission dialogs, works with any Chrome version.
+
+**Step 1: Launch Chrome with remote debugging**
+
+```bash
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --remote-debugging-port=9222 \
+  --user-data-dir="$HOME/.chrome-debug-profile"
+```
+
+**Security note**: Chrome requires a non-default `--user-data-dir` when using `--remote-debugging-port`. Chrome refuses to expose your default profile to the debug port -- this is intentional security hardening. Use a dedicated debug profile directory.
+
+**Step 2: Configure the MCP server**
+
+```json
+{
+  "command": "bunx",
+  "args": [
+    "chrome-devtools-mcp@latest",
+    "--browserUrl=http://localhost:9222"
+  ]
+}
+```
+
+**Best for**: Daily development workflows, persistent sessions with login state, CI pipelines where Chrome is pre-launched.
+**Trade-off**: Requires manually launching Chrome with the debug flags (or adding to a shell alias/startup script).
+
 ### Isolated Mode
 
 Use `--isolated` for a temporary user data directory. This prevents profile locks but loses session state (cookies, logins):
@@ -96,7 +125,7 @@ Use `--isolated` for a temporary user data directory. This prevents profile lock
 {
   "command": "bunx",
   "args": [
-    "@anthropic-ai/chrome-devtools-mcp@latest",
+    "chrome-devtools-mcp@latest",
     "--isolated"
   ]
 }
@@ -118,7 +147,7 @@ Connects to your already-running Chrome without needing `--remote-debugging-port
 {
   "command": "bunx",
   "args": [
-    "@anthropic-ai/chrome-devtools-mcp@latest",
+    "chrome-devtools-mcp@latest",
     "--autoConnect"
   ]
 }
@@ -134,6 +163,62 @@ Optionally target a specific Chrome channel: `--channel=beta`, `--channel=canary
 - Suspended tabs (from "Continue where you left off") can cause connection timeouts -- disable this Chrome setting or close stale tabs
 
 **When `--browserUrl` is better**: For persistent, frictionless daily-driver sessions, launch Chrome yourself with `--remote-debugging-port=9222` and `--user-data-dir` and use `--browserUrl` instead. No permission dialogs, works with any Chrome version.
+
+### WebSocket Connection (`--wsEndpoint`)
+
+For remote browsers, sandboxed environments (e.g., Docker), or authenticated endpoints like Browserless.
+
+**Step 1: Find the WebSocket URL**
+
+```bash
+curl -s http://localhost:9222/json/version | jq -r '.webSocketDebuggerUrl'
+# Example output: ws://127.0.0.1:9222/devtools/browser/a1b2c3d4-e5f6-...
+```
+
+**Step 2: Configure the MCP server**
+
+```json
+{
+  "command": "bunx",
+  "args": [
+    "chrome-devtools-mcp@latest",
+    "--wsEndpoint=ws://127.0.0.1:9222/devtools/browser/<id>"
+  ]
+}
+```
+
+For authenticated WebSocket endpoints (e.g., Browserless), add `--wsHeaders`:
+
+```json
+{
+  "command": "bunx",
+  "args": [
+    "chrome-devtools-mcp@latest",
+    "--wsEndpoint=wss://chrome.browserless.io",
+    "--wsHeaders={\"Authorization\": \"Bearer <token>\"}"
+  ]
+}
+```
+
+**Best for**: Remote/cloud browsers, Docker containers, Browserless/BrowserBase, environments where HTTP connectivity to `localhost:9222` is not available.
+**Trade-off**: Requires obtaining the WebSocket URL first, and the URL changes on each Chrome restart.
+
+### Custom Profile (`--userDataDir`)
+
+Override the default Chrome profile directory used by the MCP. By default, the MCP stores its profile at `~/.cache/chrome-devtools-mcp/chrome-profile-stable`.
+
+```json
+{
+  "command": "bunx",
+  "args": [
+    "chrome-devtools-mcp@latest",
+    "--userDataDir=/path/to/custom/profile"
+  ]
+}
+```
+
+**When to use**: Sharing state with a specific Chrome profile, team-standardized profiles, persisting extensions across sessions, separating profiles for different projects.
+**Trade-off**: Profile directory must not be in use by another Chrome instance (or you'll get a profile lock error).
 
 ### Profile Lock Recovery
 
@@ -163,7 +248,7 @@ For CI or environments without a display:
 {
   "command": "bunx",
   "args": [
-    "@anthropic-ai/chrome-devtools-mcp@latest",
+    "chrome-devtools-mcp@latest",
     "--headless"
   ]
 }
@@ -180,3 +265,38 @@ Some tasks require the full Chrome DevTools UI:
 - WebSocket frame inspection
 
 Guide the user to open Chrome DevTools manually (`Cmd+Option+I`) for these cases.
+
+---
+
+## Server Flags Quick Reference
+
+Complete inventory of `chrome-devtools-mcp` server flags for troubleshooting and configuration.
+
+| Flag | Description | Example |
+|------|-------------|---------|
+| `--browserUrl` | Connect to Chrome at a specific debug URL | `--browserUrl=http://localhost:9222` |
+| `--wsEndpoint` | Connect via WebSocket URL | `--wsEndpoint=ws://127.0.0.1:9222/devtools/browser/<id>` |
+| `--wsHeaders` | Headers for authenticated WebSocket endpoints | `--wsHeaders={"Authorization": "Bearer <token>"}` |
+| `--autoConnect` | Auto-discover running Chrome (144+) | `--autoConnect` |
+| `--channel` | Target Chrome channel (with `--autoConnect`) | `--channel=canary` |
+| `--isolated` | Use temporary profile directory | `--isolated` |
+| `--userDataDir` | Custom Chrome profile directory | `--userDataDir=/path/to/profile` |
+| `--headless` | Run Chrome without a visible window | `--headless` |
+| `--proxyServer` | Route Chrome traffic through a proxy | `--proxyServer=http://proxy:8080` |
+| `--acceptInsecureCerts` | Accept self-signed/invalid TLS certificates | `--acceptInsecureCerts` |
+| `--chromeArg` | Pass arbitrary flags to Chrome (repeatable) | `--chromeArg=--disable-extensions` |
+
+---
+
+## Upstream Reference
+
+When encountering unfamiliar errors or checking for new features:
+
+- **Repository**: https://github.com/ChromeDevTools/chrome-devtools-mcp
+- **README (flags, config)**: `gh api repos/ChromeDevTools/chrome-devtools-mcp/readme --jq '.content' | base64 -d`
+- **Open issues**: `gh search issues --repo ChromeDevTools/chrome-devtools-mcp "<error message>" --limit 5`
+- **Releases/changelog**: `gh release list --repo ChromeDevTools/chrome-devtools-mcp --limit 5`
+- **Troubleshooting doc**: `gh api repos/ChromeDevTools/chrome-devtools-mcp/contents/docs/troubleshooting.md --jq '.content' | base64 -d`
+- **Latest version**: check `npm view chrome-devtools-mcp version`
+
+Current version at time of writing: v0.17.0 (2026-02-10)
