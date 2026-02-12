@@ -10,6 +10,7 @@ Error recovery matrix and connection troubleshooting for Chrome DevTools MCP.
 |---------|----------|--------|----------|
 | Element not found | `take_snapshot` no UID match | Re-snapshot, try alternative labels | Screenshot + manual instructions |
 | Navigation timeout | `wait_for` exceeds timeout | Screenshot current page | Manual navigation steps |
+| Empty screenshot | `take_screenshot` returns empty/0-byte data or API 400 "image cannot be empty" | Retry without `fullPage`. If still empty, retry with `filePath` to save to disk. If still empty, reduce viewport with `resize_page` | Known upstream bug ([#571](https://github.com/ChromeDevTools/chrome-devtools-mcp/issues/571)). Report failure, suggest manual screenshot |
 | 2FA prompt | Snapshot shows auth dialog | Tell user to dismiss, `wait_for` | Wait for user, resume |
 | Chrome crash | Tool returns connection error | Report, provide startup cmd | STOP workflow |
 | MCP disconnected | Tool call fails | Run layered diagnostics | Point to `/chrome-devtools:fix` |

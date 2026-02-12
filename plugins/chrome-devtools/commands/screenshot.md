@@ -18,6 +18,7 @@ Take a screenshot using Chrome DevTools MCP.
 4. `navigate_page` to the URL.
 5. `wait_for` the page to fully load (check for expected text on the page).
 6. `take_screenshot` with `fullPage` if `--full-page` was specified.
-7. Report the screenshot to the user.
+7. If the screenshot returns empty data (0 bytes, empty base64, or API 400 error), retry without `fullPage`. If still empty, retry with `filePath` to save to disk instead of inline. Report the issue if all retries fail.
+8. Report the screenshot to the user.
 
 If no URL is provided, ask the user which URL to screenshot.

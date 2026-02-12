@@ -148,7 +148,7 @@ Take screenshots for documentation or verification.
 2. `wait_for` expected text to appear on the page (confirming load is complete)
 3. `take_screenshot` -- captures the visible viewport
 
-**Full-page capture**: Use the screenshot tool's full-page option if available.
+**Full-page capture**: Use `fullPage` param. Note: very tall pages (e.g., Wikipedia articles) may return empty screenshot data due to an upstream MCP bug ([#571](https://github.com/ChromeDevTools/chrome-devtools-mcp/issues/571)). If the screenshot is empty, retry without `fullPage` to capture just the viewport.
 
 **Device-specific screenshots**: Use `emulate` first to set viewport dimensions, then screenshot.
 
@@ -156,6 +156,7 @@ Take screenshots for documentation or verification.
 - Wait for fonts, images, and animations to settle before capturing
 - For pages with lazy loading, scroll to trigger content load first
 - Use `resize_page` for custom viewport sizes without full device emulation
+- If `take_screenshot` returns empty data or triggers a 400 error, retry: (1) without `fullPage`, (2) with `filePath` to save to disk, (3) with a smaller viewport via `resize_page`
 
 ---
 
