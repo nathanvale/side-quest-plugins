@@ -20,7 +20,7 @@ The `chrome-devtools` skill provides the core automation engine. It handles conn
 
 ## Examples
 
-See the [examples/](examples/) folder for 10 ready-to-use prompts.
+See [examples.md](examples.md) for 10 ready-to-use prompts.
 
 ## Troubleshooting
 
