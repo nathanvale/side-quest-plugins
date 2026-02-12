@@ -10,14 +10,14 @@ Diagnose and resolve JavaScript errors and warnings surfaced in the browser cons
 
 1. `navigate_page` to the target URL
 2. Interact with the page to reproduce the issue (click, fill forms, navigate)
-3. `list_console_messages` -- enumerate all console output
-4. Filter for `error` and `warning` level messages -- these are the signals
+3. `list_console_messages` with `types: ["error", "warning"]` -- filter to just errors and warnings (avoids noise from info/log messages)
+4. Scan the filtered results for actionable messages
 5. `get_console_message` on each error -- retrieve the full stack trace and message detail
 6. Analyze the stack trace to identify the source file, line number, and call chain
-7. `evaluate_script` to inspect live application state:
-   - Check variable values: `JSON.stringify(window.__APP_STATE__)`
-   - Test DOM state: `document.querySelectorAll('.error').length`
-   - Verify API responses: `JSON.stringify(performance.getEntriesByType('resource').filter(r => r.initiatorType === 'fetch').map(r => ({ name: r.name, duration: r.duration })))`
+7. `evaluate_script` to inspect live application state (note: `function` param takes an arrow function, not a bare expression):
+   - Check variable values: `() => JSON.stringify(window.__APP_STATE__)`
+   - Test DOM state: `() => document.querySelectorAll('.error').length`
+   - Verify API responses: `() => JSON.stringify(performance.getEntriesByType('resource').filter(r => r.initiatorType === 'fetch').map(r => ({ name: r.name, duration: r.duration })))`
 8. Suggest a fix based on the diagnosis
 
 **Common console error patterns**:
@@ -31,7 +31,9 @@ Diagnose and resolve JavaScript errors and warnings surfaced in the browser cons
 | `CSP violation` | Content Security Policy blocking inline scripts or external resources | Check CSP headers via `get_network_request` on the document |
 
 **Tips**:
+- Use `types: ["error", "warning"]` to filter out noise -- no need to wade through info/log messages
 - Console messages accumulate over time -- reproduce the issue on a fresh navigation for cleaner output
+- Use `includePreservedMessages: true` to see messages from the last 3 navigations (useful for redirect chains)
 - Use `pageIdx`/`pageSize` on `list_console_messages` if there are hundreds of entries
 - Pair console errors with network request analysis for a complete picture
 
@@ -71,7 +73,8 @@ Diagnose failed API calls, CORS issues, authentication errors, and payload probl
 3. If no preflight exists, the browser treated it as a simple request -- check `Access-Control-Allow-Origin` on the main response
 
 **Tips**:
-- Use `filePath` param on `get_network_request` for large response bodies (JSON APIs returning megabytes of data)
+- Use `responseFilePath` param on `get_network_request` for large response bodies (JSON APIs returning megabytes of data). Use `requestFilePath` to save request bodies separately.
+- Use `includePreservedRequests: true` on `list_network_requests` to see requests across the last 3 navigations (useful for redirect chains and SPA route changes)
 - Filter by `resourceTypes` to avoid wading through hundreds of image/font/stylesheet requests
 - Check `list_network_requests` timing data to identify slow backend responses vs network latency
 
@@ -113,7 +116,7 @@ Navigate -> Reproduce -> Analyze -> Hypothesize -> Test -> Verify
 3. fill -> populate fields, click submit
 4. list_console_messages -> "TypeError: Cannot read properties of undefined (reading 'email')"
 5. get_console_message -> stack trace points to validateForm() line 42
-6. evaluate_script -> "JSON.stringify(document.querySelector('form').elements.email.value)"
+6. evaluate_script -> function: "() => JSON.stringify(document.querySelector('form').elements.email.value)"
    -> reveals the email field has name="user-email" not name="email"
 7. Report: form field name mismatch, validateForm() expects 'email' but field is 'user-email'
 ```

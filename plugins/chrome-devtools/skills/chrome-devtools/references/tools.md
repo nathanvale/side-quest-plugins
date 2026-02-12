@@ -10,8 +10,8 @@ High-signal Chrome DevTools MCP tools. These 10 cover 90%+ of use cases.
 
 Navigate to a URL in the active tab.
 
-**Key params**: `url` (required with `type: "url"`), `type` (optional: "url", "back", "forward", "reload"), `timeout` (optional: ms)
-**When to use**: Starting any workflow, navigating between pages. Use `type: "reload"` to refresh.
+**Key params**: `url` (required with `type: "url"`), `type` (optional: "url", "back", "forward", "reload"), `timeout` (optional: ms), `initScript` (optional: JS to run before any page scripts on next navigation), `handleBeforeUnload` (optional: "accept" or "decline")
+**When to use**: Starting any workflow, navigating between pages. Use `type: "reload"` to refresh. Use `initScript` to mock APIs or patch globals before the app boots.
 **Common mistake**: Not calling `wait_for` after navigation to ensure the page has loaded before taking snapshots.
 
 ### 2. take_snapshot
@@ -26,7 +26,7 @@ Get the accessibility tree for the active page. Returns element UIDs for interac
 
 Capture a visual screenshot of the active page.
 
-**Key params**: `filePath` (optional: save to file instead of inline), `fullPage` (optional)
+**Key params**: `filePath` (optional: save to file instead of inline), `fullPage` (optional), `format` (optional: "png", "jpeg", "webp"), `quality` (optional: 0-100 for jpeg/webp), `uid` (optional: screenshot a specific element)
 **When to use**: Visual verification after actions. NEVER after a secret is revealed.
 **Common mistake**: Using screenshots for element discovery (use snapshot instead).
 
@@ -117,12 +117,12 @@ List captured network requests with filtering.
 
 ### Network
 
-- **get_network_request** -- get detailed info for a specific network request
+- **get_network_request** -- get detailed info for a specific request. Use `responseFilePath`/`requestFilePath` to save large bodies to disk
 
 ### Debugging
 
 - **get_console_message** -- get a specific console message by index
-- **list_console_messages** -- list all console messages (errors, warnings, logs)
+- **list_console_messages** -- list console messages. Use `types` filter (e.g., `["error", "warning"]`) and `includePreservedMessages` for cross-navigation history
 
 ---
 

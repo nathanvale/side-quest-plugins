@@ -94,12 +94,12 @@ Run through these checks systematically using `take_snapshot` and `evaluate_scri
 
 ### Color Contrast Checking
 
-Use `evaluate_script` to compute contrast ratios for text elements:
+Use `evaluate_script` to compute contrast ratios for text elements. The `function` param takes an arrow function:
 
 ```javascript
-// Check contrast ratio for a specific element
-(function() {
-  const el = document.querySelector('YOUR_SELECTOR');
+// evaluate_script function param -- check contrast ratio for a specific element
+(selector) => {
+  const el = document.querySelector(selector);
   const style = window.getComputedStyle(el);
   const color = style.color;
   const bg = style.backgroundColor;
@@ -131,7 +131,8 @@ Use `evaluate_script` to compute contrast ratios for text elements:
     passesAA_large: ratio >= 3,
     passesAAA_normal: ratio >= 7
   });
-})()
+}
+// Call with args: ["h1"] or any CSS selector
 ```
 
 **Thresholds** (WCAG 2.1 AA):
@@ -212,6 +213,8 @@ Every automation follows this sequence:
 4. Identify target elements by **text content and role** (never hardcoded coordinates)
 5. Perform action (`click`, `fill`, `press_key`)
 6. `take_screenshot` to verify the result
+
+**Advanced**: Use `navigate_page` with `initScript` to inject JavaScript that runs before any page scripts on the next navigation. Useful for mocking APIs, setting feature flags, or patching globals before the app boots.
 
 ### Element Finding: Snapshot-First
 
