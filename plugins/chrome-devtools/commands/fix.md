@@ -38,7 +38,7 @@ lsof -i :9222 -sTCP:LISTEN 2>/dev/null
 ```bash
 curl -s --max-time 3 http://localhost:9222/json/version
 ```
-- Response -> Chrome running but MCP transport issue.
+- Response -> Chrome running but MCP transport issue. Parse the `Browser` field from the JSON (e.g., `"Chrome/144.0.6367.60"`) and report: "Chrome {version} detected." If major version >= 144, add: "Auto-connect is available (`--autoConnect`). See diagnostics.md for setup."
 - No response -> Chrome not running with debug port.
 
 **Layer 4: MCP process check**

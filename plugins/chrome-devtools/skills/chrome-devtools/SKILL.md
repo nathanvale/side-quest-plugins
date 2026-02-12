@@ -42,7 +42,7 @@ lsof -i :9222 -sTCP:LISTEN 2>/dev/null
 ```bash
 curl -s --max-time 3 http://localhost:9222/json/version
 ```
-- Response -> Chrome running but MCP can't connect (transport issue)
+- Response -> Chrome running but MCP can't connect (transport issue). Parse the `Browser` field from the JSON response (e.g., `"Chrome/144.0.6367.60"`) and report the version to the user. If Chrome >= 144, note: "Auto-connect is available for this Chrome version (`--autoConnect`)."
 - No response -> Chrome not running with debug port
 
 **Layer 4: MCP process check** (if layers 2-3 suggest MCP issue)
@@ -63,7 +63,23 @@ ps aux | grep -c '[c]hrome-devtools-mcp'
 - **Screenshot files**: NEVER use the `Read` tool to display screenshot images saved to disk. Report the file path to the user instead. Full-page captures can exceed API size limits and crash the conversation.
 - **Pagination**: Use `pageIdx`/`pageSize` for list tools with many entries
 
-## 3. Workflow Routing
+## 3. Recommended Setup
+
+Three connection modes, each with different trade-offs:
+
+| Mode | Best For | Trade-off |
+|------|----------|-----------|
+| Default (auto-launch) | Quick tasks, clean state | Loses auth, separate profile |
+| `--autoConnect` (Chrome 144+) | Auth-gated sites, debugging handoff | Permission dialog every connection |
+| `--browserUrl` + `--user-data-dir` | Persistent sessions, daily driver | Manual Chrome launch required |
+
+- **Default** is zero-config -- the MCP launches Chrome automatically with a persistent profile. Best for one-off automation and testing.
+- **`--autoConnect`** connects to your already-running Chrome. Best when you need existing cookies/sessions (e.g., authenticated sites). Requires Chrome 144+ and shows a permission dialog on each connection.
+- **`--browserUrl` + `--user-data-dir`** gives you full control: launch Chrome yourself with `--remote-debugging-port=9222` and point the MCP at it. No permission dialogs, works with your main profile. Best for daily development workflows.
+
+See [diagnostics.md](references/diagnostics.md) for setup details and known issues for each mode.
+
+## 4. Workflow Routing
 
 Match the user's intent and load the appropriate reference:
 
@@ -86,7 +102,7 @@ Match the user's intent and load the appropriate reference:
 | Connection issues | [diagnostics.md](references/diagnostics.md) | Layered diagnostic flow |
 | Tool parameters | [tools.md](references/tools.md) | High-signal tool reference |
 
-## 4. Core Patterns
+## 5. Core Patterns
 
 ### Snapshot-First Element Finding
 
@@ -120,7 +136,7 @@ When workflows create secrets (npm tokens, API keys):
 - Display only first 8 characters to the user: `npm_1234abcd...`
 - Immediately offer storage (1Password -> gh secret set -> manual copy)
 
-## 5. Token Efficiency
+## 6. Token Efficiency
 
 Minimize token usage and context window pressure:
 
@@ -130,7 +146,7 @@ Minimize token usage and context window pressure:
 - **Filter `list_network_requests` with `resourceTypes`** -- pass `["xhr", "fetch"]` to isolate API calls instead of dumping hundreds of image/font/stylesheet entries.
 - **Use `pageIdx`/`pageSize` pagination** on list tools (`list_network_requests`, `list_console_messages`) to retrieve only what you need. Start with page 0, small page size, and paginate forward only if needed.
 
-## 6. Graceful Degradation
+## 7. Graceful Degradation
 
 On any failure mid-workflow:
 1. Screenshot current state (if connection alive AND no secrets visible on screen)

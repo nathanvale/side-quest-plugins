@@ -41,7 +41,7 @@ lsof -i :9222 -sTCP:LISTEN 2>/dev/null
 ```bash
 curl -s --max-time 3 http://localhost:9222/json/version
 ```
-- **Response**: Chrome is running with debug port. The issue is MCP transport.
+- **Response**: Chrome is running with debug port. Parse the `Browser` field (e.g., `"Chrome/144.0.6367.60"`) and report the version. If Chrome >= 144, note auto-connect availability (`--autoConnect`). The issue is MCP transport.
 - **No response**: Chrome is not running with remote debugging enabled.
 
 ### Layer 4: MCP Process Check
@@ -107,7 +107,12 @@ Use `--isolated` for a temporary user data directory. This prevents profile lock
 
 ### Auto-Connect (Chrome 144+)
 
-Use `--autoConnect` to connect to an already-running Chrome instance instead of launching a new one:
+Connects to your already-running Chrome without needing `--remote-debugging-port`. Chrome 144+ exposes a native DevTools protocol endpoint that the MCP can discover automatically.
+
+**Setup:**
+
+1. Open `chrome://inspect/#remote-debugging` in Chrome and ensure remote debugging is enabled
+2. Configure the MCP server with `--autoConnect`:
 
 ```json
 {
@@ -119,7 +124,16 @@ Use `--autoConnect` to connect to an already-running Chrome instance instead of 
 }
 ```
 
-**When to use**: Chrome is already running with `--remote-debugging-port=9222`. Avoids launching a second instance.
+Optionally target a specific Chrome channel: `--channel=beta`, `--channel=canary`, or `--channel=dev`.
+
+**Best for**: Auth-gated sites (uses existing cookies/sessions), manual-to-AI debugging handoff, ad-hoc debugging sessions.
+
+**Known friction:**
+- Chrome shows a permission dialog on every MCP connection -- there is no "Always allow" option yet
+- On macOS, auto-connect cannot use your main Chrome profile if Chrome is already running; you may need a separate profile
+- Suspended tabs (from "Continue where you left off") can cause connection timeouts -- disable this Chrome setting or close stale tabs
+
+**When `--browserUrl` is better**: For persistent, frictionless daily-driver sessions, launch Chrome yourself with `--remote-debugging-port=9222` and `--user-data-dir` and use `--browserUrl` instead. No permission dialogs, works with any Chrome version.
 
 ### Profile Lock Recovery
 
