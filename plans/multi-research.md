@@ -103,14 +103,12 @@ allowed-tools: Bash(bunx *), Read, Glob, Grep, Task, AskUserQuestion, WebSearch,
 
 ### 3. Modify: `plugins/research/.claude-plugin/plugin.json`
 
-```json
-"commands": ["./commands/last-30-days.md", "./commands/multi-research.md"]
-```
+Remove `commands` array (multi-topic is now handled by the unified skill).
 
-### 4. No changes to existing files
+### 4. Actual changes (updated post-implementation)
 
-- `skills/last-30-days/SKILL.md` -- unchanged
-- `commands/last-30-days.md` -- unchanged
+- `skills/last-30-days/SKILL.md` -- **modified** (unified with multi-topic support)
+- `commands/last-30-days.md` -- **deleted** (migrated into skill)
 - CLI package -- unchanged
 
 ## Output Format

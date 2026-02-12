@@ -30,7 +30,7 @@ Save to `.claude/agents/team/builder.md`:
 ---
 name: builder
 description: Generic engineering agent that executes ONE task at a time. Use when work needs to be done - writing code, creating files, implementing features.
-model: opus
+model: sonnet
 hooks:
   PostToolUse:
     - matcher: "Write|Edit"
@@ -119,7 +119,7 @@ Save to `.claude/agents/team/validator.md`:
 ---
 name: validator
 description: Read-only validation agent that checks if a task was completed successfully. Use after a builder finishes to verify work meets acceptance criteria.
-model: opus
+model: haiku
 disallowedTools: Write, Edit, NotebookEdit
 ---
 
@@ -230,20 +230,20 @@ TaskCreate({
 // 2. Set dependency
 TaskUpdate({ taskId: "2", addBlockedBy: ["1"] })
 
-// 3. Deploy Builder
+// 3. Deploy Builder (sonnet -- executes well-specified tasks)
 Task({
   description: "Implement auth middleware",
   prompt: "Execute Task 1: Implement JWT authentication middleware. Use TaskGet to read full requirements.",
   subagent_type: "builder",  // Custom agent from .claude/agents/team/
-  model: "opus"
+  model: "sonnet"
 })
 
-// 4. After Builder completes, deploy Validator
+// 4. After Builder completes, deploy Validator (haiku -- mechanical checks only)
 Task({
   description: "Validate auth middleware",
   prompt: "Validate Task 1 was completed correctly. Use TaskGet to read acceptance criteria. Report PASS or FAIL.",
   subagent_type: "validator",
-  model: "opus"
+  model: "haiku"
 })
 
 // 5. If FAIL, resume Builder to fix

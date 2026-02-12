@@ -6,7 +6,7 @@ description: >
   topics (separated by AND) with parallel agents and cross-topic synthesis.
   Use when users ask about recent trends, community opinions, recommendations,
   or current discussions on any topic.
-argument-hint: '"topic" or "topic 1" AND "topic 2" [--quick|--deep]'
+argument-hint: '"topic" or "topic 1" AND "topic 2" [--quick|--deep|--refresh]'
 allowed-tools: Bash(bunx *), Read, Glob, Grep, Task, AskUserQuestion, WebSearch, WebFetch
 ---
 
@@ -25,6 +25,7 @@ Supports two modes:
 /last-30-days [topic] for [tool]
 /last-30-days [topic] --quick
 /last-30-days [topic] --deep
+/last-30-days [topic] --refresh
 /last-30-days "topic 1" AND "topic 2"
 /last-30-days "topic 1" AND "topic 2" AND "topic 3" --quick
 ```
@@ -34,6 +35,7 @@ Supports two modes:
 - `/last-30-days photorealistic people in Nano Banana Pro` - prompting research
 - `/last-30-days what's happening with OpenAI` - news
 - `/last-30-days "Claude Code" AND "Cursor" AND "GitHub Copilot" --quick` - multi-topic comparison
+- `/last-30-days Claude Code hooks --refresh` - bypass cache, force fresh API calls
 
 ---
 
@@ -51,9 +53,11 @@ Parse `$ARGUMENTS` to extract topics, flags, and mode.
 
 Extract and strip flags from the FULL `$ARGUMENTS` string BEFORE splitting on AND:
 
-1. Scan for `--quick` or `--deep` anywhere in the string
-2. Store matched flag as `FLAGS` string (e.g., `--quick` or `--deep` or empty)
-3. Remove all `--quick` and `--deep` occurrences from the arguments string
+1. Scan for `--quick`, `--deep`, or `--refresh` anywhere in the string
+2. Store matched flags as `FLAGS` string (e.g., `--quick`, `--deep`, `--refresh`, or combinations like `--quick --refresh`)
+3. Remove all `--quick`, `--deep`, and `--refresh` occurrences from the arguments string
+
+**Note:** `--refresh` is combinable with depth flags (e.g., `--quick --refresh`). It bypasses the CLI's local cache to force fresh API calls.
 
 This prevents flags from being appended to the last topic.
 
@@ -87,10 +91,15 @@ Store: `TOPIC`, `TARGET_TOOL` (or "unknown"), `QUERY_TYPE`
 **No arguments provided:** Show usage help and stop.
 
 ```
-Usage: /last-30-days [topic] [--quick|--deep]
-       /last-30-days "topic 1" AND "topic 2" [--quick|--deep]
+Usage: /last-30-days [topic] [--quick|--deep] [--refresh]
+       /last-30-days "topic 1" AND "topic 2" [--quick|--deep] [--refresh]
 
 Research any topic from the last 30 days across Reddit, X, and the web.
+
+Flags:
+  --quick     Faster, lighter research
+  --deep      More thorough, slower research
+  --refresh   Bypass cache, force fresh API calls (combinable with --quick/--deep)
 
 Single topic examples:
   /last-30-days best Claude Code skills
@@ -98,7 +107,7 @@ Single topic examples:
 
 Multi-topic examples:
   /last-30-days "Claude Code" AND "Cursor"
-  /last-30-days "React" AND "Vue" AND "Svelte" --quick
+  /last-30-days "React" AND "Vue" AND "Svelte" --quick --refresh
 ```
 
 ---
@@ -195,7 +204,7 @@ KEY PATTERNS I'll use:
 For **full/partial mode**:
 ```
 ---
-All agents reported back!
+Research complete!
 - Reddit: {n} threads | {sum} upvotes | {sum} comments
 - X: {n} posts | {sum} likes | {sum} reposts
 - Web: {n} pages | {domains}

@@ -152,18 +152,27 @@ Use these files to complete the task:
 - IMPORTANT: You NEVER operate directly on the codebase. You use Task and Task* tools.
 - Take note of the session id of each team member for resume operations.
 
+### Model Selection Guide
+
+| Role | Model | Rationale |
+|------|-------|-----------|
+| All builders | sonnet | Executes well-specified tasks reliably |
+| All validators | haiku | Mechanical checks: read files, run commands, report PASS/FAIL |
+
 ### Team Members
 
 - Builder
   - Name: <unique name, e.g., builder-api>
   - Role: <single focus area>
   - Agent Type: <subagent type from team/*.md or general-purpose>
+  - Model: sonnet
   - Resume: true
 
 - Validator
   - Name: <unique name, e.g., validator-api>
   - Role: <what this validator checks>
   - Agent Type: validator
+  - Model: haiku
   - Resume: true
 
 ## Step by Step Tasks
@@ -176,6 +185,7 @@ Use these files to complete the task:
 - **Depends On**: none
 - **Assigned To**: <team member name>
 - **Agent Type**: <subagent type>
+- **Model**: <sonnet|haiku per Model Selection Guide>
 - **Parallel**: <true/false>
 - <specific action to complete>
 - <specific action to complete>
@@ -185,6 +195,7 @@ Use these files to complete the task:
 - **Depends On**: <previous Task ID>
 - **Assigned To**: <team member name>
 - **Agent Type**: <subagent type>
+- **Model**: <sonnet|haiku per Model Selection Guide>
 - **Parallel**: <true/false>
 - <specific action>
 - <specific action>
@@ -194,6 +205,7 @@ Use these files to complete the task:
 - **Depends On**: <all previous Task IDs>
 - **Assigned To**: <validator name>
 - **Agent Type**: validator
+- **Model**: haiku
 - **Parallel**: false
 - Run all validation commands
 - Verify acceptance criteria met
