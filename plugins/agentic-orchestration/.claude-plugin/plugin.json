@@ -20,6 +20,10 @@
 	],
 	"license": "MIT",
 	"skills": ["./skills/agentic-orchestration"],
-	"commands": ["./commands/plan-with-team.md"],
+	"commands": [
+		"./commands/plan-with-team.md",
+		"./commands/review.md",
+		"./commands/review-plan.md"
+	],
 	"hooks": ["./hooks/hooks.json"]
 }

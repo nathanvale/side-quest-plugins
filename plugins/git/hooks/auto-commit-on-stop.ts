@@ -7,6 +7,7 @@
  */
 
 import { readFile } from 'node:fs/promises'
+import { postEvent } from './event-bus-client'
 import type { FileStatusCounts } from './git-status-parser'
 import { parsePorcelainStatus } from './git-status-parser'
 
@@ -159,6 +160,15 @@ if (import.meta.main) {
 			console.error(
 				'Warning: Failed to create WIP commit. Changes remain uncommitted.',
 			)
+		}
+
+		try {
+			await postEvent(input.cwd, 'session.ended', {
+				committed: success,
+				branch: await getCurrentBranch(input.cwd),
+			})
+		} catch {
+			// event emission is best-effort
 		}
 	} catch {
 		// never crash the hook

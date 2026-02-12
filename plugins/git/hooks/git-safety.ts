@@ -7,6 +7,8 @@
  * Returns exit code 2 with permissionDecision: "deny" for blocked commands.
  */
 
+import { postEvent } from './event-bus-client'
+
 interface PreToolUseHookInput {
 	tool_name: string
 	tool_input?: {
@@ -71,6 +73,43 @@ const BLOCKED_PATTERNS: Array<{ pattern: RegExp; reason: string }> = [
 		pattern: /git\s+branch\s+.*-D\s/,
 		reason: 'git branch -D force-deletes a branch even if not merged.',
 	},
+	{
+		pattern:
+			/(?:^|[;&|]\s*)git\s+(?:-C\s+\S+\s+)?worktree\s+remove\s+.*(?:--force|-f)\b/,
+		reason:
+			'Force-removing a worktree can destroy uncommitted work. Use `bunx @side-quest/git worktree delete` which checks status first.',
+	},
+]
+
+/**
+ * Custom checkers for patterns that are too complex for a single regex.
+ * Each returns a block reason string, or null if allowed.
+ */
+const CUSTOM_CHECKERS: Array<(command: string) => string | null> = [
+	/**
+	 * Block `rm` with recursive+force flags targeting .worktrees paths.
+	 * Catches combined flags (-rf, -fr), split flags (-r -f), -- separator,
+	 * and flags mixed with other options (-rfi, etc.).
+	 */
+	(command) => {
+		// Match rm followed by flags/-- then a .worktrees path
+		const rmMatch = command.match(
+			/(?:^|[;&|]\s*)rm\s+((?:-[a-zA-Z]+\s+)*)(?:--\s+)?(\S*\.worktrees(?:[/\\]|\s|$))/,
+		)
+		if (!rmMatch) return null
+
+		// Collect all flag characters from all flag groups
+		const flagsStr = rmMatch[1] || ''
+		const allFlags = [...flagsStr.matchAll(/-([a-zA-Z]+)/g)]
+			.map((m) => m[1])
+			.join('')
+
+		// Both -r and -f must be present (in any order, any group)
+		if (allFlags.includes('r') && allFlags.includes('f')) {
+			return 'Deleting .worktrees/ directly bypasses git worktree cleanup. Use `bunx @side-quest/git worktree clean` instead.'
+		}
+		return null
+	},
 ]
 
 export function checkCommand(command: string): {
@@ -79,6 +118,12 @@ export function checkCommand(command: string): {
 } {
 	for (const { pattern, reason } of BLOCKED_PATTERNS) {
 		if (pattern.test(command)) {
+			return { blocked: true, reason }
+		}
+	}
+	for (const checker of CUSTOM_CHECKERS) {
+		const reason = checker(command)
+		if (reason) {
 			return { blocked: true, reason }
 		}
 	}
@@ -169,6 +214,14 @@ if (import.meta.main) {
 					permissionDecisionReason: fileResult.reason,
 				}
 				console.log(JSON.stringify({ hookSpecificOutput }))
+				try {
+					await postEvent(input.cwd || process.cwd(), 'safety.blocked', {
+						tool: input.tool_name,
+						reason: hookSpecificOutput.permissionDecisionReason,
+					})
+				} catch {
+					// event emission is best-effort
+				}
 				process.exit(2)
 			}
 
@@ -192,6 +245,14 @@ if (import.meta.main) {
 				permissionDecisionReason: commandResult.reason,
 			}
 			console.log(JSON.stringify({ hookSpecificOutput }))
+			try {
+				await postEvent(input.cwd || process.cwd(), 'safety.blocked', {
+					tool: input.tool_name,
+					reason: hookSpecificOutput.permissionDecisionReason,
+				})
+			} catch {
+				// event emission is best-effort
+			}
 			process.exit(2)
 		}
 
@@ -216,6 +277,14 @@ if (import.meta.main) {
 					].join('\n'),
 				}
 				console.log(JSON.stringify({ hookSpecificOutput }))
+				try {
+					await postEvent(input.cwd || process.cwd(), 'safety.blocked', {
+						tool: input.tool_name,
+						reason: hookSpecificOutput.permissionDecisionReason,
+					})
+				} catch {
+					// event emission is best-effort
+				}
 				process.exit(2)
 			}
 
@@ -233,6 +302,14 @@ if (import.meta.main) {
 					].join('\n'),
 				}
 				console.log(JSON.stringify({ hookSpecificOutput }))
+				try {
+					await postEvent(input.cwd || process.cwd(), 'safety.blocked', {
+						tool: input.tool_name,
+						reason: hookSpecificOutput.permissionDecisionReason,
+					})
+				} catch {
+					// event emission is best-effort
+				}
 				process.exit(2)
 			}
 		}
