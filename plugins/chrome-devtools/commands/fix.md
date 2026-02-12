@@ -1,6 +1,12 @@
 ---
 description: Diagnose and fix Chrome DevTools MCP connection issues
 argument-hint: "[--check]"
+allowed-tools:
+  - Bash
+  - Read
+  - AskUserQuestion
+  - ToolSearch
+  - mcp__chrome-devtools__*
 ---
 
 Diagnose and optionally fix Chrome DevTools MCP connection issues.
