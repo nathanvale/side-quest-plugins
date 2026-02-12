@@ -1,99 +1,134 @@
 ---
 name: last-30-days
-description: Research any topic from the last 30 days across Reddit, X, and web with engagement-ranked results.
-argument-hint: '"[topic] for [tool]" or "[topic]"'
-context: fork
-agent: general-purpose
-allowed-tools: Bash, Read, Write, AskUserQuestion, WebSearch, WebFetch
+description: >
+  Research any topic from the last 30 days across Reddit, X, and the web.
+  Supports single topics with deep prompt-writing follow-up, or multiple
+  topics (separated by AND) with parallel agents and cross-topic synthesis.
+  Use when users ask about recent trends, community opinions, recommendations,
+  or current discussions on any topic.
+argument-hint: '"topic" or "topic 1" AND "topic 2" [--quick|--deep|--refresh]'
+allowed-tools: Bash(bunx *), Read, Glob, Grep, Task, AskUserQuestion, WebSearch, WebFetch
 ---
 
 # last-30-days: Research Any Topic from the Last 30 Days
 
 Research ANY topic across Reddit, X, and the web. Surface what people are actually discussing, recommending, and debating right now.
 
-Use cases:
-- **Prompting**: "photorealistic people in Nano Banana Pro", "Midjourney prompts", "ChatGPT image generation" - learn techniques, get copy-paste prompts
-- **Recommendations**: "best Claude Code skills", "top AI tools" - get a LIST of specific things people mention
-- **News**: "what's happening with OpenAI", "latest AI announcements" - current events and updates
-- **General**: any topic you're curious about - understand what the community is saying
+Supports two modes:
+- **Single topic**: Deep research with prompt-writing follow-up
+- **Multi-topic**: Parallel background agents with cross-topic synthesis
 
-## CRITICAL: Parse User Intent
+## Usage
 
-Before doing anything, parse the user's input for:
-
-1. **TOPIC**: What they want to learn about (e.g., "web app mockups", "Claude Code skills", "image generation")
-2. **TARGET TOOL** (if specified): Where they'll use the prompts (e.g., "Nano Banana Pro", "ChatGPT", "Midjourney")
-3. **QUERY TYPE**: What kind of research they want:
-   - **PROMPTING** - "X prompts", "prompting for X", "X best practices" - User wants to learn techniques and get copy-paste prompts
-   - **RECOMMENDATIONS** - "best X", "top X", "what X should I use", "recommended X" - User wants a LIST of specific things
-   - **NEWS** - "what's happening with X", "X news", "latest on X" - User wants current events/updates
-   - **GENERAL** - anything else - User wants broad understanding of the topic
-
-Common patterns:
-- `[topic] for [tool]` - "web mockups for Nano Banana Pro" - TOOL IS SPECIFIED
-- `[topic] prompts for [tool]` - "UI design prompts for Midjourney" - TOOL IS SPECIFIED
-- Just `[topic]` - "iOS design mockups" - TOOL NOT SPECIFIED, that's OK
-- "best [topic]" or "top [topic]" - QUERY_TYPE = RECOMMENDATIONS
-- "what are the best [topic]" - QUERY_TYPE = RECOMMENDATIONS
-
-**IMPORTANT: Do NOT ask about target tool before research.**
-- If tool is specified in the query, use it
-- If tool is NOT specified, run research first, then ask AFTER showing results
-
-**Store these variables:**
-- `TOPIC = [extracted topic]`
-- `TARGET_TOOL = [extracted tool, or "unknown" if not specified]`
-- `QUERY_TYPE = [PROMPTING | RECOMMENDATIONS | NEWS | GENERAL]`
-
----
-
-## Setup Check
-
-The skill works in three modes based on available API keys:
-
-1. **Full Mode** (both keys): Reddit + X + WebSearch - best results with engagement metrics
-2. **Partial Mode** (one key): Reddit-only or X-only + WebSearch
-3. **Web-Only Mode** (no keys): WebSearch only - still useful, but no engagement metrics
-
-**API keys are OPTIONAL.** The skill will work without them using WebSearch fallback.
-
-### First-Time Setup (Optional but Recommended)
-
-If the user wants to add API keys for better results:
-
-```bash
-mkdir -p ~/.config/research
-cat > ~/.config/research/.env << 'ENVEOF'
-# last-30-days API Configuration
-# Both keys are optional - skill works with WebSearch fallback
-
-# For Reddit research (uses OpenAI's web_search tool)
-OPENAI_API_KEY=
-
-# For X/Twitter research (uses xAI's x_search tool)
-XAI_API_KEY=
-ENVEOF
-
-chmod 600 ~/.config/research/.env
-echo "Config created at ~/.config/research/.env"
-echo "Edit to add your API keys for enhanced research."
+```
+/last-30-days [topic]
+/last-30-days [topic] for [tool]
+/last-30-days [topic] --quick
+/last-30-days [topic] --deep
+/last-30-days [topic] --refresh
+/last-30-days "topic 1" AND "topic 2"
+/last-30-days "topic 1" AND "topic 2" AND "topic 3" --quick
 ```
 
-**DO NOT stop if no keys are configured.** Proceed with web-only mode.
+**Examples:**
+- `/last-30-days best Claude Code skills` - recommendations
+- `/last-30-days photorealistic people in Nano Banana Pro` - prompting research
+- `/last-30-days what's happening with OpenAI` - news
+- `/last-30-days "Claude Code" AND "Cursor" AND "GitHub Copilot" --quick` - multi-topic comparison
+- `/last-30-days Claude Code hooks --refresh` - bypass cache, force fresh API calls
 
 ---
 
-## Research Execution
+## Proactive Invocation
 
-The CLI tool runs automatically below via the `!` preprocessor. Its output is injected directly -- you do NOT need to run Bash yourself.
+This skill can be invoked proactively when the user asks about recent community discussions, trends, or opinions. No need to ask permission -- just launch the research. The user can always cancel/interrupt if they didn't want research.
 
-### CLI Research Output
+---
 
-!`bunx --bun @side-quest/last-30-days "$ARGUMENTS" --emit=compact 2>&1`
+## Step 1: Parse Arguments
+
+Parse `$ARGUMENTS` to extract topics, flags, and mode.
+
+### Flag extraction (do this FIRST)
+
+Extract and strip flags from the FULL `$ARGUMENTS` string BEFORE splitting on AND:
+
+1. Scan for `--quick`, `--deep`, or `--refresh` anywhere in the string
+2. Store matched flags as `FLAGS` string (e.g., `--quick`, `--deep`, `--refresh`, or combinations like `--quick --refresh`)
+3. Remove all `--quick`, `--deep`, and `--refresh` occurrences from the arguments string
+
+**Note:** `--refresh` is combinable with depth flags (e.g., `--quick --refresh`). It bypasses the CLI's local cache to force fresh API calls.
+
+This prevents flags from being appended to the last topic.
+
+### Mode detection
+
+After stripping flags, check if the remaining string contains ` AND ` (case-insensitive):
+- **Contains AND** -> MULTI-TOPIC mode (Step 2M)
+- **No AND** -> SINGLE-TOPIC mode (Step 2S)
+
+### Topic parsing (after flags are stripped)
+
+**For MULTI-TOPIC mode:**
+1. Split the flag-stripped string on ` AND ` (case-insensitive regex: `\s+[Aa][Nn][Dd]\s+`)
+2. For each segment: strip whitespace, strip surrounding quotes, skip if empty
+3. Store as `TOPICS[]` array
+4. **Max 5 topics** - if more, use AskUserQuestion to confirm or trim
+
+**For SINGLE-TOPIC mode:**
+1. The entire flag-stripped string is the topic
+2. Parse for TARGET TOOL: `[topic] for [tool]` pattern
+3. Parse QUERY TYPE:
+   - **PROMPTING** - "X prompts", "prompting for X", "X best practices"
+   - **RECOMMENDATIONS** - "best X", "top X", "what X should I use"
+   - **NEWS** - "what's happening with X", "X news", "latest on X"
+   - **GENERAL** - anything else
+
+Store: `TOPIC`, `TARGET_TOOL` (or "unknown"), `QUERY_TYPE`
+
+### Validation
+
+**No arguments provided:** Show usage help and stop.
+
+```
+Usage: /last-30-days [topic] [--quick|--deep] [--refresh]
+       /last-30-days "topic 1" AND "topic 2" [--quick|--deep] [--refresh]
+
+Research any topic from the last 30 days across Reddit, X, and the web.
+
+Flags:
+  --quick     Faster, lighter research
+  --deep      More thorough, slower research
+  --refresh   Bypass cache, force fresh API calls (combinable with --quick/--deep)
+
+Single topic examples:
+  /last-30-days best Claude Code skills
+  /last-30-days photorealistic people for Midjourney --deep
+
+Multi-topic examples:
+  /last-30-days "Claude Code" AND "Cursor"
+  /last-30-days "React" AND "Vue" AND "Svelte" --quick --refresh
+```
+
+---
+
+## Step 2S: Single-Topic Research
+
+For single-topic mode, run research directly in the orchestrator (no sub-agents needed).
+
+### CLI Research
+
+Run the CLI tool:
+
+```bash
+bunx --bun @side-quest/last-30-days "$TOPIC" --emit=compact $FLAGS 2>&1
+```
+
+Capture the ENTIRE output -- this contains Reddit threads, X posts, and engagement metrics.
 
 ### Check the output mode
 
-The CLI output above will indicate the mode:
+The CLI output will indicate the mode:
 - **"Mode: both"** or **"Mode: reddit-only"** or **"Mode: x-only"**: CLI found results, WebSearch is supplementary
 - **"Mode: web-only"**: No API keys, Claude must do ALL research via WebSearch
 
@@ -117,7 +152,7 @@ Choose search queries based on QUERY_TYPE:
 **If PROMPTING** ("X prompts", "prompting for X"):
 - Search for: `{TOPIC} prompts examples 2026`
 - Search for: `{TOPIC} techniques tips`
-- Goal: Find prompting techniques and examples to create copy-paste prompts
+- Goal: Find prompting techniques and examples
 
 **If GENERAL** (default):
 - Search for: `{TOPIC} 2026`
@@ -125,96 +160,34 @@ Choose search queries based on QUERY_TYPE:
 - Goal: Find what people are actually saying
 
 For ALL query types:
-- **USE THE USER'S EXACT TERMINOLOGY** - don't substitute or add tech names based on your knowledge
-  - If user says "ChatGPT image prompting", search for "ChatGPT image prompting"
-  - Do NOT add "DALL-E", "GPT-4o", or other terms you think are related
-  - Your knowledge may be outdated - trust the user's terminology
+- **USE THE USER'S EXACT TERMINOLOGY** - don't substitute based on your knowledge
 - EXCLUDE reddit.com, x.com, twitter.com (covered by CLI)
-- INCLUDE: blogs, tutorials, docs, news, GitHub repos
-- **DO NOT output "Sources:" list** - this is noise, we'll show stats at the end
+- **DO NOT output "Sources:" list** - stats come at the end
 
-**Depth options** (passed through from user's command):
-- `--quick` - Faster, fewer sources (8-12 each)
-- (default) - Balanced (20-30 each)
-- `--deep` - Comprehensive (50-70 Reddit, 40-60 X)
+### Synthesize
 
----
+**CRITICAL: Ground synthesis in ACTUAL research content, not pre-existing knowledge.**
 
-## Judge Agent: Synthesize All Sources
+Weight Reddit/X sources HIGHER (engagement signals). Identify patterns across all sources. Note contradictions. Extract top 3-5 actionable insights.
 
-**After all searches complete, internally synthesize (don't display stats yet):**
+**If RECOMMENDATIONS**: Extract SPECIFIC NAMES, count mentions, list by popularity.
 
-The Judge Agent must:
-1. Weight Reddit/X sources HIGHER (they have engagement signals: upvotes, likes)
-2. Weight WebSearch sources LOWER (no engagement data)
-3. Identify patterns that appear across ALL three sources (strongest signals)
-4. Note any contradictions between sources
-5. Extract the top 3-5 actionable insights
+**If PROMPTING**: Identify the PROMPT FORMAT the research recommends (JSON, structured, natural language, keywords).
 
-**Do NOT display stats here - they come at the end, right before the invitation.**
-
----
-
-## FIRST: Internalize the Research
-
-**CRITICAL: Ground your synthesis in the ACTUAL research content, not your pre-existing knowledge.**
-
-Read the research output carefully. Pay attention to:
-- **Exact product/tool names** mentioned (e.g., if research mentions "ClawdBot" or "@clawdbot", that's a DIFFERENT product than "Claude Code" - don't conflate them)
-- **Specific quotes and insights** from the sources - use THESE, not generic knowledge
-- **What the sources actually say**, not what you assume the topic is about
-
-**ANTI-PATTERN TO AVOID**: If user asks about "clawdbot skills" and research returns ClawdBot content (self-hosted AI agent), do NOT synthesize this as "Claude Code skills" just because both involve "skills". Read what the research actually says.
-
-### If QUERY_TYPE = RECOMMENDATIONS
-
-**CRITICAL: Extract SPECIFIC NAMES, not generic patterns.**
-
-When user asks "best X" or "top X", they want a LIST of specific things:
-- Scan research for specific product names, tool names, project names, skill names, etc.
-- Count how many times each is mentioned
-- Note which sources recommend each (Reddit thread, X post, blog)
-- List them by popularity/mention count
-
-**BAD synthesis for "best Claude Code skills":**
-> "Skills are powerful. Keep them under 500 lines. Use progressive disclosure."
-
-**GOOD synthesis for "best Claude Code skills":**
-> "Most mentioned skills: /commit (5 mentions), remotion skill (4x), git-worktree (3x), /pr (3x). The Remotion announcement got 16K likes on X."
-
-### For all QUERY_TYPEs
-
-Identify from the ACTUAL RESEARCH OUTPUT:
-- **PROMPT FORMAT** - Does research recommend JSON, structured params, natural language, keywords? THIS IS CRITICAL.
-- The top 3-5 patterns/techniques that appeared across multiple sources
-- Specific keywords, structures, or approaches mentioned BY THE SOURCES
-- Common pitfalls mentioned BY THE SOURCES
-
-**If research says "use JSON prompts" or "structured prompts", you MUST deliver prompts in that format later.**
-
----
-
-## THEN: Show Summary + Invite Vision
-
-**CRITICAL: Do NOT output any "Sources:" lists. The final display should be clean.**
-
-**Display in this EXACT sequence:**
+### Display Results
 
 **FIRST - What I learned (based on QUERY_TYPE):**
 
-**If RECOMMENDATIONS** - Show specific things mentioned:
+**If RECOMMENDATIONS:**
 ```
 Most mentioned:
 1. [Specific name] - mentioned {n}x (r/sub, @handle, blog.com)
 2. [Specific name] - mentioned {n}x (sources)
-3. [Specific name] - mentioned {n}x (sources)
-4. [Specific name] - mentioned {n}x (sources)
-5. [Specific name] - mentioned {n}x (sources)
-
+...
 Notable mentions: [other specific things with 1-2 mentions]
 ```
 
-**If PROMPTING/NEWS/GENERAL** - Show synthesis and patterns:
+**If PROMPTING/NEWS/GENERAL:**
 ```
 What I learned:
 
@@ -226,19 +199,19 @@ KEY PATTERNS I'll use:
 3. [Pattern from research]
 ```
 
-**THEN - Stats (right before invitation):**
+**THEN - Stats:**
 
-For **full/partial mode** (has API keys):
+For **full/partial mode**:
 ```
 ---
-All agents reported back!
+Research complete!
 - Reddit: {n} threads | {sum} upvotes | {sum} comments
 - X: {n} posts | {sum} likes | {sum} reposts
 - Web: {n} pages | {domains}
 - Top voices: r/{sub1}, r/{sub2} | @{handle1}, @{handle2} | {web_author} on {site}
 ```
 
-For **web-only mode** (no API keys):
+For **web-only mode**:
 ```
 ---
 Research complete!
@@ -256,78 +229,30 @@ Want engagement metrics? Add API keys to ~/.config/research/.env
 Share your vision for what you want to create and I'll write a thoughtful prompt you can copy-paste directly into {TARGET_TOOL}.
 ```
 
-**Use real numbers from the research output.** The patterns should be actual insights from the research, not generic advice.
+**IF TARGET_TOOL is unknown**, ask NOW (not before research).
 
-**SELF-CHECK before displaying**: Re-read your "What I learned" section. Does it match what the research ACTUALLY says? If the research was about ClawdBot (a self-hosted AI agent), your summary should be about ClawdBot, not Claude Code. If you catch yourself projecting your own knowledge instead of the research, rewrite it.
+**IMPORTANT**: After displaying results, WAIT for the user to respond. Don't dump generic prompts.
 
-**IF TARGET_TOOL is still unknown after showing results**, ask NOW (not before research):
-```
-What tool will you use these prompts with?
+### Prompt Writing (after user shares vision)
 
-Options:
-1. [Most relevant tool based on research - e.g., if research mentioned Figma/Sketch, offer those]
-2. Nano Banana Pro (image generation)
-3. ChatGPT / Claude (text/code)
-4. Other (tell me)
-```
+When the user responds with what they want to create, write a **single, highly-tailored prompt**.
 
-**IMPORTANT**: After displaying this, WAIT for the user to respond. Don't dump generic prompts.
-
----
-
-## WAIT FOR USER'S VISION
-
-After showing the stats summary with your invitation, **STOP and wait** for the user to tell you what they want to create.
-
-When they respond with their vision (e.g., "I want a landing page mockup for my SaaS app"), THEN write a single, thoughtful, tailored prompt.
-
----
-
-## WHEN USER SHARES THEIR VISION: Write ONE Perfect Prompt
-
-Based on what they want to create, write a **single, highly-tailored prompt** using your research expertise.
-
-### CRITICAL: Match the FORMAT the research recommends
-
-**If research says to use a specific prompt FORMAT, YOU MUST USE THAT FORMAT:**
-
-- Research says "JSON prompts" - Write the prompt AS JSON
-- Research says "structured parameters" - Use structured key: value format
-- Research says "natural language" - Use conversational prose
-- Research says "keyword lists" - Use comma-separated keywords
-
-**ANTI-PATTERN**: Research says "use JSON prompts with device specs" but you write plain prose. This defeats the entire purpose of the research.
-
-### Output Format:
+**CRITICAL: Match the FORMAT the research recommends:**
+- Research says "JSON prompts" -> write AS JSON
+- Research says "structured parameters" -> use key: value format
+- Research says "natural language" -> use conversational prose
 
 ```
 Here's your prompt for {TARGET_TOOL}:
 
 ---
 
-[The actual prompt IN THE FORMAT THE RESEARCH RECOMMENDS - if research said JSON, this is JSON. If research said natural language, this is prose. Match what works.]
+[The actual prompt IN THE FORMAT THE RESEARCH RECOMMENDS]
 
 ---
 
 This uses [brief 1-line explanation of what research insight you applied].
 ```
-
-### Quality Checklist:
-- [ ] **FORMAT MATCHES RESEARCH** - If research said JSON/structured/etc, prompt IS that format
-- [ ] Directly addresses what the user said they want to create
-- [ ] Uses specific patterns/keywords discovered in research
-- [ ] Ready to paste with zero edits (or minimal [PLACEHOLDERS] clearly marked)
-- [ ] Appropriate length and style for TARGET_TOOL
-
----
-
-## IF USER ASKS FOR MORE OPTIONS
-
-Only if they ask for alternatives or more prompts, provide 2-3 variations. Don't dump a prompt pack unless requested.
-
----
-
-## AFTER EACH PROMPT: Stay in Expert Mode
 
 After delivering a prompt, offer to write more:
 
@@ -335,15 +260,225 @@ After delivering a prompt, offer to write more:
 
 ---
 
-## CONTEXT MEMORY
+## Step 2M: Multi-Topic Research
+
+For multi-topic mode, launch parallel background agents.
+
+### Launch Research Agents
+
+Launch one Task agent per topic using `subagent_type: "general-purpose"`.
+
+**Strategy:** Launch ALL agents as background agents in a single message for true parallel execution. Each agent runs the CLI tool and WebSearch independently.
+
+Tell the user research is starting:
+
+```
+Researching {N} topics in parallel ({N} agents)...
+Topics: {comma-separated list of topics in quotes}
+Depth: {FLAGS or "default"}
+```
+
+For each topic in `TOPICS[]`, launch a Task agent with this prompt (substitute `{TOPIC}`, `{FLAGS}`):
+
+```
+You are a focused research agent. Research the topic "{TOPIC}" from the last 30 days.
+
+## Step 1: Run the CLI research tool
+
+Run this command and capture its full output:
+
+```bash
+bunx --bun @side-quest/last-30-days "{TOPIC}" --emit=compact {FLAGS} 2>&1
+```
+
+Capture the ENTIRE output -- this contains Reddit threads, X posts, and engagement metrics.
+
+## Step 2: Supplement with WebSearch
+
+Run 2-3 WebSearch queries to supplement the CLI data:
+
+1. `{TOPIC} 2026` -- recent discussions and news
+2. `{TOPIC} discussion recommendations` -- community opinions
+3. `{TOPIC} comparison review` -- if the topic involves a tool/product
+
+Exclude reddit.com, x.com, twitter.com (already covered by CLI).
+
+## Step 3: Return structured output
+
+Return your findings in EXACTLY this format (do not deviate):
+
+---BEGIN RESEARCH REPORT---
+## TOPIC: {TOPIC}
+
+## CLI_OUTPUT_SUMMARY:
+[Summarize the key findings from the CLI output in 3-5 bullet points.
+Include specific numbers: thread counts, upvote counts, post counts, like counts.]
+
+## CLI_RAW_STATS:
+- Mode: [both|reddit-only|x-only|web-only]
+- Reddit threads: [N]
+- Reddit total upvotes: [N]
+- Reddit total comments: [N]
+- X posts: [N]
+- X total likes: [N]
+- X total reposts: [N]
+
+## WEB_SUPPLEMENT:
+[Summarize the key findings from WebSearch in 3-5 bullet points.
+Include source domains and author names where available.]
+- Web pages found: [N]
+- Key domains: [comma-separated list]
+
+## TOP_VOICES:
+[List the most authoritative/cited voices across all sources]
+- Subreddits: [r/sub1, r/sub2]
+- X handles: [@handle1, @handle2]
+- Web authors: [name1 on domain1, name2 on domain2]
+
+## KEY_FINDINGS:
+1. [Most important finding with evidence]
+2. [Second finding with evidence]
+3. [Third finding with evidence]
+4. [Fourth finding if notable]
+5. [Fifth finding if notable]
+
+## SENTIMENT:
+[Overall community sentiment: positive/negative/mixed/neutral]
+[1-2 sentences explaining why]
+
+## NOTABLE_QUOTES:
+- "[Exact quote from a highly-upvoted Reddit comment or viral X post]" -- source
+- "[Another notable quote]" -- source
+---END RESEARCH REPORT---
+
+IMPORTANT: Always return the structured report above. Do not skip sections.
+If a section has no data (e.g., no X posts found), write "None found" rather than omitting.
+```
+
+Launch all Task agents in a SINGLE message with `run_in_background: true`:
+
+- `subagent_type: "general-purpose"`
+- `model: "haiku"` (these agents run a CLI command, do 2-3 WebSearches, and fill a structured template -- Haiku is fast, cheap, and reliable for this workload)
+- `run_in_background: true`
+- `description: "Research: {TOPIC}"`
+- Each agent gets the prompt template above with its specific topic substituted
+
+### Collect Results
+
+Collect results using `TaskOutput` with `block: true`. Launch all TaskOutput calls in a SINGLE message so they resolve as each agent finishes:
+
+- For each agent, call `TaskOutput` with the agent's `task_id`, `block: true`, `timeout: 300000` (5 min per agent -- deep mode with external APIs can exceed 2 min)
+
+**Error handling:** If an agent fails, times out, or returns empty output:
+- Note the failure: `"Topic '{TOPIC}': Research agent failed or returned no data"`
+- Continue with remaining topics -- don't abort the whole run
+
+### Cross-Topic Synthesis
+
+With all reports collected, perform cross-topic analysis:
+
+**Per-topic summaries:** For each topic, write a 2-3 sentence synthesis grounded in the actual report data.
+
+**Cross-topic patterns:** Identify themes across 2+ topics -- shared technologies, common pain points, convergent trends.
+
+**Unique insights per topic:** What is discussed in one topic but NOT others.
+
+**Contradictions:** Where do the topics' communities disagree.
+
+### Display Multi-Topic Report
+
+```
+---
+
+## Topic 1: "{TOPIC_1}"
+
+[2-3 sentence synthesis grounded in the actual research findings]
+
+- Reddit: {n} threads | {sum} upvotes | {sum} comments
+- X: {n} posts | {sum} likes | {sum} reposts
+- Web: {n} pages
+- Top voices: r/{sub1}, r/{sub2} | @{handle1}, @{handle2} | {author} on {domain}
+- Sentiment: {positive/negative/mixed/neutral}
+
+## Topic 2: "{TOPIC_2}"
+
+[2-3 sentence synthesis]
+
+- Reddit: ...
+- X: ...
+- Web: ...
+- Top voices: ...
+- Sentiment: ...
+
+[...repeat for each topic...]
+
+---
+
+## Cross-Topic Patterns
+
+1. **{Pattern name}** -- {1-2 sentence explanation with evidence from specific topics}
+2. **{Pattern name}** -- {explanation}
+3. **{Pattern name}** -- {explanation}
+
+## Unique to Each Topic
+
+- **{Topic 1} only:** {insight not found in other topics}
+- **{Topic 2} only:** {insight not found in other topics}
+
+## Contradictions
+
+[Where topics' communities disagree -- skip if no contradictions found]
+
+- **{Topic A} vs {Topic B}:** {what they disagree about and why}
+
+---
+
+All agents reported back!
+- Topics researched: {N}
+- Total Reddit threads: {sum across all topics} | {sum upvotes} upvotes
+- Total X posts: {sum across all topics} | {sum likes} likes
+- Total Web pages: {sum across all topics}
+```
+
+### Multi-Topic Follow-Up
+
+After displaying the report, offer next steps:
+
+```
+What would you like to do next?
+
+1. Deep dive into one topic -- I'll do detailed single-topic research with prompt writing
+2. Compare specific aspects -- Ask me about patterns across these topics
+3. Export this report -- I'll save it to a file
+```
+
+Do NOT automatically start writing prompts in multi-topic mode.
+
+---
+
+## Error Handling
+
+**All agents/searches failed:**
+```
+Research failed. This may be due to:
+- Network issues
+- API rate limiting
+- CLI tool not installed (run: bun add -g @side-quest/last-30-days)
+
+Try again or check your connection.
+```
+
+---
+
+## Context Memory
 
 For the rest of this conversation, remember:
-- **TOPIC**: {topic}
-- **TARGET_TOOL**: {tool}
-- **KEY PATTERNS**: {list the top 3-5 patterns you learned}
-- **RESEARCH FINDINGS**: The key facts and insights from the research
+- **TOPIC(S)**: {topics}
+- **TARGET_TOOL**: {tool, if single-topic}
+- **KEY PATTERNS**: {top 3-5 patterns learned}
+- **RESEARCH FINDINGS**: Key facts and insights from the research
 
-**CRITICAL: After research is complete, you are now an EXPERT on this topic.**
+**After research is complete, you are now an EXPERT on this topic.**
 
 When the user asks follow-up questions:
 - **DO NOT run new WebSearches** - you already have the research
@@ -352,29 +487,3 @@ When the user asks follow-up questions:
 - **If they ask a question** - answer it from your research findings
 
 Only do new research if the user explicitly asks about a DIFFERENT topic.
-
----
-
-## Output Summary Footer (After Each Prompt)
-
-After delivering a prompt, end with:
-
-For **full/partial mode**:
-```
----
-Expert in: {TOPIC} for {TARGET_TOOL}
-Based on: {n} Reddit threads ({sum} upvotes) + {n} X posts ({sum} likes) + {n} web pages
-
-Want another prompt? Just tell me what you're creating next.
-```
-
-For **web-only mode**:
-```
----
-Expert in: {TOPIC} for {TARGET_TOOL}
-Based on: {n} web pages from {domains}
-
-Want another prompt? Just tell me what you're creating next.
-
-Unlock Reddit & X data: Add API keys to ~/.config/research/.env
-```
