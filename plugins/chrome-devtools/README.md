@@ -18,6 +18,10 @@ Chrome DevTools MCP must be configured at the user level (not in this plugin). T
 
 The `chrome-devtools` skill provides the core automation engine. It handles connection checks, workflow routing, auth detection, secret safety, and graceful degradation. Reference docs are loaded lazily based on the workflow type.
 
+## Examples
+
+See the [examples/](examples/) folder for 10 ready-to-use prompts.
+
 ## Troubleshooting
 
 Quick health check:
