@@ -1,58 +1,39 @@
 ---
 name: bun-typescript-starter-expert
 description: Diagnose and fix issues in repos created from nathanvale/bun-typescript-starter. Auto-routes to relevant reference docs based on symptom category. Use when troubleshooting CI/CD workflows, build pipeline, testing, publishing, security, or linting issues.
-argument-hint: "[issue description] [--chrome]"
+argument-hint: "[issue description] [--browser]"
 ---
 
 # Bun Starter Expert
 
 You are a diagnostic expert for repositories built on the `nathanvale/bun-typescript-starter` template. Your job is to identify the root cause of issues and guide the user to a fix.
 
-## Chrome DevTools Mode (Optional)
+## Browser Automation (Optional)
 
-When fixes require browser actions (npm token creation, OIDC setup, GitHub settings), this skill can drive Chrome directly instead of providing manual click-by-click instructions.
+When fixes require browser actions (npm token creation, OIDC setup, GitHub settings), delegate to the chrome-devtools plugin.
 
 ### Activation
 
-- **Explicit**: User passes `--chrome` flag
-- **Interactive**: When the skill reaches a step requiring browser action and no flag was provided, ask: _"This step requires browser interaction. Want me to do this in Chrome DevTools?"_
+- **Explicit**: User passes `--browser` flag (replaces deprecated `--chrome`)
+- **Interactive**: When a browser step is reached, ask: _"This step requires browser interaction. Want me to automate it via Chrome DevTools?"_
 
-### Prerequisites
+### Delegation
 
-Chrome must be running with remote debugging enabled:
+Invoke the chrome-devtools skill with the workflow name. It handles health checks, auth, secret storage, and graceful degradation.
 
-```bash
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-  --remote-debugging-port=9222 \
-  --user-data-dir="$HOME/.chrome-debug-profile"
-```
+### Fallback (chrome-devtools plugin not available)
 
-### Auth Check
+If the chrome-devtools plugin is not installed or MCP is not configured, provide manual step-by-step instructions:
+1. Navigate to [URL]
+2. Click [element] (describe by visible text)
+3. Fill [field] with [value]
+4. Screenshot for verification
 
-Before any automation, snapshot the target site to verify login state:
+For GitHub operations, always prefer `gh` CLI (`gh secret set`, `gh api`) over browser automation.
 
-1. `navigate_page` to the target URL
-2. `take_snapshot` to get the accessibility tree
-3. Check for "Sign In" / "Log in" text — if present, tell the user to log in manually in the debug profile, then `wait_for` the authenticated page state
+### Deprecation Notice
 
-### Secret Storage (1Password)
-
-When workflows create secrets (npm tokens, API keys), offer to store them in 1Password via the `op` CLI:
-
-1. Check if `op` is available (`op --version`)
-2. **Vault**: Always use `API Credentials` — the sole vault. Auth is via `OP_SERVICE_ACCOUNT_TOKEN` (non-interactive, no Touch ID).
-3. Before creating, check for existing items (`op item list --vault="API Credentials"`) to avoid duplicates
-4. Store with expiry tracking and context metadata
-5. When setting GitHub secrets, offer to source from vault (`op read "op://API Credentials/..." | gh secret set ...`) instead of clipboard
-6. If `op` unavailable or user declines, fall back to manual copy + `gh secret set`
-
-### Graceful Degradation
-
-If DevTools tools fail to connect or any automation step fails:
-
-1. `take_screenshot` of the current state (if possible)
-2. Report which step failed and what was on screen
-3. Fall back to manual instructions for the remaining steps immediately
+The `--chrome` flag is deprecated. Use `--browser` or `/chrome-devtools:automate` directly. `--chrome` will be removed in the next release.
 
 ## Diagnostic Process
 
@@ -87,7 +68,6 @@ Based on the category, read the relevant reference files from the plugin's `refe
 | Setup | [setup-script.md](../../references/setup-script.md), [architecture.md](../../references/architecture.md) |
 | Sync | [downstream-sync.md](../../references/downstream-sync.md) |
 | Monorepo | [monorepo.md](../../references/monorepo.md), [ci-cd-pipelines.md](../../references/ci-cd-pipelines.md), [publishing.md](../../references/publishing.md) |
-| Browser automation | [chrome-devtools-workflows.md](../../references/chrome-devtools-workflows.md) _(only when DevTools mode is active)_ |
 
 **Always** also load [troubleshooting.md](../../references/troubleshooting.md) — it contains the master routing table.
 
@@ -147,10 +127,9 @@ Provide:
 
 | Condition | Action |
 |-----------|--------|
-| DevTools mode active (`--chrome` flag or user accepted prompt) | Load `chrome-devtools-workflows.md`, execute the matching workflow, screenshot for verification |
-| No flag, first browser action encountered | Ask interactively: _"Want me to do this in Chrome DevTools?"_ |
-| User declines DevTools | Provide manual instructions (existing behavior) |
-| Automation step fails | Screenshot current state, report which step failed, provide remaining steps as manual instructions |
+| chrome-devtools plugin available | Delegate: invoke chrome-devtools skill with workflow name |
+| Plugin not available, `gh` CLI works | Use `gh` CLI commands (`gh secret set`, `gh api`) |
+| Neither available | Provide manual click-by-click instructions (see Fallback above) |
 
 **CLI over browser**: For GitHub operations, prefer `gh` CLI commands (`gh secret set`, `gh api`) over browser automation. Only use browser fallback when `gh` is unavailable or the user explicitly requests it.
 
