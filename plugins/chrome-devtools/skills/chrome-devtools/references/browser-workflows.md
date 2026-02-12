@@ -299,7 +299,7 @@ Take screenshots for documentation or verification.
 
 ## Test Webapp Elements
 
-Navigate to a webapp and verify elements exist and behave correctly.
+Navigate to a web app and verify elements exist and behave correctly.
 
 1. `navigate_page` to the target URL
 2. `take_snapshot` to get the accessibility tree

@@ -133,4 +133,3 @@ List captured network requests with filtering.
 | INP (Interaction to Next Paint) | <= 200ms | <= 500ms | > 500ms |
 | LCP (Largest Contentful Paint) | <= 2.5s | <= 4.0s | > 4.0s |
 | CLS (Cumulative Layout Shift) | <= 0.1 | <= 0.25 | > 0.25 |
-| TBT (Total Blocking Time, lab) | < 200ms | < 600ms | >= 600ms |

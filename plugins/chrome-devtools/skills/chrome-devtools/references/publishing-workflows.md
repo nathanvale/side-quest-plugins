@@ -276,9 +276,13 @@ When `op` is available, check if the secret already exists in the vault before a
 ```bash
 gh api repos/<OWNER>/<REPO>/branches/main/protection \
   --method PUT \
-  --field required_status_checks='{"strict":true,"contexts":["pr-quality"]}' \
-  --field enforce_admins=true \
-  --field required_pull_request_reviews='{"required_approving_review_count":1}'
+  --input - <<'EOF'
+{
+  "required_status_checks": {"strict": true, "contexts": ["pr-quality"]},
+  "enforce_admins": true,
+  "required_pull_request_reviews": {"required_approving_review_count": 1}
+}
+EOF
 ```
 
 **Browser fallback** (when `gh` unavailable):
