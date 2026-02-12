@@ -47,7 +47,9 @@ Capture and analyze network requests during page interactions.
 
 ## Accessibility Testing
 
-Validate page accessibility using the Chrome accessibility tree.
+Validate page accessibility against WCAG 2.1 AA using the Chrome accessibility tree and JavaScript evaluation.
+
+### Basic Audit
 
 1. `navigate_page` to the target URL
 2. `take_snapshot` -- get the full accessibility tree
@@ -59,10 +61,140 @@ Validate page accessibility using the Chrome accessibility tree.
    - Heading hierarchy violations (h1 -> h3 skip)
    - Missing landmark regions (main, nav, footer)
 
+### WCAG 2.1 AA Checklist
+
+Run through these checks systematically using `take_snapshot` and `evaluate_script`:
+
+**Perceivable**:
+- [ ] All images have meaningful alt text (or `alt=""` for decorative)
+- [ ] Video/audio has captions or transcripts
+- [ ] Color is not the sole means of conveying information
+- [ ] Text has sufficient contrast ratio (4.5:1 normal, 3:1 large text)
+- [ ] Page is readable and functional at 200% zoom
+- [ ] Content reflows at 320px width without horizontal scrolling
+
+**Operable**:
+- [ ] All interactive elements are keyboard accessible (Tab, Enter, Space, Escape)
+- [ ] Focus order follows a logical reading sequence
+- [ ] Focus indicators are visible on all interactive elements
+- [ ] No keyboard traps (user can Tab away from every element)
+- [ ] Skip-to-content link exists for bypassing navigation
+- [ ] Page title is descriptive and unique
+
+**Understandable**:
+- [ ] `lang` attribute set on `<html>` element
+- [ ] Form inputs have visible labels (not just placeholders)
+- [ ] Error messages identify the field and describe the problem
+- [ ] Consistent navigation across pages
+
+**Robust**:
+- [ ] Valid HTML (no duplicate IDs, proper nesting)
+- [ ] ARIA roles match element behavior
+- [ ] Custom widgets have appropriate ARIA states (expanded, selected, checked)
+
+### Color Contrast Checking
+
+Use `evaluate_script` to compute contrast ratios for text elements:
+
+```javascript
+// Check contrast ratio for a specific element
+(function() {
+  const el = document.querySelector('YOUR_SELECTOR');
+  const style = window.getComputedStyle(el);
+  const color = style.color;
+  const bg = style.backgroundColor;
+
+  function luminance(r, g, b) {
+    const [rs, gs, bs] = [r, g, b].map(c => {
+      c = c / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  }
+
+  function parseRGB(str) {
+    const m = str.match(/\d+/g);
+    return m ? m.slice(0, 3).map(Number) : [0, 0, 0];
+  }
+
+  const [r1, g1, b1] = parseRGB(color);
+  const [r2, g2, b2] = parseRGB(bg);
+  const l1 = luminance(r1, g1, b1);
+  const l2 = luminance(r2, g2, b2);
+  const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+
+  return JSON.stringify({
+    foreground: color,
+    background: bg,
+    ratio: ratio.toFixed(2),
+    passesAA_normal: ratio >= 4.5,
+    passesAA_large: ratio >= 3,
+    passesAAA_normal: ratio >= 7
+  });
+})()
+```
+
+**Thresholds** (WCAG 2.1 AA):
+- Normal text (< 18pt or < 14pt bold): contrast ratio >= 4.5:1
+- Large text (>= 18pt or >= 14pt bold): contrast ratio >= 3:1
+- UI components and graphical objects: contrast ratio >= 3:1
+
+### Keyboard Navigation Testing
+
+Test that the page is fully operable via keyboard:
+
+1. `navigate_page` to the target URL
+2. Use `press_key` with `Tab` to move through interactive elements
+3. After each Tab press, `take_snapshot` to check which element has focus
+4. Verify:
+   - **Focus order** follows a logical reading sequence (left-to-right, top-to-bottom)
+   - **Focus indicators** are visible (element has a visible outline or highlight)
+   - **No keyboard traps** -- pressing Tab always moves to the next element
+   - **Interactive elements reachable** -- every button, link, and input receives focus
+5. Test activation: `press_key` with `Enter` or `Space` on focused buttons/links
+6. Test dismissal: `press_key` with `Escape` on modals/dropdowns
+
+**Common keyboard failures**:
+- Custom `<div>` or `<span>` buttons without `tabindex="0"` and `role="button"`
+- Modal dialogs that don't trap focus inside or restore focus on close
+- Dropdown menus that can't be navigated with arrow keys
+- Skip-to-content link missing or not functional
+
+### Common ARIA Anti-patterns
+
+Flag these patterns in the accessibility snapshot:
+
+| Anti-pattern | What to look for | Correct approach |
+|-------------|-----------------|------------------|
+| Redundant roles | `<button role="button">` | Omit role -- native elements have implicit roles |
+| Role misuse | `<div role="button">` without keyboard handling | Use native `<button>` instead |
+| Missing live regions | Dynamic content updates without `aria-live` | Add `aria-live="polite"` to container |
+| Placeholder-only labels | `<input placeholder="Email">` with no `<label>` | Add visible `<label>` or `aria-label` |
+| Generic link text | `<a>Click here</a>`, `<a>Read more</a>` | Descriptive text: `<a>Read the accessibility report</a>` |
+| Presentational with children | `role="presentation"` on parent with interactive children | Remove role or restructure |
+| Invalid ARIA attributes | `aria-checked` on non-checkbox elements | Match ARIA states to element role |
+
+### Landmark Region Validation
+
+Check that the page has proper landmark structure via `take_snapshot`:
+
+**Required landmarks**:
+- `main` -- exactly one per page (primary content area)
+- `navigation` -- at least one (site navigation)
+- `banner` -- page header (implicit on `<header>` when direct child of `<body>`)
+- `contentinfo` -- page footer (implicit on `<footer>` when direct child of `<body>`)
+
+**Validation rules**:
+- All page content should be contained within a landmark region
+- Multiple `navigation` landmarks must have unique `aria-label` values
+- `main` landmark must not be nested inside other landmarks
+- `banner` and `contentinfo` should be top-level (not nested)
+
 **Tips**:
 - Use verbose snapshot mode for detailed ARIA properties
-- Compare snapshot against WCAG 2.1 AA requirements
-- Screenshot specific elements for visual verification
+- Compare snapshot against the WCAG 2.1 AA checklist above
+- Screenshot specific elements for visual verification of contrast and focus indicators
+- Run checks on multiple pages -- consistent navigation and landmark structure matters
 
 ---
 

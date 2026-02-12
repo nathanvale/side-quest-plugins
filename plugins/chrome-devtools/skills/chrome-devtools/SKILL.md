@@ -78,6 +78,9 @@ Match the user's intent and load the appropriate reference:
 | npm token creation | [publishing-workflows.md](references/publishing-workflows.md) | Auth, form fill, 1Password |
 | OIDC setup | [publishing-workflows.md](references/publishing-workflows.md) | Auth, form fill |
 | GitHub secret/protection | [publishing-workflows.md](references/publishing-workflows.md) | Prefer `gh` CLI |
+| Console debugging | [debugging-workflows.md](references/debugging-workflows.md) | console messages -> evaluate -> fix |
+| Network debugging | [debugging-workflows.md](references/debugging-workflows.md) | list requests -> filter -> diagnose |
+| Debug-fix loop | [debugging-workflows.md](references/debugging-workflows.md) | reproduce -> analyze -> fix -> verify |
 | Screenshot | Direct (no ref needed) | navigate -> wait -> take_screenshot |
 | Custom automation | Direct | navigate -> snapshot -> interact |
 | Connection issues | [diagnostics.md](references/diagnostics.md) | Layered diagnostic flow |
@@ -117,7 +120,17 @@ When workflows create secrets (npm tokens, API keys):
 - Display only first 8 characters to the user: `npm_1234abcd...`
 - Immediately offer storage (1Password -> gh secret set -> manual copy)
 
-## 5. Graceful Degradation
+## 5. Token Efficiency
+
+Minimize token usage and context window pressure:
+
+- **Prefer `take_snapshot` over `take_screenshot`** -- snapshots are 2-5KB of structured text vs 100KB+ for screenshots. Use snapshots for element discovery and state checking; reserve screenshots for visual verification only.
+- **Use `filePath` on any tool that supports it** when output is large. Trace results, HAR exports, and long console logs should go to disk rather than inline. This keeps the conversation context lean.
+- **Batch form fills with `fill_form`** instead of calling `fill` individually on each field. One tool call vs N tool calls for N fields.
+- **Filter `list_network_requests` with `resourceTypes`** -- pass `["xhr", "fetch"]` to isolate API calls instead of dumping hundreds of image/font/stylesheet entries.
+- **Use `pageIdx`/`pageSize` pagination** on list tools (`list_network_requests`, `list_console_messages`) to retrieve only what you need. Start with page 0, small page size, and paginate forward only if needed.
+
+## 6. Graceful Degradation
 
 On any failure mid-workflow:
 1. Screenshot current state (if connection alive AND no secrets visible on screen)
