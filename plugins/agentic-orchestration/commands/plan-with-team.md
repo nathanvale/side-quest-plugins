@@ -43,6 +43,21 @@ As team lead, you coordinate work using Task* tools. You NEVER write code direct
 5. **Validate per task** -- don't wait until the end
 6. **Plan is the source of truth** -- update the spec file, not verbal context
 
+### Model Selection Rules
+
+Match model to task complexity. Community-tested defaults from IndyDevDan's hooks-mastery pattern.
+
+| Role | Model | Rationale |
+|------|-------|-----------|
+| **All builders** | sonnet | Builders execute well-specified tasks -- sonnet handles implementation reliably at 5x lower cost than opus |
+| **All validators** | haiku | Validators do mechanical checks: read files, run commands, grep for strings, report PASS/FAIL |
+
+**Rules:**
+- Builders are sonnet -- the plan spec does the thinking, builders execute
+- Validators are ALWAYS haiku -- they never write code, only read and verify
+- Every team member definition and task definition MUST include a `Model:` field
+- The lead (executing the plan) inherits from the session -- do not specify
+
 ### Validation Stack (TypeScript/Bun)
 
 When defining Builder agents, note the validation stack:
@@ -112,18 +127,27 @@ Use these files to complete the task:
 - IMPORTANT: You NEVER operate directly on the codebase. Use Task and Task* tools only.
 - Take note of the session id (agentId) of each team member for resume operations.
 
+### Model Selection Guide
+
+| Role | Model | Rationale |
+|------|-------|-----------|
+| All builders | sonnet | Executes well-specified tasks reliably |
+| All validators | haiku | Mechanical checks: read files, run commands, report PASS/FAIL |
+
 ### Team Members
 
 - Builder
   - Name: <unique name, e.g., builder-api>
   - Role: <single focus area>
   - Agent Type: <subagent type from team/*.md or general-purpose>
+  - Model: sonnet
   - Resume: true
 
 - Validator
   - Name: <unique name, e.g., validator-api>
   - Role: <what this validator checks>
   - Agent Type: validator
+  - Model: haiku
   - Resume: true
 
 <additional team members as needed>
@@ -138,6 +162,7 @@ Use these files to complete the task:
 - **Depends On**: none
 - **Assigned To**: <team member name>
 - **Agent Type**: <subagent type>
+- **Model**: <sonnet|haiku per Model Selection Guide>
 - **Parallel**: <true/false>
 - <specific action to complete>
 - <specific action to complete>
@@ -147,6 +172,7 @@ Use these files to complete the task:
 - **Depends On**: <previous Task ID>
 - **Assigned To**: <team member name>
 - **Agent Type**: <subagent type>
+- **Model**: <sonnet|haiku per Model Selection Guide>
 - **Parallel**: <true/false>
 - <specific action>
 
@@ -155,6 +181,7 @@ Use these files to complete the task:
 - **Depends On**: <all previous Task IDs>
 - **Assigned To**: <validator name>
 - **Agent Type**: validator
+- **Model**: haiku
 - **Parallel**: false
 - Run all validation commands
 - Verify acceptance criteria met

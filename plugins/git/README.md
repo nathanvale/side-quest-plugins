@@ -6,6 +6,8 @@ Provides intelligent git context, history exploration, smart commit capabilities
 
 ## Features
 
+- **Worktree-aware cortex keying** - Session memory is shared across all worktrees of the same repo (uses main worktree root instead of `--show-toplevel`)
+
 ### Hooks (5 lifecycle events)
 
 **SessionStart** - Loads git context:
@@ -48,6 +50,7 @@ All commands are thin wrappers that delegate to the git-expert skill:
 - `/git:compare [branch]` - Compare branches with AI summary
 - `/git:history [query]` - Interactive history exploration
 - `/git:session-log` - Show session git activity
+- `/git:worktree <subcommand>` - Manage git worktrees (create, list, delete, sync, clean, status)
 
 ### Skill: git-expert
 
@@ -60,6 +63,7 @@ Unified skill covering all git workflows. Claude auto-activates for git tasks:
 - "Generate a changelog" → Keep a Changelog from conventional commits
 - "Compare branches" → Diff summary with AI analysis
 - "Set up a worktree" → Worktree management
+- "Manage my worktrees" → Worktree lifecycle management
 
 ## Prerequisites
 
