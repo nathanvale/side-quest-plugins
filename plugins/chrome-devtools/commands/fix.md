@@ -24,7 +24,8 @@ Run the layered diagnostics from the chrome-devtools skill:
 
 **Layer 1: MCP probe** -- Call `list_pages` via Chrome DevTools MCP.
 - Success -> Report "Connection healthy. {N} pages open." and stop.
-- Failure -> Continue to Layer 2.
+- Tool not available (not in tool list) -> Report: "Chrome DevTools MCP tools are not registered in this session. Run `/mcp` and reconnect `chrome-devtools`, or run `/mcp-manager:enable chrome-devtools`." In `--check` mode, stop here. In interactive mode, offer to guide the user through reconnection.
+- Tool available but returns error -> Continue to Layer 2.
 
 **Layer 2: Port check**
 ```bash

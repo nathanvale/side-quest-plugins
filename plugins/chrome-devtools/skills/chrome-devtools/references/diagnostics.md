@@ -25,7 +25,8 @@ Each layer narrows the root cause. Stop at the first conclusive result.
 
 Call `list_pages` via Chrome DevTools MCP.
 - **Success**: Connection healthy. Report page count and proceed.
-- **Failure**: Continue to Layer 2.
+- **Tool not available** (not in tool list): MCP tools aren't registered in this session. Report and STOP -- do not continue to Layer 2 (this is a session config issue, not a connection issue).
+- **Tool returns error**: Continue to Layer 2.
 
 ### Layer 2: Port Check
 
@@ -64,7 +65,8 @@ Used by `/chrome-devtools:fix` to map diagnostic results to actions.
 | Chrome not running | Layer 2+3 | Port free, curl fails | "Chrome not running with debug port" | Launch Chrome / `--isolated` / `--autoConnect` |
 | MCP transport broken | Layer 3+4 | curl succeeds, MCP process exists but list_pages fails | "MCP can't connect to Chrome" | Restart MCP / `--isolated` |
 | MCP not running | Layer 4 | No MCP process found | "MCP server not running" | Restart MCP / re-add server |
-| MCP not configured | Layer 1 | Tool not found error | "Chrome DevTools MCP not configured or enabled" | `claude mcp add` / `/mcp-manager:enable` |
+| MCP tools not registered | Layer 1 | `list_pages` not in tool list (MCP may show "connected" with 0 tools) | "Chrome DevTools MCP tools are not registered in this session" | Run `/mcp` to reconnect / `/mcp-manager:enable chrome-devtools` |
+| MCP not configured | Layer 1 | ToolSearch returns no chrome-devtools tools | "Chrome DevTools MCP not configured or enabled" | `claude mcp add` / `/mcp-manager:enable` |
 | Everything healthy | Layer 1 | `list_pages` succeeds | "Connection healthy. {N} pages open." | No action needed |
 
 ---

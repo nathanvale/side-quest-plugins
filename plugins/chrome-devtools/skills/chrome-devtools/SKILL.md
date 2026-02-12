@@ -28,7 +28,8 @@ Run layered diagnostics -- each layer narrows the root cause:
 **Layer 1: MCP probe**
 Call `list_pages` via the Chrome DevTools MCP.
 - Success -> connection healthy, proceed with workflow
-- Failure -> continue to Layer 2
+- Tool not available (not in tool list) -> Report: "Chrome DevTools MCP tools are not registered in this session. The MCP server may need reconnecting. Run `/mcp` and reconnect `chrome-devtools`, or run `/mcp-manager:enable chrome-devtools`." STOP -- do not continue to Layer 2 (this is a session configuration issue, not a connection issue).
+- Tool available but returns error -> continue to Layer 2
 
 **Layer 2: Port check**
 ```bash
