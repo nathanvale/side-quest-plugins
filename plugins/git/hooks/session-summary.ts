@@ -9,6 +9,8 @@
 import { readFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { postEvent } from './event-bus-client'
+import { getMainWorktreeRoot } from './git-status-parser'
 
 interface PreCompactHookInput {
 	cwd: string
@@ -165,14 +167,6 @@ async function isGitRepo(cwd: string): Promise<boolean> {
 	return exitCode === 0
 }
 
-async function getGitRoot(cwd: string): Promise<string | null> {
-	const result = await runGit(['rev-parse', '--show-toplevel'], cwd)
-	if (result.exitCode !== 0) {
-		return null
-	}
-	return result.stdout || null
-}
-
 async function getGitStateSummary(cwd: string): Promise<string> {
 	const branchResult = await runGit(['branch', '--show-current'], cwd)
 	const branch =
@@ -233,7 +227,7 @@ if (import.meta.main) {
 			process.exit(0)
 		}
 
-		const gitRoot = await getGitRoot(input.cwd)
+		const gitRoot = await getMainWorktreeRoot(input.cwd)
 		if (!gitRoot) {
 			process.exit(0)
 		}
@@ -298,6 +292,15 @@ if (import.meta.main) {
 				},
 			}),
 		)
+
+		try {
+			await postEvent(input.cwd, 'session.compacted', {
+				cortexEntries: cortexEntries.length,
+				repoName,
+			})
+		} catch {
+			// event emission is best-effort
+		}
 	} catch {
 		// never crash the hook
 	}

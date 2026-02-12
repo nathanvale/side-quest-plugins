@@ -9,6 +9,7 @@
 import { appendFile, mkdir } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { postEvent } from './event-bus-client'
 
 interface PostToolUseHookInput {
 	tool_name: string
@@ -65,6 +66,15 @@ if (import.meta.main) {
 
 		await mkdir(logDir, { recursive: true })
 		await appendFile(logPath, `${JSON.stringify(entry)}\n`)
+
+		try {
+			await postEvent(entry.cwd, 'command.executed', {
+				command: entry.command,
+				session_id: entry.session_id,
+			})
+		} catch {
+			// event emission is best-effort
+		}
 	} catch {
 		// fire and forget
 	}

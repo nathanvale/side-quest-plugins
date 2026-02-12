@@ -30,6 +30,7 @@
 		"./commands/history.md",
 		"./commands/review-pr.md",
 		"./commands/session-log.md",
-		"./commands/squash.md"
+		"./commands/squash.md",
+		"./commands/worktree.md"
 	]
 }

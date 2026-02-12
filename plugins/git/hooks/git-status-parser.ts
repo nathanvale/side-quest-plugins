@@ -1,8 +1,12 @@
 /**
- * Shared git status parser for porcelain output.
+ * Shared git status parser and repo identity utilities.
  *
  * Used by both git-context-loader (SessionStart) and auto-commit-on-stop (Stop)
  * to avoid duplicating porcelain parsing logic.
+ *
+ * Also provides getMainWorktreeRoot and getStableRepoName for worktree-aware
+ * repo identification -- ensuring all worktrees of the same repo share the
+ * same identity key (e.g. for cortex files).
  */
 
 export interface FileStatusCounts {
@@ -53,4 +57,43 @@ export function parsePorcelainStatus(output: string): {
 	}
 
 	return { branch, counts: { staged, modified, untracked } }
+}
+
+/**
+ * Returns the root path of the main (non-linked) worktree for the repo
+ * that contains `cwd`.
+ *
+ * Uses `git worktree list --porcelain` which always lists the main worktree
+ * first. This is critical for worktree-aware keying: `--show-toplevel`
+ * returns the *current* worktree path (different for each linked worktree),
+ * while this function always returns the real repo root.
+ *
+ * Returns null if `cwd` is not inside a git repository.
+ */
+export async function getMainWorktreeRoot(cwd: string): Promise<string | null> {
+	const proc = Bun.spawn(['git', 'worktree', 'list', '--porcelain'], {
+		cwd,
+		stdout: 'pipe',
+		stderr: 'pipe',
+	})
+	const stdout = await new Response(proc.stdout).text()
+	const exitCode = await proc.exited
+
+	if (exitCode !== 0) {
+		return null
+	}
+
+	// The first "worktree <path>" line is always the main worktree
+	const match = stdout.match(/^worktree\s+(.+)$/m)
+	return match?.[1] ?? null
+}
+
+/**
+ * Returns a stable repo name that is consistent across all worktrees.
+ * Uses getMainWorktreeRoot (not git rev-parse --show-toplevel) to get the
+ * real repo root, so all linked worktrees resolve to the same name.
+ */
+export async function getStableRepoName(cwd: string): Promise<string> {
+	const root = await getMainWorktreeRoot(cwd)
+	return root?.split('/').pop() || 'unknown'
 }

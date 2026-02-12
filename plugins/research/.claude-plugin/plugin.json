@@ -19,5 +19,6 @@
 	],
 	"license": "MIT",
 	"repository": "https://github.com/nathanvale/side-quest-plugins/tree/main/plugins/research",
+	"commands": ["./commands/last-30-days.md"],
 	"skills": ["./skills/last-30-days", "./skills/ai-trends-digest"]
 }

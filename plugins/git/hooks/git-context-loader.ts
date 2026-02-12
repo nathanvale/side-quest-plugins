@@ -15,6 +15,7 @@
  * - Git Rules (safety constraints for git operations)
  */
 
+import { postEvent } from './event-bus-client'
 import { parsePorcelainStatus } from './git-status-parser'
 
 type SessionSource = 'startup' | 'resume' | 'compact' | 'clear'
@@ -132,7 +133,9 @@ export function formatAdditionalContext(
 		'| Squash WIP commits | /git:squash (combines into one clean commit) |\n'
 	routing += '| Create PR | /git:create-pr (push + gh pr create) |\n'
 	routing +=
-		'| Anything else git | git-expert skill (history, worktrees, changelog, compare, review) |'
+		'| Manage worktrees | /git:worktree (create, list, delete, sync, clean, status) |\n'
+	routing +=
+		'| Anything else git | git-expert skill (history, changelog, compare, review) |'
 	sections.push(routing)
 
 	// Section 3: Safety rules -- critical after compaction when Claude loses memory
@@ -177,6 +180,17 @@ if (import.meta.main) {
 			console.log(
 				formatAdditionalContext(context, input.source as SessionSource),
 			)
+
+			try {
+				await postEvent(input.cwd, 'session.started', {
+					source: input.source,
+					branch: context.branch,
+					status: context.status,
+					session_id: input.session_id,
+				})
+			} catch {
+				// event emission is best-effort
+			}
 		}
 	} catch {
 		// never crash the hook
