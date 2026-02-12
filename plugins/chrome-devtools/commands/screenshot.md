@@ -19,6 +19,6 @@ Take a screenshot using Chrome DevTools MCP.
 5. `wait_for` the page to fully load (check for expected text on the page).
 6. `take_screenshot` with `fullPage` if `--full-page` was specified.
 7. If the screenshot returns empty data (0 bytes, empty base64, or API 400 error), retry without `fullPage`. If still empty, retry with `filePath` to save to disk instead of inline. Report the issue if all retries fail.
-8. Report the screenshot to the user.
+8. If the screenshot was returned inline, display it. If it was saved to a file path (via `filePath` or fallback), report the file path to the user -- do NOT use the Read tool to load the image back into the conversation (full-page screenshots can be too large for the API).
 
 If no URL is provided, ask the user which URL to screenshot.

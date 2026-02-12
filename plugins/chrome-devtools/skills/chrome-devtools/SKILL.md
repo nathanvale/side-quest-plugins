@@ -59,6 +59,7 @@ ps aux | grep -c '[c]hrome-devtools-mcp'
 - **Page selection**: `list_pages` -> `select_page` by URL or title
 - **Element interaction**: `take_snapshot` for accessibility UIDs, then `click`/`fill` by UID
 - **Large outputs**: Use `filePath` param to write results to disk instead of stdout
+- **Screenshot files**: NEVER use the `Read` tool to display screenshot images saved to disk. Report the file path to the user instead. Full-page captures can exceed API size limits and crash the conversation.
 - **Pagination**: Use `pageIdx`/`pageSize` for list tools with many entries
 
 ## 3. Workflow Routing

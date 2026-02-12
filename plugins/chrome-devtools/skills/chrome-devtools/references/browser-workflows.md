@@ -158,6 +158,8 @@ Take screenshots for documentation or verification.
 - Use `resize_page` for custom viewport sizes without full device emulation
 - If `take_screenshot` returns empty data or triggers a 400 error, retry: (1) without `fullPage`, (2) with `filePath` to save to disk, (3) with a smaller viewport via `resize_page`
 
+**CRITICAL: Never use the Read tool on screenshot files.** Screenshots saved to disk via `filePath` can be very large (10+ MB for full-page captures). Reading them back into the conversation will crash the context or hit API image size limits. Instead, report the file path to the user and let them open it directly.
+
 ---
 
 ## Test Webapp Elements
