@@ -12,7 +12,7 @@ description: >
   install skill, personal skill, project skill, plugin skill, enterprise skill,
   skill-creator, skill conventions, skill best practices, what is a skill,
   local vs project skill, skill testing, skill debugging.
-allowed-tools: Read, Glob, Grep
+allowed-tools: Read, Glob, Grep, Skill(last-30-days *)
 ---
 
 # Claude Code Skills Guide -- Knowledge Bank
@@ -26,7 +26,25 @@ This skill draws from:
 - Official Claude Code documentation at code.claude.com/docs/en/skills
 - Agent Skills open standard at agentskills.io
 
-No community intel by design. This skill provides deterministic, doc-sourced answers only. For community patterns and evolving practices, see the sibling `/hooks` skill.
+Reference files are the primary source. Community intel is opt-in via `/research:last-30-days` -- see Community Perspective below.
+
+## Community Perspective (Opt-In)
+
+This skill does NOT maintain a community intel cache. Instead, it can hand off to `/research:last-30-days` for live community signal when the user wants inspiration or real-world examples.
+
+**Auto-detect these signals** -- if the user's question contains any of these, offer to run community research:
+- "what are people building", "what are people doing with skills"
+- "has anyone", "examples in the wild", "inspiration"
+- "community", "Reddit", "what's trending"
+- "real-world examples", "how are others using"
+- "best skills", "popular skills", "cool skills"
+
+**When detected**:
+1. Answer from reference files first (the official answer)
+2. Then invoke `/research:last-30-days` with a tailored query like: `"Claude Code skills" OR "SKILL.md" OR "claude skills examples"`
+3. Present both: "Here's what the docs say" followed by "Here's what the community is doing"
+
+**Do NOT auto-invoke research** for standard doc questions like "what goes in SKILL.md" or "how do I distribute a skill." Only when the user is explicitly asking for community perspective or inspiration.
 
 ## Cross-Skill Boundaries
 
@@ -213,7 +231,26 @@ Common causes in order of likelihood:
 Source: troubleshooting.md
 ```
 
-### Example 4: Cross-Skill Boundary
+### Example 4: Community Perspective
+
+```text
+User: What are people building with skills? Any cool examples?
+
+Skill: [Detects community signal -> "what are people building"]
+Skill: [Reads patterns.md for official patterns first]
+
+Here's what the official docs cover for skill patterns:
+[brief summary of the 5 patterns from patterns.md]
+
+Let me check what the community is building...
+
+Skill: [Invokes /research:last-30-days "Claude Code skills examples creative patterns"]
+
+From the community (last 30 days):
+[research results with engagement metrics]
+```
+
+### Example 5: Cross-Skill Boundary
 
 ```text
 User: How do I add hooks to my skill?
