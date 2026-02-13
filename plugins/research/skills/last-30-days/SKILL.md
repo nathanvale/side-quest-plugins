@@ -1,6 +1,6 @@
 ---
 name: last-30-days
-description: Research any topic from the last 30 days across Reddit, X, and web with engagement-ranked results.
+description: MANDATORY - Run CLI tool first (bunx @side-quest/last-30-days) before any WebSearch. Researches Reddit, X, and web with engagement-ranked results.
 argument-hint: '"[topic] for [tool]" or "[topic]"'
 context: fork
 agent: general-purpose
@@ -9,17 +9,37 @@ allowed-tools: Bash, Read, Write, AskUserQuestion, WebSearch, WebFetch
 
 # last-30-days: Research Any Topic from the Last 30 Days
 
+## STEP 0 - MANDATORY: Run the CLI Tool FIRST
+
+**STOP. Before you do ANYTHING else -- before parsing intent, before WebSearch, before ANY research -- you MUST run this command via the Bash tool:**
+
+```bash
+bunx --bun @side-quest/last-30-days "$ARGUMENTS" --emit=compact 2>&1
+```
+
+**This is NON-NEGOTIABLE.** The CLI tool searches Reddit and X with real engagement metrics (upvotes, likes, reposts). WebSearch CANNOT replace it. If you skip this step, the research is incomplete.
+
+- If it succeeds: save the output, then continue to "Parse User Intent" below
+- If it fails or times out: note the error, then continue -- WebSearch will compensate
+
+**DO NOT call WebSearch, WebFetch, or any other tool before running this CLI command.**
+
+**GATE: Do not proceed past this point until the CLI tool has executed.** If you haven't run the bunx command yet, go back and run it NOW.
+
+---
+
 Research ANY topic across Reddit, X, and the web. Surface what people are actually discussing, recommending, and debating right now.
 
 Use cases:
+
 - **Prompting**: "photorealistic people in Nano Banana Pro", "Midjourney prompts", "ChatGPT image generation" - learn techniques, get copy-paste prompts
 - **Recommendations**: "best Claude Code skills", "top AI tools" - get a LIST of specific things people mention
 - **News**: "what's happening with OpenAI", "latest AI announcements" - current events and updates
 - **General**: any topic you're curious about - understand what the community is saying
 
-## CRITICAL: Parse User Intent
+## Parse User Intent
 
-Before doing anything, parse the user's input for:
+After the CLI tool has run, parse the user's input for:
 
 1. **TOPIC**: What they want to learn about (e.g., "web app mockups", "Claude Code skills", "image generation")
 2. **TARGET TOOL** (if specified): Where they'll use the prompts (e.g., "Nano Banana Pro", "ChatGPT", "Midjourney")
@@ -30,6 +50,7 @@ Before doing anything, parse the user's input for:
    - **GENERAL** - anything else - User wants broad understanding of the topic
 
 Common patterns:
+
 - `[topic] for [tool]` - "web mockups for Nano Banana Pro" - TOOL IS SPECIFIED
 - `[topic] prompts for [tool]` - "UI design prompts for Midjourney" - TOOL IS SPECIFIED
 - Just `[topic]` - "iOS design mockups" - TOOL NOT SPECIFIED, that's OK
@@ -37,10 +58,12 @@ Common patterns:
 - "what are the best [topic]" - QUERY_TYPE = RECOMMENDATIONS
 
 **IMPORTANT: Do NOT ask about target tool before research.**
+
 - If tool is specified in the query, use it
 - If tool is NOT specified, run research first, then ask AFTER showing results
 
 **Store these variables:**
+
 - `TOPIC = [extracted topic]`
 - `TARGET_TOOL = [extracted tool, or "unknown" if not specified]`
 - `QUERY_TYPE = [PROMPTING | RECOMMENDATIONS | NEWS | GENERAL]`
@@ -85,22 +108,8 @@ echo "Edit to add your API keys for enhanced research."
 
 ## Research Execution
 
-**You MUST run the CLI command below via Bash BEFORE doing any WebSearch.** This is step 1 of research -- do not skip it.
+You already ran the CLI tool in Step 0. Now check the output mode:
 
-### Step 1: Run CLI Research
-
-Run this command using the Bash tool:
-
-```bash
-bunx --bun @side-quest/last-30-days "$ARGUMENTS" --emit=compact 2>&1
-```
-
-- **If the command succeeds**, it will print research results with a mode line. Save the output and continue to Step 2.
-- **If the command fails or times out**, note the error and continue to Step 2 -- WebSearch will compensate.
-
-### Step 2: Check the output mode
-
-The CLI output will indicate the mode:
 - **"Mode: both"** or **"Mode: reddit-only"** or **"Mode: x-only"**: CLI found results, WebSearch is supplementary
 - **"Mode: web-only"**: No API keys, Claude must do ALL research via WebSearch
 - **No output / error**: CLI failed, treat as web-only mode
@@ -112,27 +121,32 @@ For **ALL modes**, do WebSearch to supplement (or provide all data in web-only m
 Choose search queries based on QUERY_TYPE:
 
 **If RECOMMENDATIONS** ("best X", "top X", "what X should I use"):
+
 - Search for: `best {TOPIC} recommendations`
 - Search for: `{TOPIC} list examples`
 - Search for: `most popular {TOPIC}`
 - Goal: Find SPECIFIC NAMES of things, not generic advice
 
 **If NEWS** ("what's happening with X", "X news"):
+
 - Search for: `{TOPIC} news 2026`
 - Search for: `{TOPIC} announcement update`
 - Goal: Find current events and recent developments
 
 **If PROMPTING** ("X prompts", "prompting for X"):
+
 - Search for: `{TOPIC} prompts examples 2026`
 - Search for: `{TOPIC} techniques tips`
 - Goal: Find prompting techniques and examples to create copy-paste prompts
 
 **If GENERAL** (default):
+
 - Search for: `{TOPIC} 2026`
 - Search for: `{TOPIC} discussion`
 - Goal: Find what people are actually saying
 
 For ALL query types:
+
 - **USE THE USER'S EXACT TERMINOLOGY** - don't substitute or add tech names based on your knowledge
   - If user says "ChatGPT image prompting", search for "ChatGPT image prompting"
   - Do NOT add "DALL-E", "GPT-4o", or other terms you think are related
@@ -142,6 +156,7 @@ For ALL query types:
 - **DO NOT output "Sources:" list** - this is noise, we'll show stats at the end
 
 **Depth options** (passed through from user's command):
+
 - `--quick` - Faster, fewer sources (8-12 each)
 - (default) - Balanced (20-30 each)
 - `--deep` - Comprehensive (50-70 Reddit, 40-60 X)
@@ -153,6 +168,7 @@ For ALL query types:
 **After all searches complete, internally synthesize (don't display stats yet):**
 
 The Judge Agent must:
+
 1. Weight Reddit/X sources HIGHER (they have engagement signals: upvotes, likes)
 2. Weight WebSearch sources LOWER (no engagement data)
 3. Identify patterns that appear across ALL three sources (strongest signals)
@@ -168,6 +184,7 @@ The Judge Agent must:
 **CRITICAL: Ground your synthesis in the ACTUAL research content, not your pre-existing knowledge.**
 
 Read the research output carefully. Pay attention to:
+
 - **Exact product/tool names** mentioned (e.g., if research mentions "ClawdBot" or "@clawdbot", that's a DIFFERENT product than "Claude Code" - don't conflate them)
 - **Specific quotes and insights** from the sources - use THESE, not generic knowledge
 - **What the sources actually say**, not what you assume the topic is about
@@ -179,20 +196,24 @@ Read the research output carefully. Pay attention to:
 **CRITICAL: Extract SPECIFIC NAMES, not generic patterns.**
 
 When user asks "best X" or "top X", they want a LIST of specific things:
+
 - Scan research for specific product names, tool names, project names, skill names, etc.
 - Count how many times each is mentioned
 - Note which sources recommend each (Reddit thread, X post, blog)
 - List them by popularity/mention count
 
 **BAD synthesis for "best Claude Code skills":**
+
 > "Skills are powerful. Keep them under 500 lines. Use progressive disclosure."
 
 **GOOD synthesis for "best Claude Code skills":**
+
 > "Most mentioned skills: /commit (5 mentions), remotion skill (4x), git-worktree (3x), /pr (3x). The Remotion announcement got 16K likes on X."
 
 ### For all QUERY_TYPEs
 
 Identify from the ACTUAL RESEARCH OUTPUT:
+
 - **PROMPT FORMAT** - Does research recommend JSON, structured params, natural language, keywords? THIS IS CRITICAL.
 - The top 3-5 patterns/techniques that appeared across multiple sources
 - Specific keywords, structures, or approaches mentioned BY THE SOURCES
@@ -211,6 +232,7 @@ Identify from the ACTUAL RESEARCH OUTPUT:
 **FIRST - What I learned (based on QUERY_TYPE):**
 
 **If RECOMMENDATIONS** - Show specific things mentioned:
+
 ```
 Most mentioned:
 1. [Specific name] - mentioned {n}x (r/sub, @handle, blog.com)
@@ -223,6 +245,7 @@ Notable mentions: [other specific things with 1-2 mentions]
 ```
 
 **If PROMPTING/NEWS/GENERAL** - Show synthesis and patterns:
+
 ```
 What I learned:
 
@@ -237,6 +260,7 @@ KEY PATTERNS I'll use:
 **THEN - Stats (right before invitation):**
 
 For **full/partial mode** (has API keys):
+
 ```
 ---
 All agents reported back!
@@ -247,6 +271,7 @@ All agents reported back!
 ```
 
 For **web-only mode** (no API keys):
+
 ```
 ---
 Research complete!
@@ -259,6 +284,7 @@ Want engagement metrics? Add API keys to ~/.config/research/.env
 ```
 
 **LAST - Invitation:**
+
 ```
 ---
 Share your vision for what you want to create and I'll write a thoughtful prompt you can copy-paste directly into {TARGET_TOOL}.
@@ -269,6 +295,7 @@ Share your vision for what you want to create and I'll write a thoughtful prompt
 **SELF-CHECK before displaying**: Re-read your "What I learned" section. Does it match what the research ACTUALLY says? If the research was about ClawdBot (a self-hosted AI agent), your summary should be about ClawdBot, not Claude Code. If you catch yourself projecting your own knowledge instead of the research, rewrite it.
 
 **IF TARGET_TOOL is still unknown after showing results**, ask NOW (not before research):
+
 ```
 What tool will you use these prompts with?
 
@@ -321,6 +348,7 @@ This uses [brief 1-line explanation of what research insight you applied].
 ```
 
 ### Quality Checklist:
+
 - [ ] **FORMAT MATCHES RESEARCH** - If research said JSON/structured/etc, prompt IS that format
 - [ ] Directly addresses what the user said they want to create
 - [ ] Uses specific patterns/keywords discovered in research
@@ -346,6 +374,7 @@ After delivering a prompt, offer to write more:
 ## CONTEXT MEMORY
 
 For the rest of this conversation, remember:
+
 - **TOPIC**: {topic}
 - **TARGET_TOOL**: {tool}
 - **KEY PATTERNS**: {list the top 3-5 patterns you learned}
@@ -354,6 +383,7 @@ For the rest of this conversation, remember:
 **CRITICAL: After research is complete, you are now an EXPERT on this topic.**
 
 When the user asks follow-up questions:
+
 - **DO NOT run new WebSearches** - you already have the research
 - **Answer from what you learned** - cite the Reddit threads, X posts, and web sources
 - **If they ask for a prompt** - write one using your expertise
@@ -368,6 +398,7 @@ Only do new research if the user explicitly asks about a DIFFERENT topic.
 After delivering a prompt, end with:
 
 For **full/partial mode**:
+
 ```
 ---
 Expert in: {TOPIC} for {TARGET_TOOL}
@@ -377,6 +408,7 @@ Want another prompt? Just tell me what you're creating next.
 ```
 
 For **web-only mode**:
+
 ```
 ---
 Expert in: {TOPIC} for {TARGET_TOOL}
