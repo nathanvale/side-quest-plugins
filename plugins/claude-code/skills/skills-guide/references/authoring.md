@@ -68,6 +68,53 @@ Deploy the application:
 
 ---
 
+## Planning: Start with Use Cases
+
+Before writing any code, identify 2-3 concrete use cases. Use this format:
+
+```
+Use Case: Project Sprint Planning
+Trigger: User says "help me plan this sprint" or "create sprint tasks"
+Steps:
+1. Fetch current project status from Linear (via MCP)
+2. Analyze team velocity and capacity
+3. Suggest task prioritization
+4. Create tasks in Linear with proper labels and estimates
+Result: Fully planned sprint with tasks created
+```
+
+Ask yourself:
+- What does a user want to accomplish?
+- What multi-step workflows does this require?
+- Which tools are needed (built-in or MCP)?
+- What domain knowledge or best practices should be embedded?
+
+### Three Common Skill Categories
+
+Observed by Anthropic across real-world usage:
+
+**Category 1: Document & Asset Creation** -- Creating consistent, high-quality output (documents, presentations, apps, designs, code). Key techniques: embedded style guides, template structures, quality checklists. No external tools required -- uses Claude's built-in capabilities.
+
+**Category 2: Workflow Automation** -- Multi-step processes that benefit from consistent methodology, including coordination across multiple MCP servers. Key techniques: step-by-step workflow with validation gates, templates for common structures, iterative refinement loops.
+
+**Category 3: MCP Enhancement** -- Workflow guidance to enhance the tool access an MCP server provides. Key techniques: coordinates multiple MCP calls in sequence, embeds domain expertise, provides context users would otherwise need to specify, error handling for common MCP issues.
+
+### Define Success Criteria
+
+These are aspirational targets -- rough benchmarks rather than precise thresholds.
+
+**Quantitative**:
+- Skill triggers on ~90% of relevant queries (test with 10-20 queries that should trigger it)
+- Completes workflow in expected tool call count (compare with and without skill)
+- Zero failed API calls per workflow (monitor MCP server logs during test runs)
+
+**Qualitative**:
+- Users don't need to prompt Claude about next steps
+- Workflows complete without user correction
+- Consistent results across sessions (new user can accomplish task on first try)
+
+---
+
 ## Creation Process
 
 ### Step 1: Understand with Concrete Examples
