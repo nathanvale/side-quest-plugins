@@ -27,22 +27,46 @@ Skills work across Claude.ai, Claude Code, Claude Agent SDK, and the Claude Deve
 Every skill is a directory with SKILL.md as the entrypoint:
 
 ```
-skill-name/
-├── SKILL.md           # Main instructions (required)
-├── references/        # Docs loaded into context as needed (optional)
-│   ├── api-docs.md
-│   └── schemas.md
-├── scripts/           # Executable code (optional)
+your-skill-name/
+├── SKILL.md               # Required - main skill file
+├── scripts/               # Optional - executable code
+│   ├── process_data.py
 │   └── validate.sh
-└── assets/            # Files used in output, not loaded into context (optional)
-    └── template.html
+├── references/            # Optional - documentation loaded into context as needed
+│   ├── api-guide.md
+│   └── examples/
+└── assets/                # Optional - templates, files used in output
+    └── report-template.md
 ```
+
+### Critical File/Folder Naming Rules
+
+**SKILL.md naming**:
+- Must be exactly `SKILL.md` (case-sensitive)
+- No variations accepted (`SKILL.MD`, `skill.md`, `Skill.md` -- all wrong)
+
+**Skill folder naming**:
+- Use kebab-case: `notion-project-setup`
+- No spaces: `Notion Project Setup` -- wrong
+- No underscores: `notion_project_setup` -- wrong
+- No capitals: `NotionProjectSetup` -- wrong
 
 ### Required: SKILL.md
 
 Every SKILL.md has two parts:
 1. **YAML frontmatter** (between `---` markers) -- metadata that tells Claude when to use the skill
 2. **Markdown body** -- instructions Claude follows when the skill is invoked
+
+The minimal required format:
+
+```yaml
+---
+name: your-skill-name
+description: What it does. Use when user asks to [specific phrases].
+---
+```
+
+That's all you need to start.
 
 ### Optional: Bundled Resources
 
@@ -55,18 +79,18 @@ Every SKILL.md has two parts:
 ### What NOT to Include
 
 Do not create extraneous documentation or auxiliary files:
-- No README.md
+- No README.md inside the skill folder (repo-level README for humans is fine -- see distribution.md)
 - No INSTALLATION_GUIDE.md
 - No QUICK_REFERENCE.md
 - No CHANGELOG.md
 
-A skill should only contain information needed for an AI agent to do the job.
+All documentation goes in SKILL.md or references/. The skill should only contain information needed for an AI agent to do the job.
 
 ---
 
 ## SKILL.md Frontmatter Reference
 
-All fields are optional. Only `description` is recommended so Claude knows when to use the skill.
+The YAML frontmatter is how Claude decides whether to load your skill. Get this right.
 
 ```yaml
 ---
@@ -79,6 +103,12 @@ allowed-tools: Read, Grep, Glob
 model: sonnet
 context: fork
 agent: Explore
+license: MIT
+compatibility: Requires Python 3.10+
+metadata:
+  author: Your Name
+  version: 1.0.0
+  mcp-server: your-service
 hooks:
   PreToolUse:
     - matcher: "Edit"
@@ -88,12 +118,17 @@ hooks:
 ---
 ```
 
-### Field Reference
+### Required Fields
+
+| Field | Rules |
+|-------|-------|
+| `name` | kebab-case only. No spaces or capitals. Should match folder name. Max 64 characters. If omitted, uses directory name |
+| `description` | MUST include BOTH what the skill does AND when to use it (trigger conditions). Under 1024 characters. No XML tags (`<` or `>`). Include specific tasks users might say. Mention file types if relevant |
+
+### Optional Fields
 
 | Field | Description | Default |
 |-------|------------|---------|
-| `name` | Display name and /slash-command. Lowercase letters, numbers, hyphens only. Max 64 characters. If omitted, uses directory name | directory name |
-| `description` | What the skill does AND when to use it. Claude's primary trigger signal. If omitted, uses first paragraph of body | -- |
 | `argument-hint` | Hint shown during autocomplete. Example: `[filename] [format]` | -- |
 | `disable-model-invocation` | `true` prevents Claude from auto-loading. Use for workflows you control timing on: /commit, /deploy | `false` |
 | `user-invocable` | `false` hides from / menu. Use for background knowledge users shouldn't invoke directly | `true` |
@@ -102,6 +137,15 @@ hooks:
 | `context` | Set to `fork` to run in isolated subagent context | inline |
 | `agent` | Subagent type when context: fork. Options: Explore, Plan, general-purpose, or custom agent name | general-purpose |
 | `hooks` | Hooks scoped to skill lifecycle. Same format as settings.json hooks | -- |
+| `license` | Use if making skill open source. Common: MIT, Apache-2.0 | -- |
+| `compatibility` | Environment requirements (1-500 chars): intended product, required system packages, network access needs | -- |
+| `metadata` | Custom key-value pairs. Suggested keys: author, version, mcp-server | -- |
+
+### Security Restrictions
+
+Forbidden in frontmatter:
+- **XML angle brackets** (`<` `>`) -- frontmatter appears in Claude's system prompt; malicious content could inject instructions
+- **"claude" or "anthropic" in the name** -- these are reserved names
 
 ### Invocation Control Matrix
 

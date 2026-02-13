@@ -123,10 +123,50 @@ description: >
 
 #### Write the Body
 
-Use imperative/infinitive form. The body contains:
-- Instructions and guidance for using the skill
-- References to bundled resources with clear descriptions of when to read them
-- Workflow steps if applicable
+Use imperative/infinitive form. Adapt this recommended structure for your skill:
+
+````markdown
+---
+name: your-skill
+description: [What + When]
+---
+
+# Your Skill Name
+
+## Instructions
+[Core instructions]
+
+# Step 1: [First Major Step]
+Clear explanation of what happens.
+
+Example:
+```bash
+python scripts/fetch_data.py --project-id PROJECT_ID
+```
+
+Expected output: [describe what success looks like]
+
+(Add more steps as needed)
+
+## Examples
+
+### Example 1: [common scenario]
+User says: "Set up a new marketing campaign"
+Actions:
+1. Fetch existing campaigns via MCP
+2. Create new campaign with provided parameters
+Result: Campaign created with confirmation link
+
+(Add more examples as needed)
+
+## Troubleshooting
+
+### Error: [Common error message]
+Cause: [Why it happens]
+Solution: [How to fix]
+
+(Add more error cases as needed)
+````
 
 ### Step 5: Test the Skill
 
@@ -145,14 +185,92 @@ For skills with scripts, test scripts by running them to ensure no bugs and that
 
 ---
 
+## Best Practices for Instructions
+
+### Reference Bundled Resources Clearly
+
+```markdown
+Before writing queries, consult `references/api-patterns.md` for:
+- Rate limiting guidance
+- Pagination patterns
+- Error codes and handling
+```
+
+### Be Specific and Actionable
+
+Good:
+```markdown
+Run `python scripts/validate.py --input {filename}` to check data format.
+If validation fails, common issues include:
+- Missing required fields (add them to the CSV)
+- Invalid date formats (use YYYY-MM-DD)
+```
+
+Bad:
+```markdown
+Validate the data before proceeding.
+```
+
+### Use Progressive Disclosure
+
+Keep SKILL.md focused on core instructions. Move detailed documentation to `references/` and link to it. See fundamentals.md for how the three-level loading system works.
+
+### Include Error Handling
+
+```markdown
+## Common Issues
+
+### MCP Connection Failed
+If you see "Connection refused":
+1. Verify MCP server is running: Check Settings > Extensions
+2. Confirm API key is valid
+3. Try reconnecting: Settings > Extensions > [Your Service] > Reconnect
+```
+
+---
+
 ## Writing Guidelines
 
 ### Description Rules
 
+The description is the most important part of the entire skill. Structure: `[What it does] + [When to use it] + [Key capabilities]`
+
+- Under 1024 characters, no XML tags (`<` `>`)
 - Include what the skill does AND specific triggers/contexts for when to use it
 - Put all "when to use" information in the description, NOT the body
-- Be specific: "Creates and edits .docx files" not "document utility"
-- Include failure-language if relevant: "skill not loading", "debug skill"
+- Include specific tasks users might say
+- Mention file types if relevant
+
+**Good descriptions**:
+```yaml
+# Specific and actionable
+description: Analyzes Figma design files and generates developer handoff
+  documentation. Use when user uploads .fig files, asks for "design specs",
+  "component documentation", or "design-to-code handoff".
+
+# Includes trigger phrases
+description: Manages Linear project workflows including sprint planning,
+  task creation, and status tracking. Use when user mentions "sprint",
+  "Linear tasks", "project planning", or asks to "create tickets".
+
+# Clear value proposition
+description: End-to-end customer onboarding workflow for PayFlow. Handles
+  account creation, payment setup, and subscription management. Use when
+  user says "onboard new customer", "set up subscription", or "create
+  PayFlow account".
+```
+
+**Bad descriptions**:
+```yaml
+# Too vague
+description: Helps with projects.
+
+# Missing triggers
+description: Creates sophisticated multi-page documentation systems.
+
+# Too technical, no user triggers
+description: Implements the Project entity model with hierarchical relationships.
+```
 
 ### Body Rules
 
