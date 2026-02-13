@@ -85,17 +85,25 @@ echo "Edit to add your API keys for enhanced research."
 
 ## Research Execution
 
-The CLI tool runs automatically below via the `!` preprocessor. Its output is injected directly -- you do NOT need to run Bash yourself.
+**You MUST run the CLI command below via Bash BEFORE doing any WebSearch.** This is step 1 of research -- do not skip it.
 
-### CLI Research Output
+### Step 1: Run CLI Research
 
-!`bunx --bun @side-quest/last-30-days "$ARGUMENTS" --emit=compact 2>&1`
+Run this command using the Bash tool:
 
-### Check the output mode
+```bash
+bunx --bun @side-quest/last-30-days "$ARGUMENTS" --emit=compact 2>&1
+```
 
-The CLI output above will indicate the mode:
+- **If the command succeeds**, it will print research results with a mode line. Save the output and continue to Step 2.
+- **If the command fails or times out**, note the error and continue to Step 2 -- WebSearch will compensate.
+
+### Step 2: Check the output mode
+
+The CLI output will indicate the mode:
 - **"Mode: both"** or **"Mode: reddit-only"** or **"Mode: x-only"**: CLI found results, WebSearch is supplementary
 - **"Mode: web-only"**: No API keys, Claude must do ALL research via WebSearch
+- **No output / error**: CLI failed, treat as web-only mode
 
 ### Supplement with WebSearch
 
