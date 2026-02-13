@@ -73,6 +73,7 @@ Parse the user's question into one or more intent categories. If a question span
 | **Design Patterns** | pattern, advanced, dynamic context, subagent, context fork, code execution, visual output, multiple frameworks, domain-specific, conditional | [patterns.md](references/patterns.md) |
 | **Distribution** | share, distribute, publish, install, personal vs project, where to put, plugin skill, enterprise, managed settings, local skill, monorepo | [distribution.md](references/distribution.md) |
 | **Troubleshooting** | not loading, not triggering, isn't working, broken, debug, error, triggers too often, too many skills, context budget, skill not found | [troubleshooting.md](references/troubleshooting.md) |
+| **MCP Builders** | MCP server, MCP skill, connector, integration, skill on top of MCP, MCP workflow, MCP enhancement, tool access | [mcp-builders.md](references/mcp-builders.md) |
 
 ## Step 2: Read Reference Files
 
