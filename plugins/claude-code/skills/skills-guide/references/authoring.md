@@ -217,100 +217,18 @@ Solution: [How to fix]
 
 ### Step 5: Test the Skill
 
-Choose the approach that matches your quality requirements:
+For detailed testing guidance including a ready-made smoke test prompt, three test areas (triggering, functional, performance), and iteration feedback signals, see [testing.md](testing.md).
 
-| Approach | When to Use |
-|----------|------------|
-| **Manual testing in Claude.ai** | Fast iteration, no setup required. Run queries and observe |
-| **Scripted testing in Claude Code** | Repeatable validation across changes |
-| **Programmatic testing via skills API** | Systematic evaluation suites against defined test sets |
+Quick check:
+1. **Auto-trigger**: Ask something matching the description -- does it load?
+2. **Direct invoke**: Type /skill-name -- does it work?
+3. **Negative test**: Ask something unrelated -- does it stay inactive?
 
-**Pro tip**: Iterate on a single challenging task until Claude succeeds, then extract the winning approach into a skill. This leverages Claude's in-context learning and provides faster signal than broad testing. Once you have a working foundation, expand to multiple test cases.
-
-#### 1. Triggering Tests
-
-Goal: Ensure your skill loads at the right times.
-
-```
-Should trigger:
-- "Help me set up a new ProjectHub workspace"
-- "I need to create a project in ProjectHub"
-- "Initialize a ProjectHub project for Q4 planning"
-
-Should NOT trigger:
-- "What's the weather in San Francisco?"
-- "Help me write Python code"
-- "Create a spreadsheet"
-```
-
-Test: run 10-20 queries that should trigger your skill. Track how many times it loads automatically vs requires explicit /invocation.
-
-#### 2. Functional Tests
-
-Goal: Verify the skill produces correct outputs.
-
-```
-Test: Create project with 5 tasks
-Given: Project name "Q4 Planning", 5 task descriptions
-When: Skill executes workflow
-Then:
-- Project created in ProjectHub
-- 5 tasks created with correct properties
-- All tasks linked to project
-- No API errors
-```
-
-Cover: valid outputs generated, API calls succeed, error handling works, edge cases.
-
-#### 3. Performance Comparison
-
-Goal: Prove the skill improves results vs baseline.
-
-```
-Without skill:
-- User provides instructions each time
-- 15 back-and-forth messages
-- 3 failed API calls requiring retry
-- 12,000 tokens consumed
-
-With skill:
-- Automatic workflow execution
-- 2 clarifying questions only
-- 0 failed API calls
-- 6,000 tokens consumed
-```
+For skills with scripts, test scripts by running them to ensure no bugs and output matches expectations.
 
 ### Step 6: Iterate
 
-Skills are living documents. Plan to iterate based on feedback signals:
-
-**Undertriggering signals** (skill doesn't load when it should):
-- Users manually invoking with /name instead of auto-trigger
-- Support questions about when to use it
-- Fix: Add more trigger phrases and keywords to the description
-
-**Overtriggering signals** (skill loads when it shouldn't):
-- Skill loads for irrelevant queries
-- Users disabling it
-- Fix: Make description more specific, add `disable-model-invocation: true`
-
-**Execution issues** (skill loads but doesn't perform well):
-- Inconsistent results across sessions
-- API call failures
-- Users needing to correct or redirect
-- Fix: Improve instructions, add error handling, tighten degrees of freedom
-
-### Using skill-creator for Iteration
-
-The `skill-creator` skill (available in Claude.ai plugin directory or for Claude Code) helps build and iterate:
-
-- **Creating**: Generate skills from natural language descriptions with proper frontmatter
-- **Reviewing**: Flag vague descriptions, missing triggers, structural problems
-- **Iterating**: Bring edge cases and failures back to skill-creator to improve handling
-
-```
-"Use the skill-creator skill to help me build a skill for [your use case]"
-```
+Skills are living documents. See [testing.md](testing.md) for undertriggering, overtriggering, and execution issue signals to watch for.
 
 ---
 

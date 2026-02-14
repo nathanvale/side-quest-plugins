@@ -72,6 +72,7 @@ Parse the user's question into one or more intent categories. If a question span
 | **Authoring** | write a skill, create a skill, build a skill, skill description, skill name, naming rules, writing guidelines, degrees of freedom, how to write, content strategy | [authoring.md](references/authoring.md) |
 | **Design Patterns** | pattern, advanced, dynamic context, subagent, context fork, code execution, visual output, multiple frameworks, domain-specific, conditional | [patterns.md](references/patterns.md) |
 | **Distribution** | share, distribute, publish, install, personal vs project, where to put, plugin skill, enterprise, managed settings, local skill, monorepo | [distribution.md](references/distribution.md) |
+| **Testing** | test skill, smoke test, validate skill, triggering test, does it trigger, iteration, undertriggering, overtriggering, skill-creator review | [testing.md](references/testing.md) |
 | **Troubleshooting** | not loading, not triggering, isn't working, broken, debug, error, triggers too often, too many skills, context budget, skill not found | [troubleshooting.md](references/troubleshooting.md) |
 | **MCP Builders** | MCP server, MCP skill, connector, integration, skill on top of MCP, MCP workflow, MCP enhancement, tool access | [mcp-builders.md](references/mcp-builders.md) |
 
