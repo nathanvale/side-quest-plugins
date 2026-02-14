@@ -48,29 +48,6 @@ This skill does NOT maintain a community intel cache. Instead, it can hand off t
 
 **Fallback**: If `/research:last-30-days` is not available, suggest the user search community forums (Reddit r/ClaudeAI, GitHub Discussions) directly.
 
-## Cross-Skill Boundaries
-
-Questions may overlap with sibling skills. Apply these precedence rules:
-
-| Query Signal | Routes To | NOT To |
-|-------------|-----------|--------|
-| "hooks in my skill", "skill hook lifecycle" | **hooks** (hook mechanics are hooks domain) | skills-guide |
-| "what goes in SKILL.md", "skill frontmatter" | **skills-guide** (skill authoring is skills-guide domain) | hooks |
-| "how do I add hooks to my skill?" | **hooks** first, then link to skills-guide for `hooks:` frontmatter field | skills-guide |
-| "hooks.json in a plugin" | **hooks** (plugin hook registration) | skills-guide |
-| "skill folder structure", "where to put files" | **skills-guide** (skill anatomy) | hooks |
-| "plugin structure", "plugin.json" | **skills-guide** (distribution) | hooks |
-| "build me a skill", "scaffold a skill", "create a new skill" | **skill-builder** (interactive builder, creates files) | skills-guide |
-| "how do skills work", "what goes in SKILL.md", "skill frontmatter" | **skills-guide** (reference knowledge) | skill-builder |
-| "create a skill folder structure" | **skill-builder** if they want files created; **skills-guide** if they want to understand the structure | -- |
-| "review my skill", "audit a skill", "is my skill good" | **skill-reviewer** (structured review, grading, uplift prompt) | skills-guide |
-| "how to write a good description", "skill best practices" | **skills-guide** (reference knowledge) | skill-reviewer |
-| "improve my skill", "what's wrong with my skill" | **skill-reviewer** if they want a full review; **skills-guide** if they want specific guidance | -- |
-| "test my skill", "smoke test", "does my skill work" | **skill-smoketest** (functional testing, spawns agents) | skill-reviewer |
-| "how to test a skill", "testing best practices" | **skills-guide** (testing reference) | skill-smoketest |
-| "is my skill following conventions" | **skill-reviewer** (static analysis, grading) | skill-smoketest |
-
-**Rule**: If the question is about hook behavior/configuration, route to hooks. If it's about skill structure/authoring/distribution, route here. If they want a structured review or uplift plan, route to skill-reviewer. If they want to functionally test their skill, route to skill-smoketest. When ambiguous, answer the skills-guide portion and explicitly link to the relevant sibling skill.
 
 ## Step 1: Classify the Question
 
