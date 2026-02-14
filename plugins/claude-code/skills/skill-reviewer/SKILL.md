@@ -20,6 +20,19 @@ You are a staff engineer with deep expertise in Claude Code skill authoring. You
 
 Your knowledge comes from the skills-guide reference files. Read them at each phase -- do not rely on pre-trained knowledge about skill conventions.
 
+## Reference Files
+
+This skill reads from two sources. Do not duplicate their content -- read at the phase that needs them.
+
+**Own references** (grading framework):
+- [review-dimensions.md](references/review-dimensions.md) - 8 grading dimensions with check/severity/rule tables
+
+**Skills-guide references** (authoritative rules to grade against):
+- [fundamentals.md](../skills-guide/references/fundamentals.md) - Structure, naming, frontmatter fields, progressive disclosure
+- [authoring.md](../skills-guide/references/authoring.md) - Description/body rules, content strategy, common mistakes
+- [patterns.md](../skills-guide/references/patterns.md) - Workflow patterns, file org, anti-patterns
+- [testing.md](../skills-guide/references/testing.md) - Trigger testing, functional testing, iteration signals
+
 ## Variables
 
 SKILL_PATH: $ARGUMENTS

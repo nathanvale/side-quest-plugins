@@ -57,6 +57,16 @@ Common YAML mistakes:
 - Missing opening or closing `---` marker
 - Unquoted special characters in values
 - Incorrect indentation
+- Empty values (missing value after the colon)
+
+```yaml
+# Wrong - empty values
+name:
+description:
+
+# Wrong - missing colons
+name my-skill
+```
 
 ### "Invalid skill name"
 
@@ -133,7 +143,7 @@ If auto-triggering is never appropriate, add `disable-model-invocation: true`.
 
 1. **Verify MCP server is connected**
    - Claude.ai: Settings > Extensions > [Your Service] -- should show "Connected"
-   - Claude Code: run `/doctor` to diagnose MCP connection issues, or check MCP server status in settings
+   - Claude Code: run `claude --debug` to diagnose MCP connection issues, or check MCP server status in settings
 
 2. **Check authentication**
    - API keys valid and not expired
@@ -200,7 +210,8 @@ If validation fails, show the error and ask the user to fix.
    - Use progressive disclosure (see fundamentals.md)
 
 2. **Too many skills enabled simultaneously**
-   - If you have 20-50+ skills enabled, some will be excluded from the context budget
+   - Skill descriptions share a context budget that scales dynamically at **2% of the context window**, with a **16,000-character fallback** when window size can't be determined
+   - If you exceed the budget, some skills are excluded from context
    - Run `/context` to see which skills are being excluded
    - Override budget: `export SLASH_COMMAND_TOOL_CHAR_BUDGET=32000`
    - Consider selective enablement or skill "packs" for related capabilities
@@ -227,6 +238,7 @@ If validation fails, show the error and ask the user to fix.
 
 **context: fork returns empty/useless output**:
 - `context: fork` creates a new isolated context without conversation history
+- If the skill contains only guidelines (no explicit task), the subagent receives them but has no actionable prompt -- it returns without meaningful output
 - The skill content must contain a complete, actionable task -- not just guidelines
 - If your skill is guidelines-only, don't use `context: fork`
 

@@ -9,7 +9,7 @@ description: >
   I have an idea for a skill, skill scaffolding, generate a skill.
 disable-model-invocation: true
 argument-hint: "[skill idea description]"
-allowed-tools: Bash(mkdir *), Bash(ls *), Write, Read, Glob, Grep, AskUserQuestion
+allowed-tools: Bash(mkdir -p), Bash(ls -R), Write, Read, Glob, Grep, AskUserQuestion
 ---
 
 # Skill Builder
@@ -17,6 +17,20 @@ allowed-tools: Bash(mkdir *), Bash(ls *), Write, Read, Glob, Grep, AskUserQuesti
 You are an interactive skill builder. You collaborate with the user to understand their idea, then scaffold a complete, ready-to-test Claude Code skill.
 
 Your knowledge comes from the skills-guide reference files. Read them at each phase -- do not guess or use pre-trained knowledge about skill authoring conventions.
+
+## Reference Files
+
+This skill reads from two sources. Do not duplicate their content -- read at the phase that needs them.
+
+**Skills-guide references** (authoritative rules for skill authoring):
+- [fundamentals.md](../skills-guide/references/fundamentals.md) - Skill anatomy, naming rules, frontmatter fields, progressive disclosure
+- [authoring.md](../skills-guide/references/authoring.md) - Description/body rules, degrees of freedom, common mistakes
+- [patterns.md](../skills-guide/references/patterns.md) - 5 workflow patterns, 4 file org patterns, anti-patterns
+- [distribution.md](../skills-guide/references/distribution.md) - 4 location options, plugin packaging, precedence
+- [testing.md](../skills-guide/references/testing.md) - Smoke test template, 3 test areas, iteration signals
+
+**Own references** (validation criteria):
+- [quality-checklist.md](references/quality-checklist.md) - Structural, content, and organization checks for generated skills
 
 ## Variables
 
