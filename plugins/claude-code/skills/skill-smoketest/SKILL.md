@@ -140,8 +140,7 @@ Task({
     Observation: <what actually happened>
     Expected: <what should have happened>
     Notes: <any additional context>",
-  subagent_type: "general-purpose",
-  run_in_background: true
+  subagent_type: "general-purpose"
 })
 ```
 
@@ -155,7 +154,11 @@ Task({
 **Batching:**
 - Launch up to 5 subagents in parallel per wave
 - Wait for each wave to complete before starting the next
+- If a subagent does not return within 60 seconds, mark the test as SKIP with a timeout note
 - If a discovery test FAILs, skip all dependent tests and report early
+
+**Test limitations:**
+Subagent-based testing cannot verify skill discovery, autocomplete, or auto-triggering -- the subagent does not have the same skill-loading pipeline as an interactive session. D-* and I-3 tests are simulated (the subagent reads SKILL.md directly and evaluates whether the metadata would produce the expected behavior). For full invocation testing, use the manual smoke test template from `${SKILLS_GUIDE}/testing.md`.
 
 ## Phase 5: Collect and Report Results
 
