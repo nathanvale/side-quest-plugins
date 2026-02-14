@@ -19,5 +19,5 @@
 		"skill-guide"
 	],
 	"license": "MIT",
-	"skills": ["./skills/hooks", "./skills/skills-guide"]
+	"skills": ["./skills/hooks", "./skills/skills-guide", "./skills/skill-builder", "./skills/skill-reviewer", "./skills/skill-smoketest"]
 }
