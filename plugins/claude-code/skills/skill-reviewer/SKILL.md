@@ -27,11 +27,11 @@ This skill reads from two sources. Do not duplicate their content -- read at the
 **Own references** (grading framework):
 - [review-dimensions.md](references/review-dimensions.md) - 8 grading dimensions with check/severity/rule tables
 
-**Skills-guide references** (authoritative rules to grade against):
-- [fundamentals.md](../skills-guide/references/fundamentals.md) - Structure, naming, frontmatter fields, progressive disclosure
-- [authoring.md](../skills-guide/references/authoring.md) - Description/body rules, content strategy, common mistakes
-- [patterns.md](../skills-guide/references/patterns.md) - Workflow patterns, file org, anti-patterns
-- [testing.md](../skills-guide/references/testing.md) - Trigger testing, functional testing, iteration signals
+**Skills-guide references** (authoritative rules to grade against -- requires sibling `skills-guide` skill in the same plugin):
+- [fundamentals.md](../skills-guide/references/fundamentals.md)
+- [authoring.md](../skills-guide/references/authoring.md)
+- [patterns.md](../skills-guide/references/patterns.md)
+- [testing.md](../skills-guide/references/testing.md)
 
 ## Variables
 
@@ -101,8 +101,8 @@ Present results in this exact structure:
 ```
 Skill:        <name>
 Location:     <path>
-Type:         <reference | task | hybrid>
-Pattern:      <sequential | knowledge-bank | dynamic-context | code-execution | multi-framework | custom>
+Type:         <reference | task>
+Pattern:      <sequential | multi-mcp | iterative-refinement | context-aware | domain-specific | custom>
 Files:        <count> (<total lines> lines)
 SKILL.md:     <lines> lines / <words> words
 ```
@@ -146,7 +146,7 @@ The prompt should:
 2. List every WARN and FAIL finding as a numbered action item
 3. For each item, include the exact change needed (not just "improve the description")
 4. Include the "why" for each change so the implementing agent understands the reasoning
-5. End with a validation step -- ask the agent to re-read the quality checklist and verify
+5. End with a validation step using the inline checks below
 
 Format the prompt as a fenced code block the user can copy:
 
