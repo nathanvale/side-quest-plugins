@@ -20,7 +20,7 @@ Diagnose and optionally fix Chrome DevTools MCP connection issues.
 
 ## Diagnostic Flow
 
-Run the layered diagnostics from the chrome-devtools skill:
+Run the layered diagnostics from the chrome-devtools-guide skill:
 
 **Layer 1: MCP probe** -- Call `list_pages` via Chrome DevTools MCP.
 - Success -> Report "Connection healthy. {N} pages open." and stop.
@@ -50,7 +50,7 @@ ps aux | grep -c '[c]hrome-devtools-mcp'
 
 ## After Diagnosis
 
-Load [diagnostics.md](../skills/chrome-devtools/references/diagnostics.md) for the scenario table and fix options.
+Load [diagnostics.md](../skills/chrome-devtools-guide/references/diagnostics.md) for the scenario table and fix options.
 
 **If `--check` mode**: Report the diagnosis and stop. Do not take any action.
 

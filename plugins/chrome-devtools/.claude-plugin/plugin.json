@@ -18,5 +18,5 @@
 		"./commands/screenshot.md",
 		"./commands/fix.md"
 	],
-	"skills": ["./skills/chrome-devtools"]
+	"skills": ["./skills/chrome-devtools-guide"]
 }
