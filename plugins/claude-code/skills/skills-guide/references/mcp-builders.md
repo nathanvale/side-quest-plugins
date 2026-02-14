@@ -1,51 +1,71 @@
 # Skills for MCP Builders
 
-How skills complement MCP servers: the knowledge layer on top of connectivity.
+How skills complement MCP servers: adding workflow guidance and domain expertise on top of tool access.
 
-Source: Anthropic's "Complete Guide to Building Skills for Claude" (Jan 2026)
-
----
-
-## The Kitchen Analogy
-
-MCP provides the professional kitchen: access to tools, ingredients, and equipment.
-
-Skills provide the recipes: step-by-step instructions on how to create something valuable.
-
-Together, they enable users to accomplish complex tasks without needing to figure out every step themselves.
+Source: Anthropic's "Complete Guide to Building Skills for Claude" (Jan 2026), code.claude.com/docs/en/skills
 
 ---
 
-## How They Work Together
+## MCP + Skills: Two Layers
 
-| MCP (Connectivity) | Skills (Knowledge) |
-|----|-----|
-| Connects Claude to your service (Notion, Asana, Linear, etc.) | Teaches Claude how to use your service effectively |
-| Provides real-time data access and tool invocation | Captures workflows and best practices |
-| What Claude **can** do | How Claude **should** do it |
+MCP servers give Claude **access** -- connectivity to your service, real-time data, tool invocation.
+
+Skills give Claude **knowledge** -- workflow guidance, domain expertise, best practices, error handling.
+
+Claude can reason about MCP tools and use them without skills. But skills make that usage consistent, reliable, and aligned with your service's best practices.
+
+| Layer | What It Provides | Example |
+|-------|-----------------|---------|
+| **MCP server** | Tool access: create, read, update, delete | `create_project`, `list_issues`, `update_status` |
+| **Skill** | Workflow knowledge: when, why, in what order | "Before creating a project, check for duplicates. After creating, assign default team members and set up the board." |
 
 ---
 
-## Why This Matters for Your MCP Users
+## What Skills Add to MCP
 
-**Without skills**:
-- Users connect your MCP but don't know what to do next
-- Support tickets asking "how do I do X with your integration"
-- Each conversation starts from scratch
-- Inconsistent results because users prompt differently each time
-- Users blame your connector when the real issue is workflow guidance
+| Aspect | MCP Only | MCP + Skill |
+|--------|----------|-------------|
+| Tool access | Claude discovers and uses tools | Same -- skills don't change tool access |
+| Workflow guidance | Claude reasons about tool usage ad hoc | Skill encodes proven patterns and sequences |
+| Error handling | Generic retry/report | Domain-specific recovery ("if rate limited, batch into groups of 10") |
+| Best practices | User must know and communicate them | Encoded in skill instructions |
+| Multi-tool coordination | Claude orchestrates based on general reasoning | Skill specifies optimal sequences for common tasks |
+| Consistency | Results vary by how users prompt | Same workflow every time |
 
-**With skills**:
-- Pre-built workflows activate automatically when needed
-- Consistent, reliable tool usage
-- Best practices embedded in every interaction
-- Lower learning curve for your integration
+---
+
+## When to Build a Skill for Your MCP
+
+Build a skill when your MCP users:
+- Ask the same workflow questions repeatedly ("how do I set up a new project?")
+- Get inconsistent results because they prompt differently each time
+- Don't know the optimal order to call your tools
+- Miss important steps (validation, cleanup, notifications)
+- Blame your connector when the real issue is workflow guidance
+
+Don't build a skill when:
+- Your MCP tools are self-explanatory and rarely used together
+- A single tool call handles the use case
+- Good MCP server descriptions already guide Claude's usage
+
+---
+
+## MCP Tool Search and Skills
+
+When an MCP server exposes many tools (10%+ of context budget), Claude Code activates Tool Search -- it reads tool descriptions to decide which tools are relevant.
+
+Skills and MCP server descriptions serve complementary roles:
+- **MCP server descriptions** help Claude find the right tools
+- **Skill descriptions** help Claude find the right workflow
+- **Skill instructions** tell Claude how to use the tools together
+
+Write both well. A skill that references MCP tools by name helps Claude connect the dots.
 
 ---
 
 ## Building Skills on Top of MCP
 
-If you already have a working MCP server, you've done the hard part. Skills are the knowledge layer on top -- capturing the workflows and best practices you already know, so Claude can apply them consistently.
+If you have a working MCP server, skills are the knowledge layer on top -- capturing workflows you already know so Claude applies them consistently.
 
 ### What to Put in the Skill
 
@@ -59,12 +79,32 @@ If you already have a working MCP server, you've done the hard part. Skills are 
 ```yaml
 ---
 name: sentry-code-review
-description: Automatically analyzes and fixes detected bugs in GitHub
-  Pull Requests using Sentry's error monitoring data via their MCP server.
+description: >
+  Code review workflow using Sentry error data via MCP. Use when
+  reviewing code changes, analyzing error impact, or checking if
+  a PR addresses known Sentry issues.
 ---
-```
 
-This skill coordinates multiple MCP calls in sequence, embeds domain expertise about error triage, and provides context users would otherwise need to specify manually.
+# Sentry-Enhanced Code Review
+
+## Workflow
+
+1. Use Sentry MCP to fetch recent issues for the affected files
+2. Cross-reference PR changes with known error patterns
+3. Flag if changes might introduce regressions
+4. Summarize error impact in review comments
+
+## Error Patterns
+
+When Sentry shows recurring errors:
+- Check if the PR addresses the root cause
+- Verify error handling covers the failure mode
+- Flag if similar patterns exist in changed files
+
+## References
+
+For Sentry API details, see [sentry-api.md](references/sentry-api.md)
+```
 
 ### Skill Structure for MCP Enhancement
 
@@ -78,8 +118,10 @@ your-mcp-skill/
     └── validate.py       # Pre-flight checks before MCP calls
 ```
 
-Key techniques:
-- Coordinate multiple MCP calls in sequence
-- Embed domain expertise the MCP server doesn't provide
-- Provide context users would otherwise need to specify
-- Error handling for common MCP issues (connection refused, rate limits, auth failures)
+### Key Principles
+
+1. **Don't duplicate MCP docs** -- focus on workflow, not tool reference
+2. **Coordinate multiple tools** -- the skill's value is orchestration
+3. **Embed domain expertise** -- encode the "how" and "why", not just the "what"
+4. **Handle common errors** -- anticipate MCP-specific failure modes (connection refused, rate limits, auth failures)
+5. **Link to MCP docs** -- for tool-level details, point users to the MCP server documentation

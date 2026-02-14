@@ -12,7 +12,7 @@ description: >
   install skill, personal skill, project skill, plugin skill, enterprise skill,
   skill-creator, skill conventions, skill best practices, what is a skill,
   local vs project skill, skill testing, skill debugging.
-allowed-tools: Read, Glob, Grep, Skill(last-30-days *)
+allowed-tools: Read, Glob, Grep
 ---
 
 # Claude Code Skills Guide -- Knowledge Bank

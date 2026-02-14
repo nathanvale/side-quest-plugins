@@ -100,9 +100,9 @@ See Claude Code managed settings documentation for deployment details.
 
 ## Monorepo Support
 
-When working with files in subdirectories, Claude Code automatically discovers skills from nested `.claude/skills/` directories.
+When you work with files in subdirectories, Claude Code automatically discovers skills from nested `.claude/skills/` directories in those subdirectories.
 
-Example: editing a file in `packages/frontend/` causes Claude Code to also look for skills in `packages/frontend/.claude/skills/`.
+Example: editing a file in `packages/frontend/` causes Claude Code to also look for skills in `packages/frontend/.claude/skills/`. This applies to subdirectories you're actively working in, not all nested directories in the repo.
 
 This supports monorepo setups where packages have their own skills.
 

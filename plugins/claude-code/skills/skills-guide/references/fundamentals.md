@@ -177,9 +177,13 @@ Skills use a three-level loading system to manage context efficiently:
 
 ### Context Budget
 
-Skill descriptions share a character budget: 2% of the context window, with a 16,000-character fallback. If you have many skills, some may be excluded. Run `/context` to check for warnings about excluded skills.
+Skill descriptions share a character budget that scales dynamically at **2% of the context window**, with a **16,000-character fallback** when the window size can't be determined. If you have many skills, some may be excluded. Run `/context` to check for warnings about excluded skills.
 
-Override the limit with the `SLASH_COMMAND_TOOL_CHAR_BUDGET` environment variable.
+Override the limit:
+
+```bash
+export SLASH_COMMAND_TOOL_CHAR_BUDGET=32000
+```
 
 ### Key Principle
 

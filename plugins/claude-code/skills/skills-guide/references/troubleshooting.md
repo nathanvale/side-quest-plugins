@@ -133,7 +133,7 @@ If auto-triggering is never appropriate, add `disable-model-invocation: true`.
 
 1. **Verify MCP server is connected**
    - Claude.ai: Settings > Extensions > [Your Service] -- should show "Connected"
-   - Claude Code: check MCP server status in settings
+   - Claude Code: run `/doctor` to diagnose MCP connection issues, or check MCP server status in settings
 
 2. **Check authentication**
    - API keys valid and not expired

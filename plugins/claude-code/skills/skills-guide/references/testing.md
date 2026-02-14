@@ -12,7 +12,7 @@ Choose the approach that matches your quality requirements. A skill used interna
 
 | Approach | When to Use | Setup |
 |----------|------------|-------|
-| **Manual testing in Claude.ai** | Fast iteration, exploring behavior | None -- just run queries and observe |
+| **Manual testing in Claude.ai or Claude Code** | Fast iteration, exploring behavior | None -- just run queries and observe |
 | **Scripted testing in Claude Code** | Repeatable validation across changes | Write test prompts in a file |
 | **Programmatic testing via skills API** | Systematic evaluation suites | Build against defined test sets |
 
