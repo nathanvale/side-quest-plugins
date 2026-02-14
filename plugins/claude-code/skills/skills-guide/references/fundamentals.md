@@ -207,6 +207,21 @@ The description is the most important field. It is the primary triggering mechan
 
 ---
 
+## Common Mistakes
+
+| Mistake | Symptom | Fix |
+|---------|---------|-----|
+| Vague description ("helpful utility") | Skill never triggers | Be specific: what it does AND when to use it |
+| Trigger phrases in body instead of description | Skill doesn't auto-load | Move all trigger language into the `description` field |
+| Wrong SKILL.md casing (`skill.md`, `SKILL.MD`) | Skill not discovered | Must be exactly `SKILL.md` |
+| Spaces or capitals in folder name | Skill not discovered | Use kebab-case: `my-skill-name` |
+| Missing `---` YAML markers | Frontmatter silently ignored | Ensure exactly two `---` lines wrap the YAML block |
+| XML angle brackets in frontmatter | Security rejection | Remove all `<` and `>` from frontmatter values |
+| Description over 1024 characters | Truncation or exclusion | Shorten description; move detail to the body |
+| Deeply nested references (`references/sub/sub/`) | Files not found | Keep references one level deep from SKILL.md |
+
+---
+
 ## Avoid Duplication
 
 Information should live in either SKILL.md or reference files, not both. Prefer reference files for detailed information -- this keeps SKILL.md lean while making information discoverable without consuming the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to reference files.

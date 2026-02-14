@@ -190,6 +190,13 @@ All fields are optional. Only description is recommended.
 The description is the most important field. Include both what the
 skill does and specific triggers for when to use it.
 
+**Verify:** Invoke /your-skill and check that the frontmatter fields
+parse correctly. Ask "What skills are available?" to confirm your
+skill appears with the right description.
+
+**Common mistake:** Missing `---` markers or indentation errors in
+YAML cause silent parse failures. Always use exactly two `---` lines.
+
 Source: fundamentals.md
 ```
 
