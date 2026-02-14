@@ -16,8 +16,14 @@
 		"SessionStart",
 		"SKILL.md",
 		"skill-authoring",
-		"skill-guide"
+		"skills-guide"
 	],
 	"license": "MIT",
-	"skills": ["./skills/hooks", "./skills/skills-guide", "./skills/skill-builder", "./skills/skill-reviewer", "./skills/skill-smoketest"]
+	"skills": [
+		"./skills/hooks",
+		"./skills/skills-guide",
+		"./skills/skill-builder",
+		"./skills/skill-reviewer",
+		"./skills/skill-smoketest"
+	]
 }
