@@ -9,7 +9,7 @@ Take a screenshot using Chrome DevTools MCP.
 
 ## Steps
 
-1. Run the connection check from the chrome-devtools skill (Layer 1: `list_pages`). On failure, point to `/chrome-devtools:fix`.
+1. Run the connection check from the guide skill (Layer 1: `list_pages`). On failure, point to `/chrome-devtools:fix`.
 2. Parse arguments:
    - **URL** (required) -- the page to screenshot
    - **--full-page** (optional) -- capture the full scrollable page

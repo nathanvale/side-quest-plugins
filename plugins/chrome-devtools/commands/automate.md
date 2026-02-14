@@ -3,7 +3,7 @@ description: Automate browser tasks via Chrome DevTools MCP
 argument-hint: "[workflow or description]"
 ---
 
-Invoke the **chrome-devtools** skill to handle this browser automation request.
+Invoke the **guide** skill to handle this browser automation request.
 
 **Arguments received**: `$ARGUMENTS`
 

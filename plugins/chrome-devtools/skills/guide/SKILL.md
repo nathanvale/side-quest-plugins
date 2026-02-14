@@ -1,14 +1,21 @@
 ---
-name: chrome-devtools
+name: guide
 description: >
   Uses Chrome DevTools via MCP for browser automation, debugging, and testing.
   Use when: automating browser interactions, taking screenshots, testing webapps,
   analyzing Chrome performance traces, inspecting network requests, validating
   accessibility, creating npm tokens via browser, setting up GitHub OIDC,
+  debugging web apps, checking page speed, auditing website accessibility,
   or any task requiring Chrome DevTools.
 argument-hint: "[workflow or URL]"
 allowed-tools:
-  - Bash
+  - Bash(lsof *)
+  - Bash(curl *)
+  - Bash(ps *)
+  - Bash(op *)
+  - Bash(gh *)
+  - Bash(kill *)
+  - Bash(rm -f *SingletonLock*)
   - Read
   - Glob
   - Grep
@@ -23,34 +30,10 @@ You are a browser automation expert using the Chrome DevTools MCP. Before any wo
 
 ## 1. Connection Check (Always First)
 
-Run layered diagnostics -- each layer narrows the root cause:
-
-**Layer 1: MCP probe**
-Call `list_pages` via the Chrome DevTools MCP.
-- Success -> connection healthy, proceed with workflow
-- Tool not available (not in tool list) -> Report: "Chrome DevTools MCP tools are not registered in this session. The MCP server may need reconnecting. Run `/mcp` and reconnect `chrome-devtools`, or run `/mcp-manager:enable chrome-devtools`." STOP -- do not continue to Layer 2 (this is a session configuration issue, not a connection issue).
-- Tool available but returns error -> continue to Layer 2
-
-**Layer 2: Port check**
-```bash
-lsof -i :9222 -sTCP:LISTEN 2>/dev/null
-```
-- Port in use -> stale process holding the port (report PID and process name)
-- Port free -> continue to Layer 3
-
-**Layer 3: Chrome debug endpoint**
-```bash
-curl -s --max-time 3 http://localhost:9222/json/version
-```
-- Response -> Chrome running but MCP can't connect (transport issue). Parse the `Browser` field from the JSON response (e.g., `"Chrome/144.0.6367.60"`) and report the version to the user. If Chrome >= 144, note: "Auto-connect is available for this Chrome version (`--autoConnect`)."
-- No response -> Chrome not running with debug port
-
-**Layer 4: MCP process check** (if layers 2-3 suggest MCP issue)
-```bash
-ps aux | grep -c '[c]hrome-devtools-mcp'
-```
-- Process found -> MCP running but transport broken
-- Not found -> MCP not started or not configured
+Call `list_pages` via the Chrome DevTools MCP before any workflow.
+- **Success** -> proceed with the workflow
+- **Tool not available** -> MCP not registered. Tell user to run `/doctor` to diagnose MCP connectivity. STOP.
+- **Tool returns error** -> run the full 4-layer diagnostic from [diagnostics.md](references/diagnostics.md)
 
 **On failure**: Report the specific diagnosis and tell the user to run `/chrome-devtools:fix`. Never silently proceed without a connection.
 
@@ -117,20 +100,11 @@ Always `take_snapshot` before interacting with elements:
 
 ### Auth Detection
 
-Before any site workflow:
-1. `navigate_page` to the site root
-2. `take_snapshot` and check for "Sign In" / "Log in" text
-3. If not logged in, tell the user to log in manually, then `wait_for` authenticated state
+Before any site workflow, check login state via snapshot. See [publishing-workflows.md](references/publishing-workflows.md) "Auth Detection" for the full pattern. If not logged in, tell the user to log in manually, then `wait_for` authenticated state.
 
 ### 1Password Secret Storage
 
-When workflows create secrets (npm tokens, API keys):
-1. Check `op --version` for availability
-2. **Vault**: Always `API Credentials` -- the sole vault
-3. **Auth**: `OP_SERVICE_ACCOUNT_TOKEN` in shell env (non-interactive, no Touch ID)
-4. Check for existing items before creating duplicates
-5. Store with expiry tracking and context metadata
-6. Fall back to `gh secret set` or manual copy if `op` unavailable
+When workflows create secrets, offer to store them via `op` CLI. See [publishing-workflows.md](references/publishing-workflows.md) "1Password Vault Storage" for vault name, auth setup, commands, and graceful degradation.
 
 ### Secret Safety
 
