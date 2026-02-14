@@ -19,12 +19,15 @@ Source: Anthropic's "Complete Guide to Building Skills for Claude" (Jan 2026), p
 - [ ] Frontmatter delimited by `---` markers
 - [ ] YAML parses without errors
 - [ ] `name` field is lowercase + hyphens, max 64 chars, matches folder name
+- [ ] `name` does not contain "claude" or "anthropic" (reserved names)
 - [ ] No nested directories without purpose (references/, scripts/, assets/ only when used)
 
 ## Content Checks
 
 - [ ] `description` includes WHAT the skill does
 - [ ] `description` includes WHEN to use it (trigger phrases)
+- [ ] `description` is under 1024 characters
+- [ ] SKILL.md body is under 500 lines
 - [ ] Body contains clear instructions (not just a description repeat)
 - [ ] No XML tags in body (Claude Code strips them)
 - [ ] No duplicate knowledge from referenced files
@@ -41,6 +44,7 @@ Source: Anthropic's "Complete Guide to Building Skills for Claude" (Jan 2026), p
 ## Organization Checks
 
 - [ ] Reference files linked with relative paths (not absolute)
+- [ ] Reference files are one level deep from SKILL.md (no nested references/)
 - [ ] No reference file exceeds ~500 lines (split if larger)
 - [ ] Scripts in scripts/ have shebang lines and are executable
 - [ ] Assets in assets/ are referenced from SKILL.md or references

@@ -68,15 +68,15 @@ Gather enough information to make pattern and location recommendations. Ask usin
 1. Read `${SKILLS_GUIDE}/patterns.md`
 2. Match the user's needs against the 5 workflow patterns:
    - Sequential Workflow Orchestration
-   - Knowledge Bank with Classification
-   - Dynamic Context Assembly
-   - Code Execution Pipeline
-   - Multi-Framework Adapter
+   - Multi-MCP Coordination
+   - Iterative Refinement
+   - Context-Aware Tool Selection
+   - Domain-Specific Intelligence
 3. Match against the 4 file organization patterns:
-   - Single-file (minimal)
-   - Reference library
-   - Script-enhanced
-   - Full progressive disclosure
+   - High-Level Guide with References
+   - Domain-Specific Organization
+   - Conditional Details
+   - Template and Example
 4. Read `${SKILLS_GUIDE}/authoring.md` for skill type (reference vs task) and degrees of freedom guidance
 5. Present your recommendation with reasoning:
    - Recommended workflow pattern + why
@@ -163,11 +163,11 @@ If changes are requested, apply them and re-preview. Do not scaffold until appro
 
 Create all files on disk. Use the templates from `assets/templates/` as structural scaffolding, filling in the dynamic content from previous phases.
 
-**Template selection:**
-- Minimal pattern -> `assets/templates/minimal.md`
-- Knowledge bank pattern -> `assets/templates/knowledge-bank.md`
-- Task orchestrator pattern -> `assets/templates/task-orchestrator.md`
-- MCP enhanced pattern -> `assets/templates/mcp-enhanced.md`
+**Template selection** (match use case, not pattern name):
+- Simple reference or convention skill -> `assets/templates/minimal.md`
+- Knowledge bank with classification routing -> `assets/templates/knowledge-bank.md`
+- Multi-phase task workflow -> `assets/templates/task-orchestrator.md`
+- MCP server integration -> `assets/templates/mcp-enhanced.md`
 
 **Scaffolding steps:**
 1. Create the skill directory: `mkdir -p <path>/<skill-name>`
