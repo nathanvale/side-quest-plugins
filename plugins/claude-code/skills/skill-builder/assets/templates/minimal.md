@@ -2,7 +2,8 @@
 name: {{SKILL_NAME}}
 description: >
   {{DESCRIPTION}}
-{{OPTIONAL_FIELDS}}---
+{{OPTIONAL_FIELDS}}
+---
 
 # {{TITLE}}
 

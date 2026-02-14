@@ -46,6 +46,8 @@ This skill does NOT maintain a community intel cache. Instead, it can hand off t
 
 **Do NOT auto-invoke research** for standard doc questions like "what goes in SKILL.md" or "how do I distribute a skill." Only when the user is explicitly asking for community perspective or inspiration.
 
+**Fallback**: If `/research:last-30-days` is not available, suggest the user search community forums (Reddit r/ClaudeAI, GitHub Discussions) directly.
+
 ## Cross-Skill Boundaries
 
 Questions may overlap with sibling skills. Apply these precedence rules:

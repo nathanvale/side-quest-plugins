@@ -3,7 +3,8 @@ name: {{SKILL_NAME}}
 description: >
   {{DESCRIPTION}}
 allowed-tools: Read, Glob, Grep
-{{OPTIONAL_FIELDS}}---
+{{OPTIONAL_FIELDS}}
+---
 
 # {{TITLE}}
 

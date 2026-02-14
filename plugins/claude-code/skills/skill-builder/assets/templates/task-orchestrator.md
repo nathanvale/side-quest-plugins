@@ -5,7 +5,8 @@ description: >
 disable-model-invocation: true
 argument-hint: {{ARGUMENT_HINT}}
 allowed-tools: {{ALLOWED_TOOLS}}
-{{OPTIONAL_FIELDS}}---
+{{OPTIONAL_FIELDS}}
+---
 
 # {{TITLE}}
 

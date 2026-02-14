@@ -3,7 +3,8 @@ name: {{SKILL_NAME}}
 description: >
   {{DESCRIPTION}}
 allowed-tools: {{MCP_TOOLS}}
-{{OPTIONAL_FIELDS}}---
+{{OPTIONAL_FIELDS}}
+---
 
 # {{TITLE}}
 
