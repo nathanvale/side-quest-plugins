@@ -1,16 +1,201 @@
 # Skill Design Patterns
 
-Progressive disclosure patterns, advanced features, and architectural approaches for building effective skills.
+Workflow architecture patterns, file organization patterns, and advanced features for building effective skills.
 
 Source: Anthropic's "Complete Guide to Building Skills for Claude" (Jan 2026), code.claude.com/docs/en/skills
 
 ---
 
-## Progressive Disclosure Patterns
+## Problem-First vs Tool-First
 
-These patterns manage context efficiently by keeping SKILL.md focused and loading detail on demand.
+Think of it like Home Depot. You might walk in with a problem -- "I need to fix a kitchen cabinet" -- and an employee points you to the right tools. Or you might pick out a new drill and ask how to use it for your specific job.
 
-### Pattern 1: High-Level Guide with References
+Skills work the same way:
+
+- **Problem-first**: "I need to set up a project workspace" -- Your skill orchestrates the right MCP calls in the right sequence. Users describe outcomes; the skill handles the tools.
+- **Tool-first**: "I have Notion MCP connected" -- Your skill teaches Claude the optimal workflows and best practices. Users have access; the skill provides expertise.
+
+Most skills lean one direction. Knowing which framing fits your use case helps you choose the right pattern.
+
+---
+
+## Part 1: Workflow Patterns
+
+These patterns emerged from skills created by early adopters and internal teams at Anthropic. They describe how to design the *logic* inside a skill.
+
+### Pattern 1: Sequential Workflow Orchestration
+
+**Use when**: Users need multi-step processes in a specific order.
+
+```markdown
+## Workflow: Onboard New Customer
+
+# Step 1: Create Account
+Call MCP tool: `create_customer`
+Parameters: name, email, company
+
+# Step 2: Setup Payment
+Call MCP tool: `setup_payment_method`
+Wait for: payment method verification
+
+# Step 3: Create Subscription
+Call MCP tool: `create_subscription`
+Parameters: plan_id, customer_id (from Step 1)
+
+# Step 4: Send Welcome Email
+Call MCP tool: `send_email`
+Template: welcome_email_template
+```
+
+Key techniques:
+- Explicit step ordering
+- Dependencies between steps
+- Validation at each stage
+- Rollback instructions for failures
+
+### Pattern 2: Multi-MCP Coordination
+
+**Use when**: Workflows span multiple services.
+
+```markdown
+## Design-to-Development Handoff
+
+# Phase 1: Design Export (Figma MCP)
+1. Export design assets from Figma
+2. Generate design specifications
+3. Create asset manifest
+
+# Phase 2: Asset Storage (Drive MCP)
+1. Create project folder in Drive
+2. Upload all assets
+3. Generate shareable links
+
+# Phase 3: Task Creation (Linear MCP)
+1. Create development tasks
+2. Attach asset links to tasks
+3. Assign to engineering team
+
+# Phase 4: Notification (Slack MCP)
+1. Post handoff summary to #engineering
+2. Include asset links and task references
+```
+
+Key techniques:
+- Clear phase separation
+- Data passing between MCPs
+- Validation before moving to next phase
+- Centralized error handling
+
+### Pattern 3: Iterative Refinement
+
+**Use when**: Output quality improves with iteration.
+
+```markdown
+## Iterative Report Creation
+
+# Initial Draft
+1. Fetch data via MCP
+2. Generate first draft report
+3. Save to temporary file
+
+# Quality Check
+1. Run validation script: `scripts/check_report.py`
+2. Identify issues:
+   - Missing sections
+   - Inconsistent formatting
+   - Data validation errors
+
+# Refinement Loop
+1. Address each identified issue
+2. Regenerate affected sections
+3. Re-validate
+4. Repeat until quality threshold met
+
+# Finalization
+1. Apply final formatting
+2. Generate summary
+3. Save final version
+```
+
+Key techniques:
+- Explicit quality criteria
+- Iterative improvement
+- Validation scripts
+- Know when to stop iterating
+
+### Pattern 4: Context-Aware Tool Selection
+
+**Use when**: Same outcome, different tools depending on context.
+
+```markdown
+## Smart File Storage
+
+# Decision Tree
+1. Check file type and size
+2. Determine best storage location:
+   - Large files (>10MB): Use cloud storage MCP
+   - Collaborative docs: Use Notion/Docs MCP
+   - Code files: Use GitHub MCP
+   - Temporary files: Use local storage
+
+# Execute Storage
+Based on decision:
+- Call appropriate MCP tool
+- Apply service-specific metadata
+- Generate access link
+
+# Provide Context to User
+Explain why that storage was chosen
+```
+
+Key techniques:
+- Clear decision criteria
+- Fallback options
+- Transparency about choices
+
+### Pattern 5: Domain-Specific Intelligence
+
+**Use when**: Your skill adds specialized knowledge beyond tool access.
+
+```markdown
+## Payment Processing with Compliance
+
+# Before Processing (Compliance Check)
+1. Fetch transaction details via MCP
+2. Apply compliance rules:
+   - Check sanctions lists
+   - Verify jurisdiction allowances
+   - Assess risk level
+3. Document compliance decision
+
+# Processing
+IF compliance passed:
+- Call payment processing MCP tool
+- Apply appropriate fraud checks
+- Process transaction
+ELSE:
+- Flag for review
+- Create compliance case
+
+# Audit Trail
+- Log all compliance checks
+- Record processing decisions
+- Generate audit report
+```
+
+Key techniques:
+- Domain expertise embedded in logic
+- Compliance before action
+- Comprehensive documentation
+- Clear governance
+
+---
+
+## Part 2: File Organization Patterns
+
+These patterns describe how to *structure files* within a skill for efficient context loading.
+
+### High-Level Guide with References
 
 Core workflow in SKILL.md, detailed content in separate files.
 
@@ -29,7 +214,7 @@ Extract text with pdfplumber:
 
 Claude loads FORMS.md, REFERENCE.md, or EXAMPLES.md only when needed.
 
-### Pattern 2: Domain-Specific Organization
+### Domain-Specific Organization
 
 For skills with multiple domains, organize by domain to avoid loading irrelevant context:
 
@@ -43,20 +228,9 @@ bigquery-skill/
     └── marketing.md (campaigns, attribution)
 ```
 
-When a user asks about sales metrics, Claude only reads sales.md.
+When a user asks about sales metrics, Claude only reads sales.md. Also works for multi-framework skills (aws.md, gcp.md, azure.md).
 
-Also works for multi-framework skills:
-
-```
-cloud-deploy/
-├── SKILL.md (workflow + provider selection)
-└── references/
-    ├── aws.md
-    ├── gcp.md
-    └── azure.md
-```
-
-### Pattern 3: Conditional Details
+### Conditional Details
 
 Show basic content, link to advanced content:
 
@@ -73,24 +247,7 @@ For simple edits, modify the XML directly.
 **For OOXML details**: See [OOXML.md](OOXML.md)
 ```
 
-Claude reads REDLINING.md or OOXML.md only when the user needs those features.
-
-### Pattern 4: Workflow with Steps (from Anthropic references)
-
-Multi-step processes with sequential workflows and conditional logic:
-
-```markdown
-# Deploy Skill
-
-## Workflow
-1. Run tests: `bun test`
-2. Build: `bun run build`
-3. If staging: deploy to staging first
-4. If production: require approval, then deploy
-5. Verify deployment health
-```
-
-### Pattern 5: Template and Example Pattern (from Anthropic references)
+### Template and Example
 
 For skills that produce specific output formats or quality standards:
 
@@ -105,7 +262,9 @@ report-generator/
 
 ---
 
-## Advanced Features
+## Part 3: Advanced Features
+
+Claude Code-specific mechanics that extend skill capabilities.
 
 ### Dynamic Context Injection
 
@@ -162,8 +321,6 @@ When this runs:
 
 **Warning**: `context: fork` only makes sense for skills with explicit instructions. If your skill contains guidelines without a task, the subagent receives guidelines but no actionable prompt and returns without meaningful output.
 
-### How Skills and Subagents Relate
-
 | Approach | System Prompt | Task | Also Loads |
 |----------|--------------|------|------------|
 | Skill with `context: fork` | From agent type (Explore, Plan, etc.) | SKILL.md content | CLAUDE.md |
@@ -177,9 +334,11 @@ Skills can include executable scripts that Claude runs as tools:
 - Consistent, repeatable workflows
 - Dual-purpose: executable tool AND reference documentation
 
-### Visual Output Pattern
+**Advanced technique**: For critical validations, bundle a script that performs checks programmatically rather than relying on language instructions. Code is deterministic; language interpretation isn't.
 
-Generate interactive HTML files that open in the browser. Example: codebase explorer with collapsible tree, file sizes, color-coded types.
+### Visual Output
+
+Generate interactive HTML files that open in the browser.
 
 ```
 codebase-visualizer/
@@ -198,13 +357,24 @@ Include "ultrathink" anywhere in skill content to enable extended thinking mode.
 
 ## Choosing the Right Pattern
 
-| Situation | Recommended Pattern |
-|-----------|-------------------|
-| Simple guidelines or conventions | Single SKILL.md, no references needed |
-| Multiple related domains | Pattern 2: Domain-specific organization |
-| Basic + advanced features | Pattern 3: Conditional details |
-| Multi-step workflow | Pattern 4: Workflow with steps |
-| Specific output format | Pattern 5: Template and example |
+### Workflow logic (what the skill does)
+
+| Situation | Pattern |
+|-----------|---------|
+| Multi-step process in specific order | Sequential workflow orchestration |
+| Workflow spans multiple services | Multi-MCP coordination |
+| Output improves with iteration | Iterative refinement |
+| Same outcome, different tools by context | Context-aware tool selection |
+| Specialized knowledge beyond tool access | Domain-specific intelligence |
+
+### File organization (how to structure files)
+
+| Situation | Pattern |
+|-----------|---------|
+| Simple guidelines or conventions | Single SKILL.md, no references |
+| Multiple related domains or frameworks | Domain-specific organization |
+| Basic + advanced features | Conditional details |
+| Specific output format | Template and example |
 | External data needed at invoke time | Dynamic context injection |
 | Heavy computation or visual output | Code execution with scripts/ |
 | Need isolation from conversation | Subagent execution (context: fork) |
@@ -221,3 +391,5 @@ Include "ultrathink" anywhere in skill content to enable extended thinking mode.
 | Scripts without testing | Silent failures in production | Test scripts by running them |
 | Loading all references unconditionally | Wastes context | Load only what's needed per query |
 | context: fork without a task | Subagent has no actionable prompt | Only use fork for explicit instructions |
+| Instructions too verbose | Claude ignores buried details | Use bullets, numbered lists, move detail to references |
+| Ambiguous validation language | Inconsistent behavior | Use scripts for critical checks instead of prose |
