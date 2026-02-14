@@ -136,6 +136,121 @@ Existing `.claude/commands/` files keep working. Skills add optional features:
 
 ---
 
+## How Users Install Skills Today (January 2026)
+
+**Individual users**:
+1. Download the skill folder
+2. Zip the folder (if needed)
+3. Upload to Claude.ai via Settings > Capabilities > Skills
+4. Or place in Claude Code skills directory (`~/.claude/skills/` or `.claude/skills/`)
+
+**Organization-level** (shipped December 2025):
+- Admins deploy skills workspace-wide
+- Automatic updates
+- Centralized management
+
+---
+
+## Hosting on GitHub
+
+Recommended approach for distributing skills today:
+
+1. **Public repo** for open-source skills
+2. **Clear README** with installation instructions (this is the repo-level README for humans -- separate from the skill folder, which should NOT contain a README.md)
+3. **Example usage and screenshots**
+
+```
+your-skill-repo/
+├── README.md              # For humans (installation, examples, screenshots)
+├── LICENSE
+└── your-skill/            # The actual skill folder
+    ├── SKILL.md
+    ├── references/
+    └── scripts/
+```
+
+### Installation Guide Template
+
+Include this in your repo README, adapted for your skill:
+
+```markdown
+## Installing the [Your Service] skill
+
+1. Download the skill:
+   - Clone repo: `git clone https://github.com/yourcompany/skills`
+   - Or download ZIP from Releases
+
+2. Install in Claude:
+   - Open Claude.ai > Settings > Skills
+   - Click "Upload skill"
+   - Select the skill folder (zipped)
+
+3. Enable the skill:
+   - Toggle on the [Your Service] skill
+   - Ensure your MCP server is connected (if applicable)
+
+4. Test:
+   - Ask Claude: "Set up a new project in [Your Service]"
+```
+
+### Document Alongside Your MCP Repo
+
+If you have an MCP server, link to your skill from the MCP documentation:
+- Explain why using both together is valuable
+- Provide a quick-start guide
+- Show the before/after difference
+
+---
+
+## API Distribution
+
+For programmatic use cases -- applications, agents, or automated workflows:
+
+| Capability | How |
+|-----------|-----|
+| List and manage skills | `/v1/skills` endpoint |
+| Add skills to requests | `container.skills` parameter in Messages API |
+| Version control | Claude Console |
+| Custom agents | Claude Agent SDK |
+
+**When to use API vs Claude.ai/Claude Code**:
+
+| Use Case | Best Surface |
+|----------|-------------|
+| End users interacting with skills directly | Claude.ai / Claude Code |
+| Manual testing and iteration | Claude.ai / Claude Code |
+| Individual, ad-hoc workflows | Claude.ai / Claude Code |
+| Applications using skills programmatically | API |
+| Production deployments at scale | API |
+| Automated pipelines and agent systems | API |
+
+Note: Skills in the API require the Code Execution Tool beta.
+
+---
+
+## Positioning Your Skill
+
+How you describe your skill determines whether users understand its value.
+
+**Focus on outcomes, not features**:
+
+Good:
+> "The ProjectHub skill enables teams to set up complete project workspaces in seconds -- including pages, databases, and templates -- instead of spending 30 minutes on manual setup."
+
+Bad:
+> "The ProjectHub skill is a folder containing YAML frontmatter and Markdown instructions that calls our MCP server tools."
+
+**Highlight the MCP + Skills story** (if applicable):
+> "Our MCP server gives Claude access to your Linear projects. Our skills teach Claude your team's sprint planning workflow. Together, they enable AI-powered project management."
+
+---
+
+## Open Standard
+
+Skills are published as an open standard (agentskills.io). Like MCP, skills are designed to be portable across tools and platforms -- the same skill should work whether you're using Claude or other AI platforms. Authors can note platform-specific requirements in the `compatibility` frontmatter field.
+
+---
+
 ## Security
 
 Skills provide Claude with new capabilities through instructions and code. Malicious skills may introduce vulnerabilities.
