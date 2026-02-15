@@ -27,9 +27,16 @@ const job = await firecrawl.startAgent({
 });
 // Returns job ID immediately
 
-// Poll until complete
+// Poll until complete (with timeout + failure handling)
 let status = await firecrawl.getAgentStatus(job.id);
+const deadline = Date.now() + 5 * 60_000; // 5 min timeout
 while (status.status !== 'completed') {
+  if (status.status === 'failed' || status.status === 'cancelled') {
+    throw new Error(`Agent ${job.id} ${status.status}`);
+  }
+  if (Date.now() > deadline) {
+    throw new Error(`Agent ${job.id} timed out`);
+  }
   await Bun.sleep(2000);
   status = await firecrawl.getAgentStatus(job.id);
 }
@@ -253,7 +260,14 @@ const jobs = await Promise.all([
 const results = await Promise.all(
   jobs.map(async (job) => {
     let status = await firecrawl.getAgentStatus(job.id);
+    const deadline = Date.now() + 5 * 60_000;
     while (status.status !== 'completed') {
+      if (status.status === 'failed' || status.status === 'cancelled') {
+        throw new Error(`Agent ${job.id} ${status.status}`);
+      }
+      if (Date.now() > deadline) {
+        throw new Error(`Agent ${job.id} timed out`);
+      }
       await Bun.sleep(2000);
       status = await firecrawl.getAgentStatus(job.id);
     }
