@@ -1,0 +1,7 @@
+{
+	"name": "newsroom",
+	"description": "Mickey Malone's newsroom - community research across Reddit, X, and the web with engagement-ranked intelligence",
+	"skills": ["./skills/the-desk", "./skills/web-scraping"],
+	"agents": ["./agents/beat-reporter.md"],
+	"commands": ["./commands/investigate.md", "./commands/stakeout.md"]
+}

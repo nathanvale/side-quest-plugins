@@ -4,9 +4,10 @@ This document covers deployment of the AI Trends Digest automated email system.
 
 ## Overview
 
-The research plugin includes two skills:
-1. **last-30-days** - Interactive topic research (no setup required)
-2. **ai-trends-digest** - Automated weekly email digest (requires setup)
+The research plugin includes three skills:
+1. **newsroom** - Community intelligence gathering across Reddit, X, and the web (no setup required)
+2. **last-30-days-guide** - Expert knowledge for the @side-quest/last-30-days CLI tool (no setup required)
+3. **ai-trends-digest** - Automated weekly email digest (requires setup below)
 
 ---
 

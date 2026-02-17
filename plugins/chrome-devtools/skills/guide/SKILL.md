@@ -7,6 +7,7 @@ description: >
   accessibility, creating npm tokens via browser, setting up GitHub OIDC,
   debugging web apps, checking page speed, auditing website accessibility,
   or any task requiring Chrome DevTools.
+user-invocable: true
 argument-hint: "[workflow or URL]"
 allowed-tools:
   - Bash(lsof *)
