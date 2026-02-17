@@ -1,3 +1,10 @@
+> **Note**: This review was conducted pre-implementation. Several issues have since been resolved:
+> - Critical "flag model" issue: replaced with single `--mode` enum as recommended
+> - Critical "no override flag": `--format TYPE` now implemented
+> - Critical "dead affordances": `/newsroom:brief` and `--wire` deferred from v1
+> - Critical "failure UX": error templates added to the-desk SKILL.md
+> - Critical "command semantics": stakeout prints mode preset in preflight
+
 1. **Verdict**: **REQUEST CHANGES**
 
 2. **Strengths**

@@ -4,7 +4,7 @@ REQUEST CHANGES
 **Strengths**
 - The V1 wedge is clear: one command (`/dojo:spar`) and one core skill keeps initial surface area small.
 - The 3-phase framing (setup, sparring, feedback) is a good mental model for users and future decomposition.
-- The “private room” boundary is aligned with the dojo spec (`specs/orchrestrators/the-dojo-agentic-orchestration-plan.md:279`).
+- The “private room” boundary is aligned with the dojo spec (`specs/orchestrators/the-dojo-agentic-orchestration-plan.md:279`).
 - Avoiding Task fan-out for a conversational worker is directionally correct for V1, unlike newsroom’s background reporter model (`plugins/newsroom/skills/the-desk/SKILL.md:158`).
 
 **Critical issues (must fix before build)**

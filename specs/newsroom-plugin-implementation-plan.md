@@ -248,8 +248,8 @@ The newsroom metaphor is core to the ADHD-friendly design. `--plain` exists for 
 5. Create new references: mode-playbook.md, wire-protocol.md, the-morgue.md, the-wire.md, future-roles.md
 6. Create commands: dispatch.md, stakeout.md
 7. Test: `/newsroom:dispatch "test topic" --quick` end-to-end
-9. Test: `/newsroom:stakeout "Home Assistant"` produces mode=changes output
-10. Test: `/newsroom:dispatch "MCP changes" --wire enterprise` creates validated wire task
+8. Test: `/newsroom:stakeout "Home Assistant"` produces mode=changes output
+9. Test: `/newsroom:dispatch "MCP changes" --wire enterprise` creates validated wire task
 
 ---
 
@@ -275,5 +275,5 @@ The newsroom metaphor is core to the ADHD-friendly design. `--plain` exists for 
 | `plugins/research/.claude-plugin/plugin.json` | Pattern reference for plugin.json |
 | `plugins/research/skills/last-30-days-guide/SKILL.md` | Extract ~40 lines for inline CLI ref |
 | `plugins/research/skills/last-30-days-guide/references/troubleshooting.md` | Extract top 5 error patterns |
-| `specs/orchrestrators/the-newsroom-agentic-orchestration-plan.md` | Vision doc for future-roles.md |
-| `specs/orchrestrators/the-wire-service-communication-protocol.md` | Wire protocol vision |
+| `specs/orchestrators/the-newsroom-agentic-orchestration-plan.md` | Vision doc for future-roles.md |
+| `specs/orchestrators/the-wire-service-communication-protocol.md` | Wire protocol vision |

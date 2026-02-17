@@ -1,4 +1,10 @@
-1. **Verdict**  
+> **Note**: This review was conducted pre-implementation. Several issues have since been resolved:
+> - Critical #3 (reference duplication): newsroom is now canonical; research newsroom skill removed
+> - Critical #4 (skill decomposition): the-morgue/the-wire converted to reference docs as recommended
+> - Critical #5 (beat-reporter context): CLI reference inlined into agent body
+> - Observation #3 (future-roles scope): moved to newsroom-only scope
+
+1. **Verdict**
 `REQUEST CHANGES`
 
 2. **Strengths**
@@ -40,7 +46,7 @@ Implication: quick-ref helps, but not by “88%” unless you were counting docs
 If it is just `dispatch --monitor`, keep one command and document presets. Add a separate command only when stakeout has distinct lifecycle/state behavior.
 
 3. **`future-roles.md` for all rooms is scope leakage in a room-local runtime skill.**  
-Put cross-room vision docs under `specs/orchrestrators/` (design-time), not `skills/the-desk/references/` (runtime prompt-time).
+Put cross-room vision docs under `specs/orchestrators/` (design-time), not `skills/the-desk/references/` (runtime prompt-time).
 
 4. **“Standalone” should be reframed as “degrades gracefully with optional capabilities.”**  
 Core newsroom quality still depends on external CLI (`plugins/research/agents/beat-reporter.md:26`). Without it, you’re in web-only mode, which is a materially different product.

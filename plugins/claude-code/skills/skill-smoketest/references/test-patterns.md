@@ -242,7 +242,7 @@ For each MCP tool referenced in `allowed-tools` frontmatter or in the skill body
 - Input: Extract MCP tool references. Check if the corresponding MCP server is configured (appears in settings) and not disabled.
 - Pass if: MCP server is configured and enabled
 - Fail if: MCP server is not configured or is disabled
-- Note: Use `mcp-manager:list` or equivalent to check server status. If the subagent cannot access MCP config, mark as UNCHECKED.
+- Note: Check MCP server configuration via `claude mcp list` or the project's MCP settings. If the subagent cannot access MCP config, mark as UNCHECKED.
 
 ### E-4: Companion Skills Installed
 

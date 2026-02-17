@@ -3,24 +3,24 @@
 
 **Strengths**
 - The domain split is still useful as a mental model for intent routing (research/build/learn/knowledge), and it’s consistently articulated in each room spec.
-- Anti-pattern sections are unusually strong and can become practical guardrails if converted into executable checks (`specs/orchrestrators/the-wire-service-communication-protocol.md:229`, `specs/orchrestrators/the-garden-agentic-orchestration-plan.md:326`).
-- Owner-gated decision framing is explicit, which is good for avoiding silent scope drift (`specs/orchrestrators/the-wire-service-communication-protocol.md:78`).
+- Anti-pattern sections are unusually strong and can become practical guardrails if converted into executable checks (`specs/orchestrators/the-wire-service-communication-protocol.md:229`, `specs/orchestrators/the-garden-agentic-orchestration-plan.md:326`).
+- Owner-gated decision framing is explicit, which is good for avoiding silent scope drift (`specs/orchestrators/the-wire-service-communication-protocol.md:78`).
 
 **Critical issues (must fix before implementation)**
 1. No measurable success function or shutdown criteria.  
-The docs define rituals and principles but no KPI thresholds to prove value or trigger de-scope. “Value” is described qualitatively, not operationally (`specs/orchrestrators/the-garden-agentic-orchestration-plan.md:350`, `specs/orchrestrators/the-garden-agentic-orchestration-plan.md:372`).  
+The docs define rituals and principles but no KPI thresholds to prove value or trigger de-scope. “Value” is described qualitatively, not operationally (`specs/orchestrators/the-garden-agentic-orchestration-plan.md:350`, `specs/orchestrators/the-garden-agentic-orchestration-plan.md:372`).  
 Fix: define 3 hard metrics per room (usage/week, time saved, token ceiling) plus “delete if under threshold for 30 days.”
 
 2. Attention-fragmentation risk is severe for a solo operator.  
-The system adds multiple mandatory cadences: morning brief, wire check, evening edition, weekly walk, seasonal audit (`specs/orchrestrators/the-wire-service-communication-protocol.md:111`, `specs/orchrestrators/the-wire-service-communication-protocol.md:126`, `specs/orchrestrators/the-wire-service-communication-protocol.md:138`, `specs/orchrestrators/the-garden-agentic-orchestration-plan.md:198`, `specs/orchrestrators/the-garden-agentic-orchestration-plan.md:219`).  
+The system adds multiple mandatory cadences: morning brief, wire check, evening edition, weekly walk, seasonal audit (`specs/orchestrators/the-wire-service-communication-protocol.md:111`, `specs/orchestrators/the-wire-service-communication-protocol.md:126`, `specs/orchestrators/the-wire-service-communication-protocol.md:138`, `specs/orchestrators/the-garden-agentic-orchestration-plan.md:198`, `specs/orchestrators/the-garden-agentic-orchestration-plan.md:219`).  
 Fix: one daily async digest + one weekly review only. Everything else event-driven.
 
 3. “File everything” creates a privacy/data-retention liability with no policy.  
-Wire requires full logging (`specs/orchrestrators/the-wire-service-communication-protocol.md:281`) while Dojo content includes personal performance gaps/interview prep artifacts (`specs/orchrestrators/the-dojo-agentic-orchestration-plan.md:114`, `specs/orchrestrators/the-dojo-agentic-orchestration-plan.md:278`).  
+Wire requires full logging (`specs/orchestrators/the-wire-service-communication-protocol.md:281`) while Dojo content includes personal performance gaps/interview prep artifacts (`specs/orchestrators/the-dojo-agentic-orchestration-plan.md:114`, `specs/orchestrators/the-dojo-agentic-orchestration-plan.md:278`).  
 Fix: data classes (`public/internal/personal-sensitive`), retention TTL, redact-on-capture rules.
 
 4. Policy duplication will keep generating drift even if contradictions are fixed.  
-Authority rules are repeated in multiple rooms with local wording (`specs/orchrestrators/the-wire-service-communication-protocol.md:265`, `specs/orchrestrators/the-enterprise-agentic-orchestration-plan.md:267`, `specs/orchrestrators/the-garden-agentic-orchestration-plan.md:378`, `specs/orchrestrators/the-newsroom-agentic-orchestration-plan.md:17`).  
+Authority rules are repeated in multiple rooms with local wording (`specs/orchestrators/the-wire-service-communication-protocol.md:265`, `specs/orchestrators/the-enterprise-agentic-orchestration-plan.md:267`, `specs/orchestrators/the-garden-agentic-orchestration-plan.md:378`, `specs/orchestrators/the-newsroom-agentic-orchestration-plan.md:17`).  
 Fix: single normative “control-plane contract” doc; room docs reference it, never restate it.
 
 5. Demand is unvalidated for net-new rooms/capabilities.  

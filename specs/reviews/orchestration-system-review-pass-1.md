@@ -2,9 +2,9 @@
 `REQUEST CHANGES`
 
 **Strengths**
-- The domain intent is clear and useful: research, engineering, learning, and knowledge management are a strong top-level partition (`specs/orchrestrators/the-newsroom-agentic-orchestration-plan.md:7`, `specs/orchrestrators/the-enterprise-agentic-orchestration-plan.md:7`, `specs/orchrestrators/the-dojo-agentic-orchestration-plan.md:7`, `specs/orchrestrators/the-garden-agentic-orchestration-plan.md:9`).
-- Decision-rights are explicitly called out, especially owner-gated red-wire decisions (`specs/orchrestrators/the-wire-service-communication-protocol.md:78`).
-- The specs include anti-pattern sections, which is great for maintainability and operational discipline (`specs/orchrestrators/the-wire-service-communication-protocol.md:229`, `specs/orchrestrators/the-garden-agentic-orchestration-plan.md:326`).
+- The domain intent is clear and useful: research, engineering, learning, and knowledge management are a strong top-level partition (`specs/orchestrators/the-newsroom-agentic-orchestration-plan.md:7`, `specs/orchestrators/the-enterprise-agentic-orchestration-plan.md:7`, `specs/orchestrators/the-dojo-agentic-orchestration-plan.md:7`, `specs/orchestrators/the-garden-agentic-orchestration-plan.md:9`).
+- Decision-rights are explicitly called out, especially owner-gated red-wire decisions (`specs/orchestrators/the-wire-service-communication-protocol.md:78`).
+- The specs include anti-pattern sections, which is great for maintainability and operational discipline (`specs/orchestrators/the-wire-service-communication-protocol.md:229`, `specs/orchestrators/the-garden-agentic-orchestration-plan.md:326`).
 - The framework already aligns partially with existing implementations: Newsroom-style orchestration exists (`plugins/research/skills/newsroom/SKILL.md:34`) and PARA has an established orchestrator/tooling layer (`/Users/nathanvale/code/side-quest-marketplace/plugins/para-obsidian/skills/brain/SKILL.md:12`, `/Users/nathanvale/code/side-quest-marketplace/plugins/para-obsidian/.claude-plugin/plugin.json:41`).
 
 **Critical issues (must fix before implementation)**
@@ -13,19 +13,19 @@ Evidence: role-heavy narrative with no per-role build target across all 5 docs; 
 Fix: add a mandatory mapping table for each role: `agent file? skill? command? hook? MCP tool? event type? tests?`.
 
 2. Agent proliferation is beyond what Claude Code orchestration guidance recommends.  
-Evidence: ~25 roles across docs (`specs/orchrestrators/the-newsroom-agentic-orchestration-plan.md:40`, `specs/orchrestrators/the-enterprise-agentic-orchestration-plan.md:44`, `specs/orchrestrators/the-dojo-agentic-orchestration-plan.md:41`, `specs/orchrestrators/the-garden-agentic-orchestration-plan.md:100`), while your own taxonomy warns that 9+ unguided agents becomes chaos (`plugins/agentic-orchestration/skills/agentic-orchestration/references/patterns-taxonomy.md:251`).  
+Evidence: ~25 roles across docs (`specs/orchestrators/the-newsroom-agentic-orchestration-plan.md:40`, `specs/orchestrators/the-enterprise-agentic-orchestration-plan.md:44`, `specs/orchestrators/the-dojo-agentic-orchestration-plan.md:41`, `specs/orchestrators/the-garden-agentic-orchestration-plan.md:100`), while your own taxonomy warns that 9+ unguided agents becomes chaos (`plugins/agentic-orchestration/skills/agentic-orchestration/references/patterns-taxonomy.md:251`).  
 Fix: collapse to ~8 distinct agent types total, with mode flags/prompts instead of separate personas (e.g., Street/Tipster/Source become one `research-worker` mode set).
 
 3. Cross-document boundary contradictions make architecture non-executable as written.  
-Evidence: Wire is explicitly Newsroom↔Enterprise only (`specs/orchrestrators/the-wire-service-communication-protocol.md:7`), Dojo explicitly has no wire (`specs/orchrestrators/the-dojo-agentic-orchestration-plan.md:281`), but Garden extends wire and includes Dojo inbound messaging (`specs/orchrestrators/the-garden-agentic-orchestration-plan.md:295`, `specs/orchrestrators/the-garden-agentic-orchestration-plan.md:304`).  
+Evidence: Wire is explicitly Newsroom↔Enterprise only (`specs/orchestrators/the-wire-service-communication-protocol.md:7`), Dojo explicitly has no wire (`specs/orchestrators/the-dojo-agentic-orchestration-plan.md:281`), but Garden extends wire and includes Dojo inbound messaging (`specs/orchestrators/the-garden-agentic-orchestration-plan.md:295`, `specs/orchestrators/the-garden-agentic-orchestration-plan.md:304`).  
 Fix: pick one canonical model: either Wire is universal or Wire is 2-room and Garden uses a separate protocol.
 
 4. Cross-session state is required by design but not specified technically.  
-Evidence: stakeouts/overnight briefs are central (`specs/orchrestrators/the-newsroom-agentic-orchestration-plan.md:56`, `specs/orchrestrators/the-wire-service-communication-protocol.md:113`), but Task state is session-scoped (`plugins/agentic-orchestration/skills/agentic-orchestration/references/task-orchestration.md:113`) and the existing event bus has no durable replay semantics in runtime buffer (`plugins/git/plans/side-quest-git.md:456`, `plugins/git/plans/side-quest-git.md:458`).  
+Evidence: stakeouts/overnight briefs are central (`specs/orchestrators/the-newsroom-agentic-orchestration-plan.md:56`, `specs/orchestrators/the-wire-service-communication-protocol.md:113`), but Task state is session-scoped (`plugins/agentic-orchestration/skills/agentic-orchestration/references/task-orchestration.md:113`) and the existing event bus has no durable replay semantics in runtime buffer (`plugins/git/plans/side-quest-git.md:456`, `plugins/git/plans/side-quest-git.md:458`).  
 Fix: define persistence explicitly (vault note schema + append-only event log + hydration rules + scheduler).
 
 5. The architecture assumes autonomy that Claude sessions do not provide by default.  
-Evidence: protocol assumes periodic wire checks and queued review workflow (`specs/orchrestrators/the-wire-service-communication-protocol.md:126`, `specs/orchrestrators/the-wire-service-communication-protocol.md:133`), but practically the owner remains the active execution loop (`specs/orchrestrators/the-wire-service-communication-protocol.md:283`).  
+Evidence: protocol assumes periodic wire checks and queued review workflow (`specs/orchestrators/the-wire-service-communication-protocol.md:126`, `specs/orchestrators/the-wire-service-communication-protocol.md:133`), but practically the owner remains the active execution loop (`specs/orchestrators/the-wire-service-communication-protocol.md:283`).  
 Fix: define what is truly autonomous (hooks/daemon/scheduled job) vs interactive.
 
 6. MVP is missing.  
@@ -34,11 +34,11 @@ Fix: specify a v1 cutline before build starts.
 
 **Important observations (should fix)**
 1. Enterprise bridge crew is over-specialized for Nathan's likely solo workflow.
-The current roles are closer to an org chart than a useful sub-agent taxonomy (`specs/orchrestrators/the-enterprise-agentic-orchestration-plan.md:62`, `specs/orchrestrators/the-enterprise-agentic-orchestration-plan.md:72`, `specs/orchrestrators/the-enterprise-agentic-orchestration-plan.md:82`, `specs/orchrestrators/the-enterprise-agentic-orchestration-plan.md:90`).
+The current roles are closer to an org chart than a useful sub-agent taxonomy (`specs/orchestrators/the-enterprise-agentic-orchestration-plan.md:62`, `specs/orchestrators/the-enterprise-agentic-orchestration-plan.md:72`, `specs/orchestrators/the-enterprise-agentic-orchestration-plan.md:82`, `specs/orchestrators/the-enterprise-agentic-orchestration-plan.md:90`).
 Recommendation: Enterprise-lite with `spock`, `builder`, `validator`, optional `integrator`.
 
 2. Newsroom roles are mostly prompt variants, not distinct capabilities.  
-Street Reporter, Source Network, Tipster Handler, Foreign Bureau differ mostly by assignment framing (`specs/orchrestrators/the-newsroom-agentic-orchestration-plan.md:40`, `specs/orchrestrators/the-newsroom-agentic-orchestration-plan.md:69`, `specs/orchrestrators/the-newsroom-agentic-orchestration-plan.md:84`, `specs/orchrestrators/the-newsroom-agentic-orchestration-plan.md:90`).  
+Street Reporter, Source Network, Tipster Handler, Foreign Bureau differ mostly by assignment framing (`specs/orchestrators/the-newsroom-agentic-orchestration-plan.md:40`, `specs/orchestrators/the-newsroom-agentic-orchestration-plan.md:69`, `specs/orchestrators/the-newsroom-agentic-orchestration-plan.md:84`, `specs/orchestrators/the-newsroom-agentic-orchestration-plan.md:90`).  
 Current implementation already works with one Beat Reporter archetype (`plugins/research/skills/newsroom/SKILL.md:40`, `plugins/research/skills/newsroom/SKILL.md:125`).
 
 3. Token economics are likely underestimated.  
@@ -50,7 +50,7 @@ para-obsidian already has a brain orchestrator and deep skills/tools (`/Users/na
 The Garden spec should focus on cross-room policy/orchestration, not re-describing existing capabilities.
 
 5. Internal consistency issues need cleanup.  
-Examples: “wire is a bus, not a queue” vs “red wire queue” (`specs/orchrestrators/the-wire-service-communication-protocol.md:267`, `specs/orchrestrators/the-wire-service-communication-protocol.md:133`), and Enterprise references a "classifieds desk" not defined in Newsroom (`specs/orchrestrators/the-enterprise-agentic-orchestration-plan.md:247`).
+Examples: “wire is a bus, not a queue” vs “red wire queue” (`specs/orchestrators/the-wire-service-communication-protocol.md:267`, `specs/orchestrators/the-wire-service-communication-protocol.md:133`), and Enterprise references a "classifieds desk" not defined in Newsroom (`specs/orchestrators/the-enterprise-agentic-orchestration-plan.md:247`).
 
 6. Dojo isolation is directionally right, but the Garden sync text creates awkwardness.  
 Current best simplification: no Dojo wire; only explicit user-triggered export to Garden.
@@ -58,7 +58,7 @@ Current best simplification: no Dojo wire; only explicit user-triggered export t
 **Nice-to-haves**
 1. Add a single “capability matrix” appendix mapping every room role to Claude primitive(s): `Task`, `TaskCreate/Update`, `TeamCreate`, hooks, MCP.  
 2. Add token budgets and stop conditions per flow (`quick`, `standard`, `deep`) with max-agent and max-spend defaults.  
-3. Standardize terminology and naming (including folder typo `specs/orchrestrators/`).
+3. Standardize terminology and naming (including folder typo `specs/orchestrators/`).
 
 **Questions for the author**
 1. What is the exact v1 slice: `Newsroom + Enterprise-lite + Wire-lite`, or `Newsroom + Garden sync` first?  

@@ -174,11 +174,11 @@ Beat reporters get structured articles instead of raw HTML. The Copy Desk (synth
 
 ---
 
-## Mode 2: Life Research with Melanie
+## Mode 2: Life Research with a Partner
 
 ### Holiday Planning
 
-**Scenario**: Easter break. You and Melanie pick a town. Now you need accommodation, activities, restaurants, and logistics.
+**Scenario**: Easter break. You and your partner pick a town. Now you need accommodation, activities, restaurants, and logistics.
 
 **Accommodation search**:
 ```typescript
@@ -210,7 +210,7 @@ const AttractionSchema = z.object({
 });
 ```
 
-Crawl the local tourism site -> extract attractions with age filtering for Levi.
+Crawl the local tourism site -> extract attractions with age filtering for your kid.
 
 **Walking trails**:
 ```typescript
@@ -262,11 +262,11 @@ Scrape the same product across JB Hi-Fi, Harvey Norman, Amazon AU. Structured co
 
 ---
 
-## Mode 3: Dad Research for Levi
+## Mode 3: Family Research
 
 ### School Holiday Activities
 
-**Scenario**: School holidays approaching. What's on for a 9-year-old in Melbourne?
+**Scenario**: School holidays approaching. What's on for a primary schooler in your city?
 
 ```typescript
 const KidsActivitySchema = z.object({
@@ -281,13 +281,13 @@ const KidsActivitySchema = z.object({
 });
 ```
 
-Crawl Melbourne council event pages, museum sites (Scienceworks, Melbourne Museum), and activity aggregators. Extract with age-range filtering.
+Crawl local council event pages, museum sites, and activity aggregators. Extract with age-range filtering.
 
 **Gotcha**: Council and museum sites are often old-school HTML -- Firecrawl handles these well. Event aggregator sites (Eventbrite, Humanitix) may need JS rendering.
 
 ### Birthday Party Venues
 
-**Scenario**: Levi's birthday is coming up. Need venue options.
+**Scenario**: Your kid's birthday is coming up. Need venue options.
 
 ```typescript
 const PartyVenueSchema = z.object({

@@ -362,7 +362,7 @@ The monorepo has a single `biome.json` at the root. Never nested configs -- that
 
 The newsroom is v1. The implementation plan (`specs/newsroom-plugin-implementation-plan.md`) documents every file, every design decision, and every tradeoff. The nice-to-haves include reporter telemetry, structured JSON dispatch payloads, conditional web-augment (skip web when CLI is sufficient), and `--plain` mode for professional contexts.
 
-The Kitchen is next. The spec is written (`specs/orchrestrators/the-kitchen-agentic-orchestration-plan.md`), the wire protocol is designed, and the newsroom already supports `--wire kitchen` (it warns "no consumer" since the Kitchen doesn't exist yet, but the plumbing is there).
+The Kitchen is next. The spec is written (`specs/orchestrators/the-kitchen-agentic-orchestration-plan.md`), the wire protocol is designed, and the newsroom already supports `--wire kitchen` (it warns "no consumer" since the Kitchen doesn't exist yet, but the plumbing is there).
 
 The Garden and Dojo are further out. The Garden integrates with para-obsidian for knowledge cultivation. The Dojo handles learning and skill development. Both specs exist but haven't been through the review gauntlet yet.
 
