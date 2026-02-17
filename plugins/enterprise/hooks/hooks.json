@@ -1,0 +1,17 @@
+{
+	"description": "Enterprise Captain's Log -- writes session activity to JSONL on stop",
+	"hooks": {
+		"Stop": [
+			{
+				"matcher": "*",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/captains-log.ts",
+						"timeout": 15
+					}
+				]
+			}
+		]
+	}
+}

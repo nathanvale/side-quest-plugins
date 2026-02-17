@@ -1,7 +1,7 @@
 {
 	"name": "claude-code",
 	"version": "1.0.0",
-	"description": "Knowledge bank for Claude Code hooks, skills, and MCP servers - event lifecycle, hook types, configuration, community patterns, skill authoring, MCP setup, Tool Search, design patterns, and troubleshooting.",
+	"description": "Knowledge bank for Claude Code hooks, skills, sub-agents, and MCP servers - event lifecycle, hook types, configuration, community patterns, skill authoring, sub-agent orchestration, MCP setup, Tool Search, design patterns, and troubleshooting.",
 	"author": {
 		"name": "Nathan Vale"
 	},
@@ -19,7 +19,10 @@
 		"SessionStart",
 		"SKILL.md",
 		"skill-authoring",
-		"skills-guide"
+		"skills-guide",
+		"subagents",
+		"agent-teams",
+		"subagents-guide"
 	],
 	"license": "MIT",
 	"skills": [
@@ -28,6 +31,8 @@
 		"./skills/skill-builder",
 		"./skills/skill-reviewer",
 		"./skills/skill-smoketest",
-		"./skills/mcp-guide"
+		"./skills/mcp-guide",
+		"./skills/subagents-guide",
+		"./skills/design-guide"
 	]
 }
