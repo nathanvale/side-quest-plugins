@@ -1,6 +1,6 @@
 # Agent Integration Patterns
 
-How to integrate Firecrawl into AI agent workflows -- blocking vs non-blocking, model selection, Zod schema-driven extraction, and framework integrations. All examples use TypeScript.
+How to integrate Firecrawl into AI agent workflows -- blocking vs non-blocking, model selection, Zod schema-driven extraction, and framework integrations. All examples use TypeScript with the Bun runtime.
 
 ---
 

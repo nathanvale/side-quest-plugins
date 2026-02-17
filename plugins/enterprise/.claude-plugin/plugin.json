@@ -1,0 +1,27 @@
+{
+	"name": "enterprise",
+	"description": "Software engineering orchestrator - Spock coordinates the bridge crew for documentation, code review, refactoring, and mission planning",
+	"version": "1.0.0",
+	"author": {
+		"name": "Nathan Vale"
+	},
+	"keywords": [
+		"software-engineering",
+		"documentation",
+		"orchestration",
+		"star-trek"
+	],
+	"license": "MIT",
+	"commands": [
+		"./commands/document.md",
+		"./commands/scan.md",
+		"./commands/log.md",
+		"./commands/chart.md",
+		"./commands/refit.md",
+		"./commands/engage.md",
+		"./commands/away-mission.md",
+		"./commands/orders.md",
+		"./commands/hail.md"
+	],
+	"skills": ["./skills/the-bridge"]
+}

@@ -208,3 +208,58 @@ Test that the same query produces consistent results.
 - Input: Run the same test prompt in 2-3 separate sessions
 - Pass if: Responses are structurally consistent (same sections, same level of detail)
 - Fail if: Wildly different responses, missing sections in some sessions
+
+---
+
+## Category 6: Dependency Tests
+
+Verify that external dependencies referenced by the skill actually exist and are available. These are **live** tests -- they execute real commands and check system state, not just documentation consistency.
+
+Without dependency verification, a skill can score 100% on static tests while being completely broken at runtime because a CLI tool isn't installed, an env var isn't set, or an MCP server is disabled.
+
+### E-1: CLI Tools Available
+
+For each CLI command referenced in the skill's bash code blocks or prose instructions, verify the binary exists.
+
+- Input: Extract CLI commands from SKILL.md and reference files. For each, run `which <cmd>` or `bunx <pkg> --help`.
+- Pass if: Command is found and responds (exit code 0)
+- Fail if: Command not found (`which` returns non-zero, `bunx` errors)
+- Note: For `bunx`-invoked packages, test with `bunx <pkg> --help` or `bunx <pkg> --version`. For system binaries, use `which`.
+
+### E-2: Environment Variables Set
+
+For each environment variable referenced in the skill (via `process.env.X`, `$X`, or prose like "set your FIRECRAWL_API_KEY"), verify it is defined.
+
+- Input: Extract env var names. For each, check `printenv <VAR>`.
+- Pass if: Variable is set (value is non-empty)
+- Fail if: Variable is unset or empty
+- Note: Do NOT log the value -- only check existence. Env vars may contain secrets.
+
+### E-3: MCP Servers Available
+
+For each MCP tool referenced in `allowed-tools` frontmatter or in the skill body (e.g., `mcp__firecrawl__firecrawl_scrape`), verify the MCP server is configured and enabled.
+
+- Input: Extract MCP tool references. Check if the corresponding MCP server is configured (appears in settings) and not disabled.
+- Pass if: MCP server is configured and enabled
+- Fail if: MCP server is not configured or is disabled
+- Note: Check MCP server configuration via `claude mcp list` or the project's MCP settings. If the subagent cannot access MCP config, mark as UNCHECKED.
+
+### E-4: Companion Skills Installed
+
+For skills that cross-reference other skills (e.g., `skills: [web-scraping]` in agent frontmatter, or prose like "invoke /newsroom:dispatch"), verify the referenced skill exists.
+
+- Input: Extract skill references from frontmatter and body. Glob for each referenced skill's SKILL.md.
+- Pass if: Referenced skill directory and SKILL.md exist
+- Fail if: Referenced skill not found
+- Note: Only checks existence, not correctness. The referenced skill may have its own issues.
+
+### E-5: Fallback Chain Integration
+
+For skills that define a fallback chain (tool A fails -> use tool B), verify the chain works end-to-end with a real URL.
+
+- Input: Identify the fallback chain from the skill body. Find or use a known URL that triggers the fallback (e.g., a URL that 403s on WebFetch but succeeds on Firecrawl). Execute both steps:
+  1. Attempt the primary tool and confirm it fails as expected
+  2. Attempt the fallback tool and confirm it succeeds
+- Pass if: Primary tool fails on the test URL AND fallback tool returns non-empty content
+- Fail if: Fallback tool also fails, returns empty content, or returns an error blob instead of markdown
+- Note: The test URL should be documented in the skill or chosen by the subagent. For web-scraping skills, `https://www.producthunt.com/` is a reliable anti-bot test target. This test consumes one Firecrawl API credit.
