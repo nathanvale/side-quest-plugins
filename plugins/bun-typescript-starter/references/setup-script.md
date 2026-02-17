@@ -43,10 +43,11 @@ When enabled, the setup script:
 
 1. **Workflow permissions**: Sets `default_workflow_permissions=write` and `can_approve_pull_request_reviews=true`
 2. **Merge settings**: Squash merge only, auto-delete branches, allow auto-merge
-3. **Branch protection** on `main`:
+3. **Branch protection** on `main` (via `bun run setup:protect`):
    - Required status check: "All checks passed"
    - Strict up-to-date requirement
    - Dismiss stale reviews
+   - Required conversation resolution before merging
    - Required linear history
    - No force pushes or deletions
    - Enforce for admins
