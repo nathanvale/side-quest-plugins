@@ -22,7 +22,7 @@ This is functional testing, not static analysis. The skill-reviewer grades struc
 ## Reference Files
 
 **Own references** (test case patterns):
-- [test-patterns.md](references/test-patterns.md) - 5 test categories with structured test case format
+- [test-patterns.md](references/test-patterns.md) - 6 test categories with structured test case format (includes dependency verification)
 
 **Skills-guide references** (for understanding skill anatomy):
 - [fundamentals.md](../skills-guide/references/fundamentals.md) - Skill anatomy, frontmatter fields, invocation control
@@ -85,6 +85,54 @@ Ask the user using AskUserQuestion:
 - Select specific categories to test
 - Run a quick pass (discovery + invocation only)
 
+## Phase 2.5: Dependency Scan
+
+Before generating test cases, scan the skill for external dependencies and verify each one is available. This prevents running dozens of tests against a skill whose core tools don't work.
+
+**Extract and verify:**
+
+1. **CLI commands** -- Scan all bash code blocks in SKILL.md and reference files for command invocations. Check each with `which <cmd>` (system binaries) or `bunx <pkg> --version` / `bunx <pkg> --help` (npm packages).
+
+2. **Environment variables** -- Scan for `process.env.X`, `$X`, or prose references to env vars (e.g., "set your API_KEY"). Check each with `printenv <VAR>`. Do NOT log values -- only check existence.
+
+3. **MCP tools** -- Check `allowed-tools` frontmatter and tool references in the body (e.g., `mcp__firecrawl__*`). Verify the corresponding MCP server is configured and not disabled.
+
+4. **Cross-skill references** -- Check `skills:` frontmatter in agent files and skill body references (e.g., "invoke /newsroom:dispatch"). Verify referenced skills exist via Glob.
+
+5. **Fallback chains** -- Scan the skill body for decision trees where one tool's failure triggers another (e.g., "if WebFetch fails, use Firecrawl CLI"). Record both the primary and fallback tool, and note any test URLs mentioned in the skill.
+
+**Dependency status values:**
+- **AVAILABLE** -- Tool/var/server exists and responds
+- **MISSING** -- Not found (blocks runtime)
+- **DISABLED** -- Found but disabled (e.g., MCP server in disabled list)
+- **UNCHECKED** -- Cannot verify from subagent context (note for manual check)
+
+**Present the dependency report before proceeding:**
+
+```
+Dependency Scan for <skill-name>:
+
+CLI Tools:
+  firecrawl-cli (bunx)     AVAILABLE
+  rg (system)              AVAILABLE
+
+Environment Variables:
+  FIRECRAWL_API_KEY        AVAILABLE
+
+MCP Servers:
+  firecrawl                AVAILABLE
+
+Companion Skills:
+  newsroom:dispatch        AVAILABLE
+
+Fallback Chains:
+  WebFetch -> firecrawl-cli scrape    UNTESTED (run E-5 to verify)
+
+Status: All dependencies available
+```
+
+**If any dependency is MISSING**, flag it prominently and warn the user before proceeding. Tests that depend on missing tools will produce false results. Ask the user whether to continue (tests will be marked with caveats) or stop and fix dependencies first.
+
 ## Phase 3: Generate Test Cases
 
 Read `references/test-patterns.md` for test case structure and categories.
@@ -146,16 +194,19 @@ Task({
 
 **Execution strategy:**
 - Run discovery tests (D-*) first -- if these fail, skip dependent tests
+- Run dependency tests (E-*) next -- these verify external tools/env/MCP exist (live checks)
 - Run invocation tests (I-*) next -- these validate basic functionality
 - Run feature tests (F-*) in parallel -- these are independent
 - Run cross-skill tests (X-*) in parallel -- these are independent
 - Run content quality tests (C-*) last -- these need prior results for context
+- Run integration tests (E-5) after dependency tests pass -- these consume external API credits
 
 **Batching:**
 - Launch up to 5 subagents in parallel per wave
 - Wait for each wave to complete before starting the next
 - If a subagent does not return within 60 seconds, mark the test as SKIP with a timeout note
 - If a discovery test FAILs, skip all dependent tests and report early
+- E-5 (integration) tests use real API calls -- warn the user before running and allow them to skip
 
 **Test limitations:**
 Subagent-based testing cannot verify skill discovery, autocomplete, or auto-triggering -- the subagent does not have the same skill-loading pipeline as an interactive session. D-* and I-3 tests are simulated (the subagent reads SKILL.md directly and evaluates whether the metadata would produce the expected behavior). For full invocation testing, use the manual smoke test template from `${SKILLS_GUIDE}/testing.md`.
@@ -176,15 +227,21 @@ Skipped:  Z
 
 ### Results by Category
 
-| ID | Category | Test | Result | Notes |
-|----|----------|------|--------|-------|
-| D-1 | Discovery | Skill appears in list | PASS | |
-| D-2 | Discovery | Description reads clearly | PASS | |
-| I-1 | Invocation | Direct invocation | PASS | |
-| I-3 | Invocation | Auto-trigger | FAIL | Didn't trigger on "..." |
-| F-1 | Feature | Phase 1 classification | PASS | |
-| F-2 | Feature | Reference routing | FAIL | Read wrong file |
-| ... | ... | ... | ... | ... |
+| ID | Category | Test | Type | Result | Notes |
+|----|----------|------|------|--------|-------|
+| D-1 | Discovery | Skill appears in list | static | PASS | |
+| D-2 | Discovery | Description reads clearly | static | PASS | |
+| E-1 | Dependency | CLI `firecrawl-cli` installed | live | FAIL | `bunx firecrawl-cli --version` not found |
+| E-2 | Dependency | Env var FIRECRAWL_API_KEY set | live | PASS | |
+| I-1 | Invocation | Direct invocation | static | PASS | |
+| I-3 | Invocation | Auto-trigger | static | FAIL | Didn't trigger on "..." |
+| F-1 | Feature | Phase 1 classification | static | PASS | |
+| F-2 | Feature | Reference routing | static | FAIL | Read wrong file |
+| ... | ... | ... | ... | ... | ... |
+
+**Test types:**
+- **static** -- Evaluated by reading documentation only (checks internal consistency)
+- **live** -- Verified by executing a real command or checking system state
 
 ### Failed Tests Detail
 
@@ -199,8 +256,9 @@ For each FAIL, show:
 
 | Rating | Criteria |
 |--------|----------|
-| **Ship it** | All tests PASS |
+| **Ship it** | All tests PASS (including live dependency checks) |
 | **Almost there** | Only WARN-level failures (cosmetic, not functional) |
+| **Docs OK, untested** | All static tests PASS but dependency checks have MISSING or UNCHECKED results |
 | **Needs work** | Any functional FAIL |
 | **Broken** | Discovery or invocation FAILs |
 
