@@ -768,7 +768,7 @@ If voice needs to be decoupled from the server (independent start/stop, separate
 
 #### Voicebox as Free Alternative
 
-[Voicebox](https://github.com/voicebox-ai/voicebox) is a local voice cloning tool ("Ollama for voice") that can generate character voices without API costs. If ElevenLabs costs become a concern, the cache layer makes swapping backends trivial -- same disk cache, different generator.
+[Voicebox](https://github.com/jamiepine/voicebox) is a local voice cloning tool ("Ollama for voice") that can generate character voices without API costs. If ElevenLabs costs become a concern, the cache layer makes swapping backends trivial -- same disk cache, different generator.
 
 ### 5g: Update @side-quest/git
 

@@ -108,7 +108,7 @@ OBS-1 (Event Server) ----+
 | Role | Model | Rationale |
 |------|-------|-----------|
 | All builders | sonnet | Executes well-specified tasks reliably |
-| All validators | haiku | Mechanical checks: read files, run commands, report PASS/FAIL |
+| All validators | opus | Semantic code review requires strongest reasoning for edge cases, convention violations, and logic errors |
 
 ### Team Members
 
@@ -130,7 +130,7 @@ OBS-1 (Event Server) ----+
   - Name: validator-obs1
   - Role: Verify OBS-1 typecheck, tests, lint, build pass
   - Agent Type: enterprise:validator-mccoy
-  - Model: haiku
+  - Model: opus
   - Resume: true
 
 - Builder
@@ -151,7 +151,7 @@ OBS-1 (Event Server) ----+
   - Name: validator-obs4
   - Role: Verify OBS-4 builds, renders, connects to server
   - Agent Type: enterprise:validator-mccoy
-  - Model: haiku
+  - Model: opus
   - Resume: true
 
 - Builder
@@ -172,7 +172,7 @@ OBS-1 (Event Server) ----+
   - Name: validator-final
   - Role: Full system integration validation across all domains
   - Agent Type: enterprise:validator-mccoy
-  - Model: haiku
+  - Model: opus
   - Resume: true
 
 ## Step by Step Tasks
@@ -235,7 +235,7 @@ OBS-1 (Event Server) ----+
 - **Depends On**: obs1-tests, obs2-cli
 - **Assigned To**: validator-obs1
 - **Agent Type**: enterprise:validator-mccoy
-- **Model**: haiku
+- **Model**: opus
 - **Parallel**: false
 - `bun test` in packages/server -- all tests pass
 - `bun run typecheck` -- clean
@@ -275,7 +275,7 @@ OBS-1 (Event Server) ----+
 - **Depends On**: obs3-plugin, obs4-dashboard
 - **Assigned To**: validator-obs4
 - **Agent Type**: enterprise:validator-mccoy
-- **Model**: haiku
+- **Model**: opus
 - **Parallel**: false
 - OBS-3: hooks.json valid JSON, emit-event.ts has zero external imports, exits 0
 - OBS-4: `bun run build` succeeds, `vue-tsc` passes, dashboard connects to server
@@ -309,7 +309,7 @@ OBS-1 (Event Server) ----+
 - **Depends On**: obs5-devops, obs6-voice
 - **Assigned To**: validator-final
 - **Agent Type**: enterprise:validator-mccoy
-- **Model**: haiku
+- **Model**: opus
 - **Parallel**: false
 - `bun test` -- all tests pass across packages/server
 - `bun run typecheck` -- clean

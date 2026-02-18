@@ -86,7 +86,7 @@ No separate polish phase -- this is a trivial task integrated into OBS-1's extra
 | Role | Model | Rationale |
 |------|-------|-----------|
 | All builders | sonnet | Executes well-specified tasks reliably |
-| All validators | haiku | Mechanical checks: read files, run commands, report PASS/FAIL |
+| All validators | opus | Semantic code review requires strongest reasoning for edge cases, convention violations, and logic errors |
 
 ### Team Members
 
@@ -101,7 +101,7 @@ No separate polish phase -- this is a trivial task integrated into OBS-1's extra
   - Name: validator-cli
   - Role: Verify CLI starts server correctly
   - Agent Type: enterprise:validator-mccoy
-  - Model: haiku
+  - Model: opus
   - Resume: true
 
 ## Step by Step Tasks
@@ -126,7 +126,7 @@ No separate polish phase -- this is a trivial task integrated into OBS-1's extra
 - **Depends On**: create-cli
 - **Assigned To**: validator-cli
 - **Agent Type**: enterprise:validator-mccoy
-- **Model**: haiku
+- **Model**: opus
 - **Parallel**: false
 - `bun run packages/server/src/cli/index.ts server` -- server starts, ctrl+c to stop
 - `bun run packages/server/src/cli/index.ts` -- prints usage to stderr, exits 1
