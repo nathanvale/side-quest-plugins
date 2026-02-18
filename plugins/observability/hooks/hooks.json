@@ -7,7 +7,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/emit-event.ts session-start",
+						"command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/emit-event.ts\" session-start",
 						"timeout": 5
 					}
 				]
@@ -19,7 +19,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/emit-event.ts pre-tool-use",
+						"command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/emit-event.ts\" pre-tool-use",
 						"timeout": 5,
 						"async": true
 					}
@@ -32,7 +32,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/emit-event.ts post-tool-use",
+						"command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/emit-event.ts\" post-tool-use",
 						"timeout": 5,
 						"async": true
 					}
@@ -45,7 +45,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/emit-event.ts post-tool-use-failure",
+						"command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/emit-event.ts\" post-tool-use-failure",
 						"timeout": 5,
 						"async": true
 					}
@@ -58,7 +58,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/emit-event.ts stop",
+						"command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/emit-event.ts\" stop",
 						"timeout": 5
 					}
 				]
