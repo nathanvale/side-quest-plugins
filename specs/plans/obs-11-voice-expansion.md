@@ -13,6 +13,7 @@ v1 ships with pre-generated clips only, triggered on Stop events with a generic 
 ## Depends on
 
 - OBS-8 (Full Hook Coverage) - SubagentStart/SubagentStop enrichment handlers are the primary trigger
+- OBS-6 (Voice System) - Phrase library, weighted selection, and configuration foundation
 
 ## Items
 
@@ -30,9 +31,9 @@ When OBS-8 adds SubagentStart/SubagentStop enrichment:
 **Files:** `packages/server/src/server.ts`, `packages/server/src/voice/voices.ts`
 
 Extract verdict from SubagentStop transcript:
-- Read last 2KB of `agent_transcript_path`
-- Scan for `VERDICT: PASS` or `VERDICT: FAIL`
-- Route to `stop_pass` or `stop_fail` phrase sets for McCoy
+- Read the full `agent_transcript_path` and find the last occurrence of `/VERDICT:\s*(PASS|FAIL)/i`
+- Case-insensitive, whitespace-tolerant matching handles variations like "Verdict: PASS", "verdict: pass", "VERDICT:PASS"
+- Route to `stop_pass` or `stop_fail` phrase sets for McCoy based on the captured group
 
 Add priority queue support: McCoy FAIL verdict jumps ahead of pending start clips.
 
@@ -64,7 +65,7 @@ Add priority queue support: McCoy FAIL verdict jumps ahead of pending start clip
 Detect platform and use appropriate player:
 - macOS: `afplay` (built-in)
 - Linux: `aplay` or `paplay`
-- Windows: `powershell -c (New-Object Media.SoundPlayer).PlaySync()`
+- Windows: `powershell -c "(New-Object Media.SoundPlayer '<path>').PlaySync()"`
 
 Reference: `@claude-code-hooks/sound` npm package pattern.
 

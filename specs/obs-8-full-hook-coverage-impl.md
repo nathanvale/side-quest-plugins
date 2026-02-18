@@ -62,7 +62,7 @@ Add 9 new hook registrations to `plugins/observability/hooks/hooks.json`. All ne
 Add to `packages/server/src/server.ts`:
 
 **EVENT_NAME_MAP additions** (9 entries after line 86):
-```
+```text
 'session-end':       'hook.session_end'
 'notification':      'hook.notification'
 'user-prompt-submit': 'hook.user_prompt_submit'

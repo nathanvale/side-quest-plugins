@@ -86,7 +86,7 @@ While `mapEventName()` has a fallback (`hook.${name.replace(/-/g, '_')}`), expli
 
 ## Phasing (recommended by reviewer)
 
-Can be implemented in two sub-PRs if desired:
+This plan can be implemented in two sub-PRs if desired:
 
 **PR-A: hooks.json expansion + raw passthrough**
 - Add 9 hooks.json entries (all async, 5s timeout)

@@ -40,12 +40,12 @@ The plan explicitly states: "When the system proves its value over at least a we
 
 | Item | Description | Source spec |
 |------|-------------|-------------|
-| Health check in emitter | Cache health check result per-process before posting events. Skip emit on probe failure. Prevents hooks from blocking when server is starting up. | OBS-5 |
+| Health check in emitter | Consume OBS-12's server readiness endpoint, cache result per-process, skip emit on probe failure. Does not reimplement the probe -- delegates to OBS-12. Prevents hooks from blocking when server is starting up. | OBS-5 |
 
 ## Verification
 
 1. `just install && just start` - server starts and stays running
-2. Kill the server process - launchd restarts it within 10s
+2. `kill -9` the server process (non-zero exit) - launchd restarts it within 10s (note: `KeepAlive.SuccessfulExit = false` means graceful exit 0 will NOT restart)
 3. Reboot machine - server auto-starts on login
 4. `just logs` - shows server output with rotation
 5. `just stop && just uninstall` - clean removal

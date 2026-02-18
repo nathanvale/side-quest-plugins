@@ -4,7 +4,7 @@
 
 ## Goal
 
-Remove the duplicated event system from `@side-quest/git` and repoint it to `@side-quest/observability` as the canonical event infrastructure.
+Remove the duplicated event system from `@side-quest/git` and repoint it to `@side-quest/observability-server` as the canonical event infrastructure.
 
 ## Context
 

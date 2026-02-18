@@ -6,7 +6,7 @@
 
 Make the observability server installable from npm so users can run:
 
-```
+```bash
 bunx @side-quest/observability-server server
 ```
 
@@ -53,7 +53,7 @@ Postbuild script that copies `packages/client/dist/` into `packages/server/dist/
 ### package.json (root)
 
 Changed build from parallel filter to explicit sequencing:
-```
+```json
 "build": "bun run --cwd packages/client build && bun run --cwd packages/server build"
 ```
 
@@ -73,7 +73,7 @@ Changed `"access": "restricted"` to `"access": "public"`.
 
 ## Published package structure
 
-```
+```text
 dist/
   index.js          # library bundle
   index.d.ts        # types

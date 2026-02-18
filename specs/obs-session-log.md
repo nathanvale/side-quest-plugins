@@ -604,7 +604,7 @@ All 3 phases complete. 88 tests passing. Server builds. Dashboard builds. Plugin
 
 Use this prompt to have a fresh agent review the entire observability system end-to-end. This agent has zero prior context -- everything it needs is in the prompt.
 
-```
+````
 ## Review Mission: Full Observability System Review
 
 You are reviewing the complete Enterprise Agent Observability system built across
@@ -797,4 +797,4 @@ Report PASS or FAIL for each domain:
 Then a final overall PASS/FAIL.
 
 For any FAIL: file, line number, issue description, suggested fix.
-```
+````
