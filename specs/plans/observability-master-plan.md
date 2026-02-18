@@ -1,5 +1,39 @@
 # Enterprise Agent Observability -- Implementation Plan
 
+## Phase Tracker
+
+### Phase 1: v1 Foundation (Completed)
+
+| Plan | Domain | Status |
+|------|--------|--------|
+| OBS-1 | Event Server | Completed |
+| OBS-2 | Hook CLI | Completed |
+| OBS-3 | Plugin Registration | Completed |
+| OBS-4 | Vue Dashboard | Completed |
+| OBS-5 | Server DevOps | Completed |
+| OBS-6 | Voice TTS | Completed |
+| OBS-7 | npm Publishing | Completed |
+
+### Phase 2: Full Coverage + Polish
+
+| Plan | Domain | Status | Depends on |
+|------|--------|--------|------------|
+| OBS-8 | Full Hook Coverage (14 events) | Planning | Nothing (keystone) |
+| OBS-9 | Dashboard Polish (v1.1) | Planning | OBS-8 |
+| OBS-11 | Voice Expansion | Planning | OBS-8 |
+| OBS-12 | Server Hardening | Planning | Nothing |
+| OBS-15 | Git Migration | Planning | OBS-7 |
+
+### Phase 3: Advanced Features
+
+| Plan | Domain | Status | Depends on |
+|------|--------|--------|------------|
+| OBS-10 | Dashboard Advanced (v2) | Planning | OBS-8, OBS-9 |
+| OBS-13 | Launchd + Lifecycle | Planning | OBS-12 |
+| OBS-14 | HITL (Human-in-the-Loop) | Planning | OBS-8, OBS-10 |
+
+---
+
 ## Context
 
 The enterprise plugin has a single Stop hook (`captains-log.ts`) that retrospectively parses transcripts. No real-time visibility into agent activity during sessions.

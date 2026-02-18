@@ -1,5 +1,7 @@
 # Observability Plugin Registration (Domain 3 of 6) -- Revised v3 (Self-Contained Hook)
 
+## Status: Completed (v1)
+
 ## Overview
 
 This domain creates the `plugins/observability/` plugin directory with a fully self-contained hook script. **Zero external dependencies** -- the hook reads stdin, POSTs raw JSON to the server, and exits. All event enrichment lives server-side (OBS-1).

@@ -1,5 +1,7 @@
 # OBS-1: Event Server Domain -- Implementation Plan
 
+## Status: Completed (v1)
+
 ## Overview
 
 Extract the event system from `@side-quest/git/src/events/` (7 files, 4 test files) into a new `@side-quest/observability` repo scaffolded from `bun-typescript-starter`.

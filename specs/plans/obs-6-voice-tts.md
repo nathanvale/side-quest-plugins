@@ -1,5 +1,7 @@
 # Domain 6: Voice/TTS System -- Implementation Plan
 
+## Status: Completed (v1)
+
 **Parent plan:** `specs/plans/observability-master-plan.md` (Stage 5f)
 **Prerequisites:** Domains 1 (Event Server) and 2 (Hook CLI) must be substantially complete.
 
