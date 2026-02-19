@@ -42,14 +42,24 @@ Pass additional context files with `--config`:
 
 ```bash
 ~/.local/bin/coderabbit review --prompt-only --type uncommitted --config .coderabbit.yaml
-~/.local/bin/coderabbit review --prompt-only --type committed --base main --config claude.md
+~/.local/bin/coderabbit review --prompt-only --type committed --base main --config .claude/CLAUDE.md
 ```
 
 Multiple config files are supported:
 
 ```bash
-~/.local/bin/coderabbit review --prompt-only --config .coderabbit.yaml --config team-standards.md
+~/.local/bin/coderabbit review --prompt-only --config .coderabbit.yaml --config .claude/CLAUDE.md
 ```
+
+### Auto-inject project standards
+
+The skill automatically appends the project's CLAUDE.md (or .coderabbit.yaml) as a `--config` file on every CLI invocation. This means CodeRabbit enforces the same coding standards documented in CLAUDE.md without extra configuration. The lookup order is:
+
+1. `.claude/CLAUDE.md`
+2. `CLAUDE.md`
+3. `.coderabbit.yaml`
+
+If the user explicitly passes `--config`, the standards file is appended as an additional config (not replaced).
 
 ## Working Directory
 
