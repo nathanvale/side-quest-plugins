@@ -69,7 +69,10 @@ Summary:
 6. Check for stale review (CodeRabbit comment older than latest commit)
 7. Extract findings from inline comments (path, line, body)
 
-If no CodeRabbit comments exist on the PR, suggest the user add a comment `@coderabbitai review` on the PR to trigger a review, then retry.
+If no CodeRabbit comments exist on the PR, let the user know. They may want to trigger a review by posting `@coderabbitai review` as a PR comment:
+```bash
+gh pr comment {PR_NUMBER} --body "@coderabbitai review"
+```
 
 ### 3B. CLI Mode -- Run CodeRabbit CLI
 
@@ -131,7 +134,11 @@ Or for CLI mode:
 Source: local CLI analysis
 ```
 
-If no findings, congratulate the user -- clean code.
+If no findings, let the user know -- no actionable issues found. If they want a fresh review (e.g. after pushing new changes), they can re-trigger:
+- **CLI mode**: re-run the same `coderabbit review` command
+- **PR mode**: `gh pr comment {PR_NUMBER} --body "@coderabbitai review"`
+
+Do not automatically re-trigger. Just inform them how.
 
 ### 6. Remediation (--fix mode)
 
@@ -153,16 +160,73 @@ When `--fix` is set, adopt the **staff engineer peer review** persona. You are a
    - **Fix it now** -- the finding is legitimate and the fix is small enough to belong in this PR
    - **Defer** -- the finding is valid but the fix is out of scope, would bloat the diff, or needs its own PR
    - **Dismiss** -- the finding is noise, a false positive, or technically correct but not worth the change
-4. **Present the options** via AskUserQuestion with your recommendation marked. Include a brief code snippet of the proposed fix when recommending "Fix it now"
+4. **Present the options** via AskUserQuestion with your recommendation marked. Include a brief code snippet of the proposed fix when recommending "Fix it now". If AskUserQuestion is unavailable, present the same choices as a numbered markdown list and wait for the user to reply before proceeding.
 5. **If the user agrees to fix** -- apply the edit. If they defer or dismiss, move on. No judgment either way.
+6. **If in PR mode and a fix was applied** -- reply to the CodeRabbit comment explaining what was fixed, then resolve the thread. See [references/pr-comment-parsing.md](references/pr-comment-parsing.md) for the API calls. Only do this for findings that were actually fixed inline -- not deferred or dismissed.
 
 #### After all findings:
 
 - Summarize what was fixed, deferred, and dismissed
 - If anything was deferred, suggest: "Want me to open a tracking issue for the deferred items?"
-- Do NOT re-run CodeRabbit automatically -- the user can trigger another review when ready
+- If fixes were applied, offer to re-review (see Re-Review Loop below)
 
 If `--fix` is NOT set, end with: "Run with `--fix` to walk through remediation."
+
+### 7. Re-Triggering Reviews
+
+The user may ask you to re-run a CodeRabbit review at any point -- after fixes, after new commits, or just because they want a fresh pass. Here's how:
+
+#### CLI mode
+
+Re-run the same command. CodeRabbit analyzes the current state fresh each time:
+```bash
+~/.local/bin/coderabbit review --prompt-only --type uncommitted
+```
+
+#### PR mode
+
+Post a comment on the PR to trigger a fresh review:
+```bash
+gh pr comment {PR_NUMBER} --body "@coderabbitai review"
+```
+Then wait for CodeRabbit to post updated comments and re-fetch them via the GitHub API.
+
+Other useful PR comment triggers:
+- `@coderabbitai full review` -- force a complete re-review (not incremental)
+- `@coderabbitai resolve` -- resolve all open CodeRabbit comment threads
+
+#### Guidelines
+
+- **Never re-trigger automatically.** Only re-run when the user asks for it.
+- If running multiple reviews in a session, be mindful of rate limits (see below).
+- When presenting re-review results, compare against the previous run if you have the context.
+
+#### Rate limits
+
+Reviews consume rate-limited quota:
+
+| Plan | Reviews/hour |
+|------|-------------|
+| Free/OSS | 2 |
+| Trial | 5 |
+| Pro | 8 |
+
+If you hit a rate limit (429 or timeout), tell the user and suggest waiting. Do not retry in a loop -- a single retry after 30 seconds is acceptable, then stop.
+
+#### Re-review summary
+
+After a re-review, present a comparison:
+
+```
+## Re-Review Results
+
+- Initial findings: N
+- Fixed: X
+- Remaining: Y (N critical, M minor)
+- New findings: Z
+
+[Assessment of whether the fixes are clean]
+```
 
 ## Error Handling
 

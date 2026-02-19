@@ -59,6 +59,52 @@ CodeRabbit runs in the current working directory by default. Use `--cwd` to targ
 ~/.local/bin/coderabbit review --prompt-only --cwd /path/to/other/repo
 ```
 
+## Output Modes
+
+The CLI supports three output modes:
+
+| Flag | Mode | Use case |
+|------|------|----------|
+| (none) | Interactive TUI | Human browsing findings with arrow keys |
+| `--plain` | Plain text | Detailed findings with fix suggestions, human-readable |
+| `--prompt-only` | Token-efficient | Minimal structured text designed for LLM consumption |
+
+**Always use `--prompt-only` in skill context.** It implies `--plain` (no TUI) and produces output optimized for AI agents -- file paths, line numbers, severity, and suggested fixes in a compact format.
+
+The `--plain` flag is useful if the user wants more verbose output to read themselves.
+
+There is no `--output=json` flag. Output is always plain text.
+
+## Re-Triggering a Review
+
+### After fixing issues (CLI mode)
+
+Re-run the same command. CodeRabbit analyzes the current state of the working tree each time -- it doesn't cache previous results locally.
+
+```bash
+# Same command as before -- reviews the current state fresh
+~/.local/bin/coderabbit review --prompt-only --type uncommitted
+```
+
+### After fixing issues (PR mode)
+
+Post a comment on the PR to trigger a fresh CodeRabbit review:
+
+```bash
+gh pr comment {PR_NUMBER} --body "@coderabbitai review"
+```
+
+Other useful PR comment triggers:
+- `@coderabbitai full review` -- force a complete re-review (not incremental)
+- `@coderabbitai resolve` -- resolve all open CodeRabbit comment threads
+- `@coderabbitai generate unit tests` -- generate tests for changed code
+
+After posting, wait for CodeRabbit to process (can take several minutes), then re-fetch comments via the GitHub API.
+
+### Timing expectations
+
+Reviews take 7-30+ minutes depending on change scope. Plan accordingly -- don't poll in a tight loop. A reasonable approach is to run the CLI command, let it block until complete, then parse the output.
+
 ## Error Scenarios
 
 ### Authentication Failed

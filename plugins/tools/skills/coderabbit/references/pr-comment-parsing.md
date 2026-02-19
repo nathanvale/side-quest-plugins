@@ -100,6 +100,71 @@ When processing findings:
 3. During `--fix` remediation, use this as the proposed fix content
 4. The suggestion replaces the line(s) indicated by the comment's `.line` and `.diff_hunk` context
 
+## Replying To and Resolving Comments
+
+After fixing an issue inline, reply to the CodeRabbit comment and resolve the thread. This keeps the PR clean and signals to reviewers that the finding was addressed.
+
+### Step 1: Reply to the comment
+
+Use the REST API to post a reply on the review comment:
+
+```bash
+gh api repos/{owner}/{repo}/pulls/{pr}/comments/{comment_id}/replies \
+  -f body="Fixed -- [brief description of the fix]."
+```
+
+The `{comment_id}` is the `.id` field from the inline comment fetched in Step 3 above.
+
+Keep replies short and factual. Examples:
+- "Fixed -- added null check before accessing `.length`."
+- "Fixed -- switched to parameterized query to prevent SQL injection."
+- "Fixed -- renamed to `getUserById` for clarity."
+
+### Step 2: Resolve the review thread
+
+GitHub review threads are resolved via the GraphQL API. First, get the thread ID for the comment, then resolve it:
+
+```bash
+# Get the thread node ID for a review comment
+THREAD_ID=$(gh api graphql -f query='
+  query($owner: String!, $repo: String!, $pr: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $pr) {
+        reviewThreads(first: 100) {
+          nodes {
+            id
+            isResolved
+            comments(first: 1) {
+              nodes { databaseId }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner="{owner}" -f repo="{repo}" -F pr={pr} \
+  --jq ".data.repository.pullRequest.reviewThreads.nodes[] | select(.comments.nodes[0].databaseId == {comment_id}) | .id")
+
+# Resolve the thread
+gh api graphql -f query='
+  mutation($threadId: ID!) {
+    resolveReviewThread(input: {threadId: $threadId}) {
+      thread { isResolved }
+    }
+  }
+' -f threadId="$THREAD_ID"
+```
+
+### When to resolve
+
+- **Fix it now** (applied inline) -- reply + resolve
+- **Defer** -- do NOT resolve. The thread stays open as a reminder.
+- **Dismiss** -- do NOT resolve. Let the user decide if they want to dismiss it on GitHub.
+
+### Batch resolution
+
+If multiple findings were fixed, reply and resolve each one individually. Do not batch-resolve with `@coderabbitai resolve` -- that resolves ALL threads including ones that weren't addressed.
+
 ## Edge Cases
 
 ### No CodeRabbit Comments
