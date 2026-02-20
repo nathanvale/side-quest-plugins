@@ -6,7 +6,7 @@ How to analyze local CodeRabbit review history for patterns and insights.
 
 CodeRabbit stores all local review data at:
 
-```
+```text
 ~/.coderabbit/reviews/{projectHash}/{commitHash}/reviews/{timestamp}/
 ```
 

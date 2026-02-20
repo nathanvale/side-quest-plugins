@@ -41,10 +41,12 @@ Reply to any CodeRabbit comment on a PR:
 In any PR comment:
 
 ```
-@coderabbitai add a learning using .claude/CLAUDE.md
+@coderabbitai add a learning using docs/coding-standards.md
 ```
 
 CodeRabbit reads the file and extracts preferences as learnings.
+
+> **Note:** `.claude/CLAUDE.md` is auto-detected by CodeRabbit as code guidelines -- it does not need manual import via this command.
 
 ### Method 3: Manage via web UI
 

@@ -24,7 +24,7 @@ Today's orchestration patterns exist as separate building blocks (Builder/Valida
 
 A single skill (`/orchestrate`) that implements a **Leader/Swarm + Builder/Validator** pattern with these layers:
 
-```
+```text
 User
   |
   v
@@ -58,7 +58,7 @@ Orchestrator (Leader) -- never writes code, only coordinates
 
 Uses Claude Code's native `TaskCreate`/`TaskUpdate` with `addBlockedBy` for dependency chains.
 
-```
+```typescript
 TaskCreate({ subject: "Add auth middleware", ... })
 TaskCreate({ subject: "Add auth tests", addBlockedBy: ["task-1"] })
 TaskCreate({ subject: "Update API routes", addBlockedBy: ["task-1"] })
@@ -172,8 +172,8 @@ TaskUpdate({ taskId, status: "pending" })
 
 Tasks are session-scoped but the spec file is the source of truth:
 
-```
-specs/<feature>-orchestrator.md  <-- Hydration source
+```text
+specs/<feature>-orchestrator.md  -- Hydration source
   |
   v
 TaskCreate (session start)  <-- Hydrate from spec
@@ -199,7 +199,7 @@ Spec file updated           <-- Persist on completion/pause
 
 ### New Files
 
-```
+```text
 plugins/agentic-orchestration/
 ├── commands/
 │   └── orchestrate.md              # User-facing command
@@ -283,7 +283,7 @@ plugins/agentic-orchestration/
 
 1. Create `hitl-protocol.md` reference with trigger rules
 2. Implement `blocked_hitl` status with `AskUserQuestion` integration
-3. Spec file persistence -- write progress back to markdown on pause/completion
+3. Spec file persistence -- write progress back to Markdown on pause/completion
 4. Hydration on resume -- read spec, reconstruct DAG, continue
 5. Session timeout handling (auto-checkpoint before context limit)
 
@@ -301,7 +301,7 @@ This spec itself should be implemented using the Builder/Validator pattern:
 
 ### Task Dependency Chain
 
-```
+```text
 [Phase 1: DAG Engine]
   |
   +-- [Phase 2: Parallel/Worktrees] (blocked by Phase 1)
@@ -319,7 +319,7 @@ Phases 2-4 can run in parallel after Phase 1. Phase 5 depends only on Phase 1.
 
 ### Why CLI-first for agent-browser (not MCP)?
 
-agent-browser has no MCP server. The CLI interface is intentionally minimal:
+agent-browser has no MCP server. The CLI is intentionally minimal:
 - `npx agent-browser navigate <url>`
 - `npx agent-browser click @e1`
 - `npx agent-browser get text @e1`
@@ -400,7 +400,7 @@ The inner parameters (variable):
 
 **Possible interface:**
 
-```
+```bash
 # Explicit team flag
 /agentic-orchestration:orchestrate "add JWT auth" --team enterprise
 /agentic-orchestration:orchestrate "investigate competitor pricing" --team newsroom
@@ -463,7 +463,7 @@ Google Research's 180-configuration study (770 likes, @GoogleResearch Jan 28) fo
 The community's "orchestrator spawns disposable subagents" pattern (@joshuaday) matches our Task-tool-only leader. Clean separation is the consensus approach.
 
 **6. Sequential execution in Phase 1 is correct sequencing.**
-Google Research's -70% finding on sequential tasks confirms: get the decomposition + loop right first, parallelize in Phase 2.
+Google Research's -70% finding on sequential tasks confirms: get the decomposition + loop right first, parallelise in Phase 2.
 
 ### Community-Identified Risks
 

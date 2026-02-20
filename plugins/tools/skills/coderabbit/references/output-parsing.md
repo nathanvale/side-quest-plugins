@@ -44,7 +44,7 @@ If this line is missing, the review may have failed or been interrupted.
 
 ## Parsing Algorithm
 
-1. Split stdout on `============` separator lines
+1. Split stdout on separator lines (lines consisting entirely of 4 or more `=` characters, e.g. `============`)
 2. For each block, extract:
    - **File**: value after `File: `
    - **Line**: value after `Line: ` (may be a single number or `N to M` range)

@@ -129,11 +129,11 @@ Keep replies short and factual. Examples:
 GitHub review threads are resolved via the GraphQL API using a thread's global node ID. First, fetch all threads and map them to REST comment IDs:
 
 ```bash
-gh api graphql -f query='
-  query($owner: String!, $repo: String!, $pr: Int!) {
+gh api graphql --paginate -f query='
+  query($owner: String!, $repo: String!, $pr: Int!, $endCursor: String) {
     repository(owner: $owner, name: $repo) {
       pullRequest(number: $pr) {
-        reviewThreads(first: 100) {
+        reviewThreads(first: 100, after: $endCursor) {
           nodes {
             id
             isResolved
@@ -145,12 +145,15 @@ gh api graphql -f query='
               }
             }
           }
+          pageInfo { hasNextPage endCursor }
         }
       }
     }
   }
 ' -f owner="{owner}" -f repo="{repo}" -F pr={pr}
 ```
+
+> **Pagination:** `--paginate` with `$endCursor` automatically fetches all pages. The nested `comments(first: 10)` is not paginated -- if a thread has >10 comments, only the first 10 are returned. This is acceptable since we only need the first comment's `databaseId` for thread mapping.
 
 **Mapping thread ID to comment ID:**
 

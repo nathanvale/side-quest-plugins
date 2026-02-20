@@ -161,7 +161,7 @@ Steve Yegge reportedly runs 3 concurrent Claude Max accounts to sustain Gas Town
 
 ### 3a. Claude Code Plan Mode Wins on Quality and Safety
 
-Claude Code's plan mode is runtime-enforced read-only. Codex's plan mode is [prompt-level instruction only](https://smartscope.blog/en/generative-ai/chatgpt/codex-plan-mode-complete-guide/) -- not enforced at runtime. The OpenAI Codex team is actively soliciting feedback ([GitHub Discussion #7355](https://github.com/openai/codex/discussions/7355)) and citing Claude Code as the reference implementation.
+Claude Code's plan mode is runtime-enforced read-only. Codex's plan mode is [prompt-level instruction only](https://smartscope.blog/en/generative-ai/chatgpt/codex-plan-mode-complete-guide/) -- not enforced at runtime. The OpenAI Codex team is actively soliciting feedback ([GitHub Discussion #7355](https://github.com/openai/codex/discussions/7355)) and citing Claude Code as a point of comparison.
 
 [Armin Ronacher's deep dive](https://lucumr.pocoo.org/2025/12/17/what-is-plan-mode/) confirms: plan mode is structured prompt injection across four phases (Initial Understanding, Design, Review, Final Plan). The capability difference is workflow ergonomics, not fundamental model capability.
 
@@ -258,7 +258,7 @@ IndyDevDan's example: an `automate` command takes `$1` (another prompt) as its a
 - System locates matching skills from a registry
 - Drafts missing skills if needed
 - Wires them together with contracts, references, and rubrics
-- Tool/MCP integration requires no manual glue code
+- Tool/MCP integration requires no manual glue-code
 
 This is the closest thing found to an agent-agnostic orchestrator that accepts builder/validator as parameters. Skills are versioned and composable.
 

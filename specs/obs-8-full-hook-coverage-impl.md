@@ -114,7 +114,7 @@ Add table-driven enrichment tests to `packages/server/src/server.test.ts`:
 | Role | Model | Rationale |
 |------|-------|-----------|
 | All builders | sonnet | Executes well-specified tasks reliably |
-| All validators | haiku | Mechanical checks: read files, run commands, report PASS/FAIL |
+| All validators | opus | Read-only review: read files, run commands, report PASS/FAIL |
 
 ### Team Members
 
