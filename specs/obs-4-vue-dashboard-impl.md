@@ -191,7 +191,7 @@ packages/client/
 | Role | Model | Rationale |
 |------|-------|-----------|
 | All builders | sonnet | Executes well-specified tasks reliably |
-| All validators | haiku | Mechanical checks: read files, run commands, report PASS/FAIL |
+| All validators | opus | Semantic code review requires strongest reasoning for edge cases, convention violations, and logic errors |
 
 ### Team Members
 
@@ -220,7 +220,7 @@ packages/client/
   - Name: validator-dashboard
   - Role: Verify dashboard builds, renders, streams events correctly
   - Agent Type: enterprise:validator-mccoy
-  - Model: haiku
+  - Model: opus
   - Resume: true
 
 ## Step by Step Tasks
@@ -278,7 +278,7 @@ packages/client/
 - **Depends On**: build-header-polish
 - **Assigned To**: validator-dashboard
 - **Agent Type**: enterprise:validator-mccoy
-- **Model**: haiku
+- **Model**: opus
 - **Parallel**: false
 - `cd packages/client && bun run build` -- production build succeeds
 - `vue-tsc -b` -- no type errors

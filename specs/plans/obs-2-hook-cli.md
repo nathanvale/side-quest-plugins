@@ -1,5 +1,7 @@
 # OBS-2: Hook CLI Implementation Plan -- Revised v3 (Dumb Hook, Smart Server)
 
+## Status: Completed (v1)
+
 Parent plan: `specs/plans/observability-master-plan.md` (Stage 3)
 Depends on: OBS-1 PR1 (event server extraction -- server handles all enrichment)
 

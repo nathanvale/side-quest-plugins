@@ -1,5 +1,7 @@
 # Domain 4: Vue Dashboard -- Implementation Plan
 
+## Status: Completed (v1)
+
 **Domain:** Vue 3 Real-Time Dashboard (`packages/client/`)
 **Parent plan:** `specs/plans/observability-master-plan.md` (Stage 4)
 **Dependencies:** Domain 1 (Event Server) must be complete -- the dashboard consumes HTTP + WebSocket events from it.

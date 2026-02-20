@@ -1,5 +1,7 @@
 # Domain 5: Server Lifecycle and DevOps -- Implementation Plan
 
+## Status: Completed (v1)
+
 **Parent plan:** `specs/plans/observability-master-plan.md` (Stage 5)
 **Prerequisites:** Domains 1 (Event Server) and 4 (Vue Dashboard) must be substantially complete.
 

@@ -92,7 +92,7 @@ No separate foundation -- this builds on OBS-1 and OBS-4.
 | Role | Model | Rationale |
 |------|-------|-----------|
 | All builders | sonnet | Executes well-specified tasks reliably |
-| All validators | haiku | Mechanical checks: read files, run commands, report PASS/FAIL |
+| All validators | opus | Semantic code review requires strongest reasoning for edge cases, convention violations, and logic errors |
 
 ### Team Members
 
@@ -107,7 +107,7 @@ No separate foundation -- this builds on OBS-1 and OBS-4.
   - Name: validator-devops
   - Role: Verify static serving, justfile recipes, integration
   - Agent Type: enterprise:validator-mccoy
-  - Model: haiku
+  - Model: opus
   - Resume: true
 
 ## Step by Step Tasks
@@ -148,7 +148,7 @@ No separate foundation -- this builds on OBS-1 and OBS-4.
 - **Depends On**: create-justfile
 - **Assigned To**: validator-devops
 - **Agent Type**: enterprise:validator-mccoy
-- **Model**: haiku
+- **Model**: opus
 - **Parallel**: false
 - `just build-client` -- builds Vue dashboard to dist/
 - `just dev` -- starts server, dashboard loads at http://127.0.0.1:7483

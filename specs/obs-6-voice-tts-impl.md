@@ -149,7 +149,7 @@ scripts/
 | Role | Model | Rationale |
 |------|-------|-----------|
 | All builders | sonnet | Executes well-specified tasks reliably |
-| All validators | haiku | Mechanical checks: read files, run commands, report PASS/FAIL |
+| All validators | opus | Semantic code review requires strongest reasoning for edge cases, convention violations, and logic errors |
 
 ### Team Members
 
@@ -171,7 +171,7 @@ scripts/
   - Name: validator-voice
   - Role: Verify queue behavior, router responses, server integration
   - Agent Type: enterprise:validator-mccoy
-  - Model: haiku
+  - Model: opus
   - Resume: true
 
 ## Step by Step Tasks
@@ -236,7 +236,7 @@ scripts/
 - **Depends On**: voice-integration
 - **Assigned To**: validator-voice
 - **Agent Type**: enterprise:validator-mccoy
-- **Model**: haiku
+- **Model**: opus
 - **Parallel**: false
 - `bun test voice/` -- all queue and router tests pass
 - `bun run typecheck` -- no type errors in voice/

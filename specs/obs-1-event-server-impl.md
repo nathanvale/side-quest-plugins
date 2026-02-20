@@ -191,7 +191,7 @@ New operational tests:
 | Role | Model | Rationale |
 |------|-------|-----------|
 | All builders | sonnet | Executes well-specified tasks reliably |
-| All validators | haiku | Mechanical checks: read files, run commands, report PASS/FAIL |
+| All validators | opus | Semantic code review requires strongest reasoning for edge cases, convention violations, and logic errors |
 
 ### Team Members
 
@@ -220,7 +220,7 @@ New operational tests:
   - Name: validator-obs1
   - Role: Verify typecheck, tests, lint, build, smoke test
   - Agent Type: enterprise:validator-mccoy
-  - Model: haiku
+  - Model: opus
   - Resume: true
 
 ## Step by Step Tasks
@@ -305,7 +305,7 @@ New operational tests:
 - **Depends On**: write-tests
 - **Assigned To**: validator-obs1
 - **Agent Type**: enterprise:validator-mccoy
-- **Model**: haiku
+- **Model**: opus
 - **Parallel**: false
 - `cd ~/code/side-quest-observability && bun test`
 - `bun run typecheck`

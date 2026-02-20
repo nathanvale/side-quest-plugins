@@ -113,7 +113,7 @@ Follow the testing strategy from `specs/plans/obs-3-plugin-registration.md`:
 | Role | Model | Rationale |
 |------|-------|-----------|
 | All builders | sonnet | Executes well-specified tasks reliably |
-| All validators | haiku | Mechanical checks: read files, run commands, report PASS/FAIL |
+| All validators | opus | Semantic code review requires strongest reasoning for edge cases, convention violations, and logic errors |
 
 ### Team Members
 
@@ -128,7 +128,7 @@ Follow the testing strategy from `specs/plans/obs-3-plugin-registration.md`:
   - Name: validator-plugin
   - Role: Verify plugin files, hook execution, coexistence
   - Agent Type: enterprise:validator-mccoy
-  - Model: haiku
+  - Model: opus
   - Resume: true
 
 ## Step by Step Tasks
@@ -157,7 +157,7 @@ Follow the testing strategy from `specs/plans/obs-3-plugin-registration.md`:
 - **Depends On**: create-plugin
 - **Assigned To**: validator-plugin
 - **Agent Type**: enterprise:validator-mccoy
-- **Model**: haiku
+- **Model**: opus
 - **Parallel**: false
 - hooks.json is valid JSON
 - emit-event.ts has zero `import` statements from external packages (only node:fs, node:path, node:os)
