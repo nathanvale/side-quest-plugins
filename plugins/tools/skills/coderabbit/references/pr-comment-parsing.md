@@ -106,11 +106,15 @@ After fixing an issue inline, reply to the CodeRabbit comment and resolve the th
 
 ### Step 1: Reply to the comment
 
-Use the REST API to post a reply on the review comment:
+Use the pull request review comment replies endpoint. **The full path including `/pulls/{pr}` is required** -- omitting it causes a 404:
 
 ```bash
+# CORRECT -- includes /pulls/{pr}
 gh api repos/{owner}/{repo}/pulls/{pr}/comments/{comment_id}/replies \
-  -f body="Fixed -- [brief description of the fix]."
+  -X POST -f body="Fixed -- [brief description of the fix]."
+
+# WRONG -- missing /pulls/{pr}, returns 404
+# gh api repos/{owner}/{repo}/comments/{comment_id}/replies
 ```
 
 The `{comment_id}` is the `.id` field from the inline comment fetched in Step 3 above.
@@ -120,12 +124,39 @@ Keep replies short and factual. Examples:
 - "Fixed -- switched to parameterized query to prevent SQL injection."
 - "Fixed -- renamed to `getUserById` for clarity."
 
-### Step 2: Resolve the review thread
+### Step 2: Fetch review thread IDs
 
-GitHub review threads are resolved via the GraphQL API. First, get the thread ID for the comment, then resolve it:
+GitHub review threads are resolved via the GraphQL API using a thread's global node ID. First, fetch all threads and map them to REST comment IDs:
 
 ```bash
-# Get the thread node ID for a review comment
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $pr: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $pr) {
+        reviewThreads(first: 100) {
+          nodes {
+            id
+            isResolved
+            comments(first: 10) {
+              nodes {
+                databaseId
+                url
+                author { login }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner="{owner}" -f repo="{repo}" -F pr={pr}
+```
+
+**Mapping thread ID to comment ID:**
+
+Each thread's `comments.nodes[].databaseId` matches the `.id` field from the REST API (Step 3). Find the thread whose first comment's `databaseId` matches your target `comment_id`:
+
+```bash
 THREAD_ID=$(gh api graphql -f query='
   query($owner: String!, $repo: String!, $pr: Int!) {
     repository(owner: $owner, name: $repo) {
@@ -144,26 +175,86 @@ THREAD_ID=$(gh api graphql -f query='
   }
 ' -f owner="{owner}" -f repo="{repo}" -F pr={pr} \
   --jq ".data.repository.pullRequest.reviewThreads.nodes[] | select(.comments.nodes[0].databaseId == {comment_id}) | .id")
+```
 
-# Resolve the thread
+### Step 3: Resolve the thread
+
+```bash
 gh api graphql -f query='
   mutation($threadId: ID!) {
     resolveReviewThread(input: {threadId: $threadId}) {
-      thread { isResolved }
+      thread { id isResolved }
     }
   }
 ' -f threadId="$THREAD_ID"
 ```
 
+### Step 4: Verify resolution
+
+Always verify the thread was actually resolved. Query the thread's `isResolved` state:
+
+```bash
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $pr: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $pr) {
+        reviewThreads(first: 100) {
+          nodes {
+            id
+            isResolved
+            comments(first: 1) {
+              nodes { databaseId }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner="{owner}" -f repo="{repo}" -F pr={pr} \
+  --jq ".data.repository.pullRequest.reviewThreads.nodes[] | select(.comments.nodes[0].databaseId == {comment_id}) | .isResolved"
+```
+
+Expected output: `true`. If `false`, the mutation may have failed silently -- check the thread ID and retry.
+
+### Bot-Login Filtering
+
+CodeRabbit's author name differs between the REST and GraphQL APIs:
+
+| API | Author field | Value |
+|-----|-------------|-------|
+| REST (`/pulls/{pr}/comments`) | `.user.login` | `coderabbitai[bot]` |
+| GraphQL (`reviewThreads`) | `.comments.nodes[].author.login` | `coderabbitai` (no `[bot]` suffix) |
+
+When filtering comments, match against the correct value for each API:
+
+```bash
+# REST filtering
+--jq '[.[] | select(.user.login == "coderabbitai[bot]")]'
+
+# GraphQL filtering
+--jq '... | select(.author.login == "coderabbitai")'
+```
+
+Always normalize before comparing -- check for both `coderabbitai[bot]` and `coderabbitai` if you're cross-referencing between APIs.
+
 ### When to resolve
 
-- **Fix it now** (applied inline) -- reply + resolve
+- **Fix it now** (applied inline) -- reply + resolve + verify
 - **Defer** -- do NOT resolve. The thread stays open as a reminder.
 - **Dismiss** -- do NOT resolve. Let the user decide if they want to dismiss it on GitHub.
 
 ### Batch resolution
 
 If multiple findings were fixed, reply and resolve each one individually. Do not batch-resolve with `@coderabbitai resolve` -- that resolves ALL threads including ones that weren't addressed.
+
+### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| 404 when replying to a comment | Wrong endpoint path -- missing `/pulls/{pr}` segment | Use `repos/{owner}/{repo}/pulls/{pr}/comments/{comment_id}/replies` (full path) |
+| "No thread found for comment" / empty `THREAD_ID` | Thread query returned stale data, or `comment_id` doesn't match any `databaseId` | Re-fetch the thread list (Step 2) and re-map. Confirm `comment_id` is the REST `.id`, not `.node_id`. |
+| Thread already resolved | Another agent or user resolved it, or `@coderabbitai resolve` was used | Check `isResolved` before mutating. If already `true`, skip the mutation silently. |
+| GraphQL auth error | `gh` token lacks `repo` scope or SSO isn't authorized | Run `gh auth status` and re-auth if needed: `gh auth login -s repo` |
 
 ## Edge Cases
 
@@ -201,7 +292,55 @@ CodeRabbit may post multiple rounds of comments (after re-reviews). The API retu
 
 ### Outdated Comments
 
-GitHub marks inline comments as "outdated" when the diff changes underneath them. The API field `.position` becomes `null` for outdated comments, but `.path` and `.original_line` remain. Include outdated comments with a note that they may no longer apply.
+GitHub marks inline comments as "outdated" when the diff changes underneath them. In the REST API, `.position` becomes `null` but `.path` and `.original_line` remain. In GraphQL, `reviewThreads.nodes[].isOutdated` is `true`.
+
+**Outdated does NOT mean resolved.** A thread can be `isOutdated: true` AND `isResolved: false` -- this means the code around the comment changed but the finding was never addressed. These are still actionable.
+
+When fetching threads via GraphQL, use both fields:
+
+| `isResolved` | `isOutdated` | Status | Action |
+|:---:|:---:|---|---|
+| `false` | `false` | **Active** | Present as primary finding |
+| `false` | `true` | **Outdated but unresolved** | Present in a separate "Outdated" group with a note that code has changed. Still include in `--analyze` and `--fix` workflows. |
+| `true` | `false` | **Resolved** | Skip |
+| `true` | `true` | **Resolved + outdated** | Skip |
+
+**The recommended GraphQL query includes `isOutdated`:**
+
+```bash
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $pr: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $pr) {
+        reviewThreads(first: 100) {
+          nodes {
+            id
+            isResolved
+            isOutdated
+            comments(first: 10) {
+              nodes {
+                databaseId
+                url
+                body
+                path
+                line
+                originalLine
+                author { login }
+                createdAt
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner="{owner}" -f repo="{repo}" -F pr={pr}
+```
+
+Group findings in presentation:
+1. **Active findings** (`!isResolved && !isOutdated`) -- primary group
+2. **Outdated findings** (`!isResolved && isOutdated`) -- secondary group, labeled "Outdated (code changed since review)"
+3. Resolved threads -- omit entirely
 
 ### Comments on Deleted Files
 

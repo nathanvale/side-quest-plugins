@@ -53,7 +53,7 @@ Determine where findings come from based on `--source`:
 **`auto` (default):**
 1. Run `gh pr view --json number,state 2>/dev/null`
 2. If an **open** PR exists on the current branch, try **PR mode**
-3. If PR mode finds no actionable CodeRabbit comments (review still pending, no inline findings yet), **fall back to CLI mode** automatically. Report what you found in PR mode (e.g., "CodeRabbit review still pending") and note that CLI results are being shown instead.
+3. If PR mode finds **zero unresolved** CodeRabbit threads (neither active nor outdated), **fall back to CLI mode** automatically. Report what you found in PR mode (e.g., "CodeRabbit review still pending, no unresolved threads") and note that CLI results are being shown instead. **Do NOT fall back if there are unresolved outdated threads** -- those are still actionable.
 4. If no open PR exists, use **CLI mode** directly
 
 **`pr` (explicit):**
@@ -70,14 +70,20 @@ See [references/pr-comment-parsing.md](references/pr-comment-parsing.md) for ful
 
 Summary:
 1. Get repo info: `gh repo view --json nameWithOwner --jq .nameWithOwner`
-2. Fetch inline findings: `gh api repos/{owner}/{repo}/pulls/{n}/comments`
+2. Fetch review threads via GraphQL (preferred) or REST inline comments
 3. Fetch summary comment: `gh api repos/{owner}/{repo}/issues/{n}/comments`
-4. Filter both by `user.login == "coderabbitai[bot]"`
+4. Filter by CodeRabbit author (`coderabbitai[bot]` for REST, `coderabbitai` for GraphQL)
 5. Check for rate-limit markers in comment bodies
 6. Check for stale review (CodeRabbit comment older than latest commit)
-7. Extract findings from inline comments (path, line, body)
+7. Extract findings from all **unresolved** threads (both active and outdated)
 
-If no CodeRabbit comments exist on the PR, let the user know. They may want to trigger a review by posting `@coderabbitai review` as a PR comment:
+**What counts as "actionable":** Any unresolved CodeRabbit thread (`isResolved: false`), regardless of whether it is outdated. Outdated threads (`isOutdated: true`) had their surrounding code change but were never resolved -- they are still actionable. See [references/pr-comment-parsing.md](references/pr-comment-parsing.md) for the full `isResolved` x `isOutdated` matrix.
+
+**Presentation grouping:**
+- **Active findings** (`!isResolved && !isOutdated`) -- primary group
+- **Outdated findings** (`!isResolved && isOutdated`) -- secondary group, labeled "Outdated (code changed since review)". Note that these may already be fixed by the code changes that made them outdated -- read the current code before recommending action.
+
+If no CodeRabbit comments exist on the PR (no unresolved threads at all), let the user know. They may want to trigger a review by posting `@coderabbitai review` as a PR comment:
 ```bash
 gh pr comment {PR_NUMBER} --body "@coderabbitai review"
 ```
@@ -227,7 +233,14 @@ After presenting each finding's analysis (steps 1-4 from section 6):
    Present the same choices as a numbered markdown list and **explicitly wait for the user to reply** before proceeding. Do not assume silence means consent.
 
 6. **If the user agrees to fix** -- apply the edit. If they defer or dismiss, move on. No judgment either way.
-7. **If in PR mode and a fix was applied** -- reply to the CodeRabbit comment explaining what was fixed, then resolve the thread. See [references/pr-comment-parsing.md](references/pr-comment-parsing.md) for the API calls. Only do this for findings that were actually fixed inline -- not deferred or dismissed.
+7. **If in PR mode and a fix was applied** -- reply to the comment, resolve the thread, and verify resolution:
+   1. **Reply**: `gh api repos/{owner}/{repo}/pulls/{pr}/comments/{comment_id}/replies -X POST -f body="Fixed -- [description]."`
+      - The full path with `/pulls/{pr}` is required -- omitting it causes 404.
+   2. **Get thread ID**: Query `reviewThreads` via GraphQL, match `comments.nodes[0].databaseId` to the REST `comment_id`.
+   3. **Resolve**: `mutation { resolveReviewThread(input: {threadId: "..."}) { thread { id isResolved } } }`
+   4. **Verify**: Re-query `isResolved` for the thread. If already resolved, skip silently.
+   - Only do this for findings that were actually **fixed inline** -- not deferred or dismissed.
+   - See [references/pr-comment-parsing.md](references/pr-comment-parsing.md) for full endpoint details, bot-login filtering, and troubleshooting.
 
 #### After all findings (fix mode):
 
@@ -385,7 +398,7 @@ After a re-review, present a comparison:
 - CodeRabbit sends diffs to its cloud service for analysis -- the user is aware of this
 - Findings are suggestions, not mandates -- always let the user decide what to fix (except in `--preflight` where you decide autonomously)
 - PR mode uses `gh` CLI -- ensure the user is authenticated (`gh auth status`)
-- PR mode is read-only -- it only fetches existing comments, never posts to the PR
+- PR mode reads comments for analysis, and writes replies + resolves threads only when `--fix` applies a fix
 - Auto-inject CLAUDE.md as `--config` on every CLI invocation for coding standards context
 - Context7 enrichment is optional and best-effort -- skip silently if unavailable
 - For learnings bootstrap guidance, see [references/learnings-guide.md](references/learnings-guide.md)

@@ -23,11 +23,12 @@
 | OBS-11 | Voice Expansion | Planning | OBS-8 |
 | OBS-12 | Server Hardening | Planning | Nothing |
 | OBS-15 | Git Migration | Planning | OBS-7 |
+| OBS-16 | Correlation Hierarchy Migration (`sessionCid`/`cid`/`parentCid`) | Deferred | OBS-8 |
 
 **OBS-8 scope guard (approved):**
 - OBS-8 delivers full 14-hook coverage, server enrichment handlers, and tests.
 - OBS-8 does **not** change `EventEnvelope` shape. Keep required `correlationId` contract unchanged.
-- Any correlation hierarchy migration (`sessionCid` / `cid` / `parentCid`) is deferred to a separate post-OBS-8 proposal with compatibility planning.
+- Any correlation hierarchy migration (`sessionCid` / `cid` / `parentCid`) is deferred to **OBS-16** with compatibility planning.
 
 ### Phase 3: Advanced Features
 
@@ -837,3 +838,21 @@ After `@side-quest/observability` is published:
 | Correlation | session_id | session_id (same) |
 
 `captains-log.ts` is never modified. Both fire on Stop -- captains-log writes JSONL, obs-stop posts raw stdin to server.
+
+---
+
+## Related Documents
+
+### This Repo
+
+| Document | Purpose |
+|----------|---------|
+| [OBS-8 Full Hook Coverage](../obs-8-full-hook-coverage-impl.md) | Implementation spec for 14-event hook coverage |
+
+### External Repos
+
+| Document | Repo | Purpose |
+|----------|------|---------|
+| [Orchestration Observability Impl Plan](~/code/orchestrator-prototype/specs/orchestration-observability-impl.md) | orchestrator-prototype | Event emission from HOP orchestrator -- extends observability to prompt-based agents |
+| [HOP Master Plan](~/code/orchestrator-prototype/specs/master-plan.md) | orchestrator-prototype | Staged orchestrator rollout -- each stage adds new event types |
+| [EventEnvelope types](~/code/side-quest-observability/packages/server/src/types.ts) | side-quest-observability | Canonical type definitions including `OrchestrationType` |

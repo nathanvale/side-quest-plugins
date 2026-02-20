@@ -272,5 +272,22 @@ Add table-driven enrichment tests to `packages/server/src/server.test.ts`:
 - **Pre-existing v1 bug:** The current `extractEventFields` reads `raw.tool_result` for PostToolUse, but `event-reference.md` documents the field as `tool_response`. Similarly, PostToolUseFailure reads `raw.tool_error` but docs say `error`. This is out of scope for OBS-8 but should be tracked.
 - **TeammateIdle and TaskCompleted** are not in the official 12-event reference doc. They appear in the `ClaudeHookEvent` type union. Treat them as forward-declared -- extract sessionId only with raw passthrough.
 - **Phasing:** PR-A (hooks.json) can ship independently. The server's default fallback handles unknown events gracefully. PR-B (server enrichment) follows when handlers are validated.
-- **Schema stability:** Keep envelope compatibility in this phase. Do not introduce `sessionCid`/`cid`/`parentCid` in OBS-8.
+- **Schema stability:** Keep envelope compatibility in this phase. Do not introduce `sessionCid`/`cid`/`parentCid` in OBS-8. Track this deferred migration in **OBS-16**.
 - **No emit-event.ts changes needed.** The dumb pipe accepts any event name from argv[2] and POSTs it as-is.
+- **Orchestration events are a separate domain.** The orchestrator prototype (`~/code/orchestrator-prototype/`) emits events via its own `scripts/emit-event.ts` (same dumb-pipe pattern) using `source: 'cli'` and `type: 'orchestration.*'`. These arrive via `POST /events` (not hook routes) and use `orchestrationId` in `data` for correlation -- not an envelope schema change. See [Orchestration Observability Impl Plan](~/code/orchestrator-prototype/specs/orchestration-observability-impl.md).
+
+## Related Documents
+
+### This Repo
+
+| Document | Purpose |
+|----------|---------|
+| [Observability Master Plan](./plans/observability-master-plan.md) | OBS-1 through OBS-15 roadmap, OBS-8 scope guard |
+
+### External Repos
+
+| Document | Repo | Purpose |
+|----------|------|---------|
+| [Orchestration Observability Impl Plan](~/code/orchestrator-prototype/specs/orchestration-observability-impl.md) | orchestrator-prototype | Event emission from HOP orchestrator -- extends observability beyond hooks |
+| [HOP Master Plan](~/code/orchestrator-prototype/specs/master-plan.md) | orchestrator-prototype | Staged rollout showing which events each stage introduces |
+| [EventEnvelope types](~/code/side-quest-observability/packages/server/src/types.ts) | side-quest-observability | `OrchestrationType` union, envelope contract |
