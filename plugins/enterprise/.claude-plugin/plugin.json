@@ -23,5 +23,19 @@
 		"./commands/orders.md",
 		"./commands/hail.md"
 	],
-	"skills": ["./skills/the-bridge"]
+	"skills": [
+		"./skills/the-bridge",
+		"./skills/stations/medical",
+		"./skills/stations/engineering",
+		"./skills/ops/computer",
+		"./skills/programs/readme",
+		"./skills/programs/api-reference",
+		"./skills/programs/code-review",
+		"./skills/programs/refactor-analysis"
+	],
+	"agents": [
+		"./agents/ships-computer-cpu.md",
+		"./agents/builder-scotty.md",
+		"./agents/validator-mccoy.md"
+	]
 }

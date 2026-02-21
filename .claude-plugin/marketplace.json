@@ -1,0 +1,52 @@
+{
+	"$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+	"name": "side-quest",
+	"version": "1.0.0",
+	"description": "Curated, verified Claude Code plugins for compound engineering workflows",
+	"owner": {
+		"name": "Nathan Vale",
+		"email": "hi@nathanvale.com"
+	},
+	"plugins": [
+		{
+			"name": "git",
+			"source": "./plugins/git",
+			"description": "Git workflows with 10 commands, safety hooks, and session logging",
+			"category": "development",
+			"tags": [
+				"git",
+				"safety",
+				"commits",
+				"hooks",
+				"worktrees",
+				"compound-engineering"
+			]
+		},
+		{
+			"name": "enterprise",
+			"source": "./plugins/enterprise",
+			"description": "Multi-agent engineering orchestrator with builder/validator pattern",
+			"category": "development",
+			"tags": [
+				"orchestration",
+				"builder-validator",
+				"multi-agent",
+				"compound-engineering"
+			]
+		},
+		{
+			"name": "newsroom",
+			"source": "./plugins/newsroom",
+			"description": "Multi-agent research across Reddit, X, and web with engagement metrics",
+			"category": "productivity",
+			"tags": [
+				"research",
+				"reddit",
+				"x",
+				"community",
+				"multi-agent",
+				"compound-engineering"
+			]
+		}
+	]
+}
