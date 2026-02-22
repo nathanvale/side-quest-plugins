@@ -21,10 +21,7 @@ const DEFAULT_TOPICS = [
 ]
 
 /** Path to environment config */
-const ENV_PATH = resolve(
-	process.env.HOME ?? '',
-	'.config/research/.env',
-)
+const ENV_PATH = resolve(process.env.HOME ?? '', '.config/research/.env')
 
 /**
  * Type guard to validate parsed JSON matches ResearchResult shape

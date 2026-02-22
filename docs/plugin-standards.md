@@ -11,7 +11,9 @@ Standards for plugins in the Side Quest marketplace. Every plugin must pass this
 These checks can be run by a CI pipeline or an agent without human judgment.
 
 - [ ] `claude plugin validate .` exits with code 0
+- [ ] `bun run validate:marketplace` passes (structure checks on marketplace.json)
 - [ ] `marketplace.json` entry has non-empty `description`, `category`, `tags`
+- [ ] Plugin name is kebab-case and matches the directory basename of its source path
 - [ ] Plugin installs without error via `/plugin install <name>@side-quest`
 - [ ] All paths in `plugin.json` (skills, commands, agents) resolve to real files
 - [ ] No biome/tsc errors in TypeScript hooks (if plugin has hooks)
@@ -167,13 +169,44 @@ All paths in the manifest are validated by `claude plugin validate .`. The comma
 
 ---
 
+## Versioning Policy
+
+### Marketplace Version
+
+The `version` field in `.claude-plugin/marketplace.json` tracks the plugin catalog. CI enforces bumps via `bun run validate:marketplace --check-bump`. When multiple change types occur in one PR, the highest-level bump wins.
+
+| Change Type | Version Bump | Example |
+|-------------|-------------|---------|
+| Add a new plugin | Minor | 1.0.0 -> 1.1.0 |
+| Remove a plugin | Major | 1.1.0 -> 2.0.0 |
+| Change plugin metadata | Patch | 1.1.0 -> 1.1.1 |
+| Non-plugin changes (docs, CI) | No bump | -- |
+
+### Plugin Version
+
+The `version` field in each plugin's `.claude-plugin/plugin.json` tracks that plugin independently.
+
+| Change Type | Version Bump |
+|-------------|-------------|
+| New commands, skills, or agents | Minor |
+| Bug fixes to existing commands/skills | Patch |
+| Breaking changes (renamed/removed) | Major |
+| README-only or cosmetic changes | No bump |
+
+### Marketplace vs Changesets
+
+Marketplace versioning and npm changesets are independent systems. Changesets (`bun version:gen`) are for npm publishing (`package.json`). Marketplace version tracks the plugin catalog (`.claude-plugin/marketplace.json`). Adding a plugin requires a marketplace version bump but not a changeset.
+
+---
+
 ## Contribution Steps
 
 1. Fork the repository.
 2. Add your plugin to `plugins/<name>/` following the manifest schema and README template above. The directory name must match the `name` field in `plugin.json`.
 3. Add an entry to `.claude-plugin/marketplace.json` with `name`, `description`, `category`, and `tags` populated.
-4. Run the agent-verifiable checklist items locally: `claude plugin validate .` must exit 0, and the TypeScript hooks must pass biome and tsc checks.
-5. Work through the human-verifiable checklist yourself -- confirm category assignment, verify the description is accurate, and confirm at least one end-to-end demo works.
-6. Submit a PR. Include a short description of what the plugin does and which demo flow to run. A maintainer will review both tiers of the checklist and, once approved, add the plugin to marketplace.json on the main branch.
+4. Bump the marketplace version in `.claude-plugin/marketplace.json` per the [versioning policy](#versioning-policy) (adding a plugin = minor bump).
+5. Run `bun run validate` locally. This runs lint, typecheck, and marketplace validation in one command. Also run `claude plugin validate .` from your plugin directory.
+6. Work through the human-verifiable checklist yourself -- confirm category assignment, verify the description is accurate, and confirm at least one end-to-end demo works.
+7. Submit a PR. Include a short description of what the plugin does and which demo flow to run. CI will run `bun run validate:marketplace --check-bump` to enforce structure and versioning automatically. A maintainer will review both tiers of the checklist.
 
-Plugins that fail the agent-verifiable checks will not be reviewed. Fix validation errors before opening a PR.
+Plugins that fail `bun run validate` or `claude plugin validate .` will not be reviewed. Fix validation errors before opening a PR.
