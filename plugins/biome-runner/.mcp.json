@@ -1,8 +1,0 @@
-{
-	"mcpServers": {
-		"biome-runner": {
-			"command": "bunx",
-			"args": ["--bun", "@side-quest/biome-runner"]
-		}
-	}
-}

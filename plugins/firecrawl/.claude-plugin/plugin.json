@@ -1,6 +1,0 @@
-{
-	"name": "firecrawl",
-	"version": "0.1.0",
-	"description": "Firecrawl expertise layer for AI agents -- API knowledge, gotchas, cost optimization, and integration patterns",
-	"skills": ["./skills/guide"]
-}

@@ -1,5 +1,0 @@
-{
-	"name": "observability",
-	"description": "Real-time observability for Claude Code sessions -- streams lifecycle events to @side-quest/observability server",
-	"version": "0.1.0"
-}

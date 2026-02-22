@@ -1,5 +1,0 @@
-{
-	"name": "tools",
-	"description": "Slash commands wrapping external CLI tools -- CodeRabbit, Greptile, and more to come",
-	"skills": ["./skills/coderabbit", "./skills/greptile"]
-}

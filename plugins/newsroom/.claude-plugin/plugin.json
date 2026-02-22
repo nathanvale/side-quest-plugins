@@ -16,5 +16,6 @@
 	],
 	"license": "MIT",
 	"commands": ["./commands/investigate.md", "./commands/stakeout.md"],
-	"skills": ["./skills/the-desk", "./skills/web-scraping"]
+	"skills": ["./skills/the-desk", "./skills/web-scraping"],
+	"agents": ["./agents/beat-reporter.md"]
 }
