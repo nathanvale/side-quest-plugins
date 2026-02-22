@@ -317,6 +317,38 @@ Use the official Anthropic category values as `category` (for discoverability), 
 
 ---
 
+## Starter Packs
+
+### Concept
+
+Starter packs are recommended groupings of related plugins for common workflows. Each plugin installs independently -- packs are a discovery shortcut, not a bundle. They solve the "which plugins should I install together?" problem as the catalog grows past 10-15 plugins.
+
+### Why Not in marketplace.json?
+
+The marketplace.json schema does NOT support custom fields like `collections`. Root-level fields are limited to `name`, `version`, `description`, `owner`, `metadata`, and `plugins`. Adding unknown fields may break `claude plugin validate .`. Therefore, starter packs are a **documentation-layer concept** -- README sections, plan docs, and optional project settings files -- not a schema extension.
+
+### Initial Starter Packs (V1.1+)
+
+| Pack | Description | Plugins |
+|------|-------------|---------|
+| **quality-gates** | Lint, type-check, and test your code | bun-runner, tsc-runner, biome-runner |
+| **compound-engineering** | The full CE stack -- safety, orchestration, research | git, enterprise, newsroom |
+| **code-intelligence** | Semantic search, navigation, and Claude Code knowledge | kit, claude-code |
+
+These packs will be defined once enough plugins exist to form meaningful groups (V1.1+, when quality-gates and code-intelligence plugins pass the acceptance checklist).
+
+### Delivery Mechanisms
+
+1. **README section** with grouped install commands (human discovery). Users see which plugins go together and can copy-paste install commands for an entire pack.
+
+2. **Example project settings files** in `starter-packs/` directory -- `.claude/settings.json` snippets with `enabledPlugins` pre-configured that teams can copy into their projects (agent + team discovery). Each file is a ready-to-use settings fragment.
+
+### Timing
+
+V1.1+ -- when enough plugins exist to form meaningful groups. The compound-engineering pack can be documented immediately (all 3 plugins are V1), but quality-gates and code-intelligence packs require their constituent plugins to pass the acceptance checklist first.
+
+---
+
 ## Acceptance Criteria
 
 ### Marketplace-Level (V1 release gate)
@@ -592,6 +624,8 @@ This phase creates the marketplace shell with all 3 V1 plugins, fixes manifest i
 - `CONTRIBUTING.md` for external contributors
 - Plugin versioning strategy
 - Auto-update configuration
+- `starter-packs/` directory with example `.claude/settings.json` files for each pack
+- File a Claude Code feature request for native `collections` in marketplace.json schema and batch install command
 
 ### V3: Advanced
 - `/marketplace:verify <plugin-path>` command (agent-automated acceptance checks)
