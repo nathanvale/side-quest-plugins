@@ -63,6 +63,6 @@ Branch naming: `type/description` (e.g., `feat/add-plugin`, `fix/manifest-merge`
 
 ## License
 
-MIT License - Copyright (c) 2025 Nathan Vale
+MIT License - Copyright (c) 2025-2026 Nathan Vale
 
 See [LICENSE](LICENSE) for full text.

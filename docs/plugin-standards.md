@@ -149,7 +149,7 @@ All paths in the manifest are validated by `claude plugin validate .`. The comma
 
 1. Fork the repository.
 2. Add your plugin to `plugins/<name>/` following the manifest schema and README template above. The directory name must match the `name` field in `plugin.json`.
-3. Add an entry to `marketplace.json` with `name`, `description`, `category`, and `tags` populated.
+3. Add an entry to `.claude-plugin/marketplace.json` with `name`, `description`, `category`, and `tags` populated.
 4. Run the agent-verifiable checklist items locally: `claude plugin validate .` must exit 0, and the TypeScript hooks must pass biome and tsc checks.
 5. Work through the human-verifiable checklist yourself -- confirm category assignment, verify the description is accurate, and confirm at least one end-to-end demo works.
 6. Submit a PR. Include a short description of what the plugin does and which demo flow to run. A maintainer will review both tiers of the checklist and, once approved, add the plugin to marketplace.json on the main branch.
