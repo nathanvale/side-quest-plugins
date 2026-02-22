@@ -49,6 +49,28 @@ When a plugin spans multiple categories, assign the category that best describes
 
 ---
 
+## Starter Packs
+
+Starter packs are recommended groupings of related plugins for common workflows. They help users discover which plugins work well together without coupling the packages.
+
+Starter packs exist in documentation (README) and as example project settings files -- not in marketplace.json. The marketplace schema does not support custom fields like `collections`, and adding unknown fields may break validation.
+
+**Rules:**
+
+- A plugin can appear in multiple starter packs.
+- Naming convention: kebab-case, descriptive of the workflow (e.g., `quality-gates` not `bun-biome-tsc`).
+- Each pack needs: name, description (one sentence), list of plugin names, install commands.
+
+**Current packs:**
+
+| Pack | Description | Plugins |
+|------|-------------|---------|
+| **quality-gates** | Lint, type-check, and test your code | bun-runner, tsc-runner, biome-runner |
+| **compound-engineering** | The full CE stack -- safety, orchestration, research | git, enterprise, newsroom |
+| **code-intelligence** | Semantic search, navigation, and Claude Code knowledge | kit, claude-code |
+
+---
+
 ## Multi-Agent Plugin Requirements
 
 Plugins that coordinate multiple sub-agents carry additional cost and complexity that users must be able to reason about before installing. Any plugin that spawns, orchestrates, or delegates work to sub-agents must document the following in its README.

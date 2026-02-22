@@ -31,6 +31,25 @@ Add the marketplace and install plugins:
 | **enterprise** | development | Multi-agent engineering orchestrator with Star Trek metaphor. Spock coordinates Scotty (builder) and McCoy (validator) for documentation, code review, and refactoring. 9 commands, 8 skills, 3 agents. |
 | **newsroom** | productivity | Multi-agent research across Reddit, X, and the web. Mickey "The Desk" Malone dispatches beat reporters in parallel with engagement metrics and source links. 2 commands, 2 skills, 1 agent. |
 
+## Starter Packs (V1.1)
+
+Starter packs group related plugins for common workflows. Each plugin installs independently -- packs are a discovery shortcut, not a bundle.
+
+| Pack | Plugins | Description |
+|------|---------|-------------|
+| **quality-gates** | bun-runner, tsc-runner, biome-runner | Lint, type-check, and test your code |
+| **compound-engineering** | git, enterprise, newsroom | Full CE stack -- safety, orchestration, research |
+| **code-intelligence** | kit, claude-code | Semantic search, navigation, Claude Code knowledge |
+
+Install a pack by installing each plugin:
+
+```bash
+# Quality Gates
+/plugin install bun-runner@side-quest
+/plugin install tsc-runner@side-quest
+/plugin install biome-runner@side-quest
+```
+
 ## Migrating from Symlinks
 
 If you previously installed plugins via `ln -s`:
