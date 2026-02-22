@@ -1,0 +1,23 @@
+{
+	"name": "agentic-orchestration",
+	"description": "HOP Orchestrator - decomposes prompts into task DAGs and dispatches Builder/Validator agent teams",
+	"version": "1.0.0",
+	"author": { "name": "Nathan Vale" },
+	"keywords": [
+		"orchestration",
+		"builder-validator",
+		"hop",
+		"dag",
+		"multi-agent",
+		"agent-teams"
+	],
+	"license": "MIT",
+	"commands": ["./commands/orchestrate.md"],
+	"skills": ["./skills/orchestrator"],
+	"agents": [
+		"./agents/builder.md",
+		"./agents/validator.md",
+		"./agents/research-builder.md",
+		"./agents/research-validator.md"
+	]
+}
