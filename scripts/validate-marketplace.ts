@@ -12,7 +12,7 @@
  */
 
 import { existsSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { resolve, sep } from 'node:path'
 import { parseArgs } from 'node:util'
 
 // --- Types ---
@@ -343,11 +343,17 @@ async function main(): Promise<number> {
 	if (!hasErrors) pass('Plugin entries valid')
 
 	// 7. Source paths resolve to directories with plugin.json, no traversal
+	const repoRoot = process.cwd().replace(/[\\/]+$/, '')
+	const repoRootWithSep = repoRoot + sep
 	for (const plugin of plugins) {
-		const sourcePath = resolve(process.cwd(), plugin.source)
+		if (typeof plugin.source !== 'string' || plugin.source.length === 0) {
+			// validatePluginEntry already reported this
+			continue
+		}
+		const sourcePath = resolve(repoRoot, plugin.source)
 
-		// Path traversal check
-		if (!sourcePath.startsWith(process.cwd())) {
+		// Path traversal check (segment-aware to prevent prefix attacks)
+		if (!sourcePath.startsWith(repoRootWithSep)) {
 			fail(`Plugin "${plugin.name}": source path escapes repo root`)
 			continue
 		}
@@ -375,20 +381,34 @@ async function main(): Promise<number> {
 	// 9. Version bump check (optional)
 	if (flags['check-bump']) {
 		try {
-			const proc = Bun.spawn(['git', 'show', `main:${MARKETPLACE_PATH}`], {
-				stdout: 'pipe',
-				stderr: 'pipe',
-			})
-			const exitCode = await proc.exited
+			// Try multiple refs: CI provides GITHUB_BASE_REF, fall back to origin/main, then local main
+			const refsToTry = [
+				process.env.GITHUB_BASE_REF
+					? `origin/${process.env.GITHUB_BASE_REF}`
+					: null,
+				'origin/main',
+				'main',
+			].filter(Boolean) as string[]
 
-			if (exitCode !== 0) {
+			let oldRaw: string | null = null
+			for (const ref of refsToTry) {
+				const proc = Bun.spawn(['git', 'show', `${ref}:${MARKETPLACE_PATH}`], {
+					stdout: 'pipe',
+					stderr: 'pipe',
+				})
+				const exitCode = await proc.exited
+				if (exitCode === 0) {
+					oldRaw = await new Response(proc.stdout).text()
+					break
+				}
+			}
+
+			if (!oldRaw) {
 				console.log(
-					'[WARN] No main branch marketplace.json found, skipping version bump check',
+					'[WARN] No base branch marketplace.json found, skipping version bump check',
 				)
 				return 0
 			}
-
-			const oldRaw = await new Response(proc.stdout).text()
 			const oldData = JSON.parse(oldRaw) as Marketplace
 			const oldPlugins = oldData.plugins as Plugin[]
 

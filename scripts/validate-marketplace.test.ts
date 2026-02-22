@@ -1,4 +1,7 @@
-import { describe, expect, test } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
 import {
 	detectBumpType,
 	isKebabCase,
@@ -268,5 +271,284 @@ describe('isVersionBumpSufficient', () => {
 	test('invalid semver returns false', () => {
 		expect(isVersionBumpSufficient('bad', '1.0.0', 'patch')).toBe(false)
 		expect(isVersionBumpSufficient('1.0.0', 'bad', 'patch')).toBe(false)
+	})
+})
+
+// --- Integration tests: --check-bump subprocess ---
+
+const SCRIPT_PATH = resolve(import.meta.dir, 'validate-marketplace.ts')
+
+/** Generate a minimal valid marketplace.json object. */
+function makeMarketplace(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+	return {
+		name: 'test-marketplace',
+		version: '1.0.0',
+		description: 'Test marketplace',
+		owner: { name: 'Test' },
+		plugins: [],
+		...overrides,
+	}
+}
+
+/** Create a plugin stub directory with .claude-plugin/plugin.json. */
+function stubPlugin(repoDir: string, name: string): void {
+	const pluginDir = join(repoDir, 'plugins', name, '.claude-plugin')
+	mkdirSync(pluginDir, { recursive: true })
+	writeFileSync(join(pluginDir, 'plugin.json'), JSON.stringify({ name }))
+}
+
+/** Run a git command in the given directory. */
+async function git(
+	cwd: string,
+	...args: string[]
+): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+	const proc = Bun.spawn(['git', ...args], {
+		cwd,
+		stdout: 'pipe',
+		stderr: 'pipe',
+	})
+	const exitCode = await proc.exited
+	const stdout = await new Response(proc.stdout).text()
+	const stderr = await new Response(proc.stderr).text()
+	return { exitCode, stdout, stderr }
+}
+
+/** Run the validation script as a subprocess. */
+async function runScript(
+	cwd: string,
+	args: string[] = [],
+	env: Record<string, string> = {},
+): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+	const proc = Bun.spawn(['bun', 'run', SCRIPT_PATH, ...args], {
+		cwd,
+		stdout: 'pipe',
+		stderr: 'pipe',
+		env: { ...process.env, ...env },
+	})
+	const exitCode = await proc.exited
+	const stdout = await new Response(proc.stdout).text()
+	const stderr = await new Response(proc.stderr).text()
+	return { exitCode, stdout, stderr }
+}
+
+describe('--check-bump integration', () => {
+	let tmpDir: string
+
+	beforeEach(async () => {
+		tmpDir = mkdtempSync(join(tmpdir(), 'validate-marketplace-test-'))
+		// Initialize a git repo with user config for commits
+		await git(tmpDir, 'init', '-b', 'main')
+		await git(tmpDir, 'config', 'user.email', 'test@test.com')
+		await git(tmpDir, 'config', 'user.name', 'Test')
+	})
+
+	afterEach(() => {
+		rmSync(tmpDir, { recursive: true, force: true })
+	})
+
+	test('passes: minor bump for plugin addition', async () => {
+		// Baseline: v1.0.0 with one plugin on main
+		const pluginA = {
+			name: 'alpha',
+			source: './plugins/alpha',
+			description: 'Alpha plugin',
+			category: 'development',
+			tags: ['test'],
+		}
+		const baseline = makeMarketplace({
+			version: '1.0.0',
+			plugins: [pluginA],
+		})
+		stubPlugin(tmpDir, 'alpha')
+		mkdirSync(join(tmpDir, '.claude-plugin'), { recursive: true })
+		writeFileSync(
+			join(tmpDir, '.claude-plugin', 'marketplace.json'),
+			JSON.stringify(baseline, null, '\t'),
+		)
+		await git(tmpDir, 'add', '-A')
+		await git(tmpDir, 'commit', '-m', 'initial')
+
+		// Working tree: add second plugin, bump to v1.1.0
+		const pluginB = {
+			name: 'bravo',
+			source: './plugins/bravo',
+			description: 'Bravo plugin',
+			category: 'productivity',
+			tags: ['test'],
+		}
+		stubPlugin(tmpDir, 'bravo')
+		const updated = makeMarketplace({
+			version: '1.1.0',
+			plugins: [pluginA, pluginB],
+		})
+		writeFileSync(
+			join(tmpDir, '.claude-plugin', 'marketplace.json'),
+			JSON.stringify(updated, null, '\t'),
+		)
+
+		const result = await runScript(tmpDir, ['--check-bump'], {
+			GITHUB_BASE_REF: 'main',
+		})
+
+		expect(result.exitCode).toBe(0)
+		expect(result.stdout).toContain('[PASS]')
+		expect(result.stdout).toContain('1.0.0 -> 1.1.0')
+	})
+
+	test('fails: no bump for plugin addition', async () => {
+		// Baseline: v1.0.0 with one plugin
+		const pluginA = {
+			name: 'alpha',
+			source: './plugins/alpha',
+			description: 'Alpha plugin',
+			category: 'development',
+			tags: ['test'],
+		}
+		const baseline = makeMarketplace({
+			version: '1.0.0',
+			plugins: [pluginA],
+		})
+		stubPlugin(tmpDir, 'alpha')
+		mkdirSync(join(tmpDir, '.claude-plugin'), { recursive: true })
+		writeFileSync(
+			join(tmpDir, '.claude-plugin', 'marketplace.json'),
+			JSON.stringify(baseline, null, '\t'),
+		)
+		await git(tmpDir, 'add', '-A')
+		await git(tmpDir, 'commit', '-m', 'initial')
+
+		// Working tree: add second plugin but keep v1.0.0
+		const pluginB = {
+			name: 'bravo',
+			source: './plugins/bravo',
+			description: 'Bravo plugin',
+			category: 'productivity',
+			tags: ['test'],
+		}
+		stubPlugin(tmpDir, 'bravo')
+		const updated = makeMarketplace({
+			version: '1.0.0',
+			plugins: [pluginA, pluginB],
+		})
+		writeFileSync(
+			join(tmpDir, '.claude-plugin', 'marketplace.json'),
+			JSON.stringify(updated, null, '\t'),
+		)
+
+		const result = await runScript(tmpDir, ['--check-bump'], {
+			GITHUB_BASE_REF: 'main',
+		})
+
+		expect(result.exitCode).toBe(1)
+		expect(result.stderr).toContain('[FAIL]')
+		expect(result.stderr).toContain('minor')
+	})
+
+	test('passes: major bump for plugin removal', async () => {
+		// Baseline: v1.0.0 with two plugins
+		const pluginA = {
+			name: 'alpha',
+			source: './plugins/alpha',
+			description: 'Alpha plugin',
+			category: 'development',
+			tags: ['test'],
+		}
+		const pluginB = {
+			name: 'bravo',
+			source: './plugins/bravo',
+			description: 'Bravo plugin',
+			category: 'productivity',
+			tags: ['test'],
+		}
+		const baseline = makeMarketplace({
+			version: '1.0.0',
+			plugins: [pluginA, pluginB],
+		})
+		stubPlugin(tmpDir, 'alpha')
+		stubPlugin(tmpDir, 'bravo')
+		mkdirSync(join(tmpDir, '.claude-plugin'), { recursive: true })
+		writeFileSync(
+			join(tmpDir, '.claude-plugin', 'marketplace.json'),
+			JSON.stringify(baseline, null, '\t'),
+		)
+		await git(tmpDir, 'add', '-A')
+		await git(tmpDir, 'commit', '-m', 'initial')
+
+		// Working tree: remove bravo, bump to v2.0.0
+		const updated = makeMarketplace({
+			version: '2.0.0',
+			plugins: [pluginA],
+		})
+		writeFileSync(
+			join(tmpDir, '.claude-plugin', 'marketplace.json'),
+			JSON.stringify(updated, null, '\t'),
+		)
+
+		const result = await runScript(tmpDir, ['--check-bump'], {
+			GITHUB_BASE_REF: 'main',
+		})
+
+		expect(result.exitCode).toBe(0)
+		expect(result.stdout).toContain('[PASS]')
+	})
+
+	test('passes: no changes, no bump needed', async () => {
+		// Same plugins on main and working tree
+		const pluginA = {
+			name: 'alpha',
+			source: './plugins/alpha',
+			description: 'Alpha plugin',
+			category: 'development',
+			tags: ['test'],
+		}
+		const marketplace = makeMarketplace({
+			version: '1.0.0',
+			plugins: [pluginA],
+		})
+		stubPlugin(tmpDir, 'alpha')
+		mkdirSync(join(tmpDir, '.claude-plugin'), { recursive: true })
+		writeFileSync(
+			join(tmpDir, '.claude-plugin', 'marketplace.json'),
+			JSON.stringify(marketplace, null, '\t'),
+		)
+		await git(tmpDir, 'add', '-A')
+		await git(tmpDir, 'commit', '-m', 'initial')
+
+		const result = await runScript(tmpDir, ['--check-bump'], {
+			GITHUB_BASE_REF: 'main',
+		})
+
+		expect(result.exitCode).toBe(0)
+		expect(result.stdout).toContain('[PASS]')
+		expect(result.stdout).toContain('no version bump required')
+	})
+
+	test('graceful skip: no base ref available', async () => {
+		// No initial commit, so main ref does not resolve
+		const pluginA = {
+			name: 'alpha',
+			source: './plugins/alpha',
+			description: 'Alpha plugin',
+			category: 'development',
+			tags: ['test'],
+		}
+		const marketplace = makeMarketplace({
+			version: '1.0.0',
+			plugins: [pluginA],
+		})
+		stubPlugin(tmpDir, 'alpha')
+		mkdirSync(join(tmpDir, '.claude-plugin'), { recursive: true })
+		writeFileSync(
+			join(tmpDir, '.claude-plugin', 'marketplace.json'),
+			JSON.stringify(marketplace, null, '\t'),
+		)
+
+		// Don't commit - so there's no main ref to resolve
+		const result = await runScript(tmpDir, ['--check-bump'], {
+			GITHUB_BASE_REF: 'nonexistent-branch',
+		})
+
+		expect(result.exitCode).toBe(0)
+		expect(result.stdout).toContain('[WARN]')
 	})
 })
