@@ -30,6 +30,8 @@
 		"lint": "biome lint .",
 		"lint:fix": "biome lint --write .",
 		"typecheck": "tsc --noEmit",
+		"validate:marketplace": "bun scripts/validate-marketplace.ts",
+		"validate": "bun run check && bun run typecheck && bun run validate:marketplace",
 		"prepare": "husky"
 	},
 	"devDependencies": {

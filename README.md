@@ -62,7 +62,7 @@ Plugins not yet in the marketplace can continue using symlinks.
 
 ## Plugin Standards
 
-See [docs/plugin-standards.md](docs/plugin-standards.md) for the acceptance checklist, category system, and contribution guide.
+See [docs/plugin-standards.md](docs/plugin-standards.md) for the acceptance checklist, category system, versioning policy, and contribution guide.
 
 ## Roadmap
 
@@ -74,11 +74,18 @@ V1.1 adds core development tools (bun-runner, tsc-runner, biome-runner, kit). Se
 git clone https://github.com/nathanvale/side-quest-plugins.git
 cd side-quest-plugins
 bun install
+bun run validate               # Full gate: lint + typecheck + marketplace validation
+bun run validate:marketplace   # Marketplace structure checks only
+```
+
+Individual checks:
+
+```bash
 bun run check      # Biome lint + format
 bun run typecheck  # TypeScript type check
 ```
 
-Branch naming: `type/description` (e.g., `feat/add-plugin`, `fix/manifest-merge`). Commits use [Conventional Commits](https://www.conventionalcommits.org/) enforced by commitlint. Run `bun run validate` before pushing.
+Branch naming: `type/description` (e.g., `feat/add-plugin`, `fix/manifest-merge`). Commits use [Conventional Commits](https://www.conventionalcommits.org/) enforced by commitlint. CI runs `bun run validate:marketplace --check-bump` on PRs to enforce marketplace.json structure and [version bumps](docs/plugin-standards.md#versioning-policy). Run `bun run validate` before pushing.
 
 ## License
 
