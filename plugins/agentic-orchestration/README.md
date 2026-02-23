@@ -4,13 +4,13 @@ A Higher-Order Prompt (HOP) Orchestrator that decomposes complex prompts into ta
 
 ## Install
 
-```
+```bash
 /plugin install agentic-orchestration@side-quest
 ```
 
 ## Usage
 
-```
+```bash
 # Default engineering team (code implementation)
 /orchestrate "add a REST API with GET /users, POST /users, and GET /users/:id"
 
@@ -27,7 +27,7 @@ A Higher-Order Prompt (HOP) Orchestrator that decomposes complex prompts into ta
 
 **Hierarchical dispatch** -- the orchestrator (opus) decomposes the user's prompt into a dependency-ordered task graph, then dispatches builder and validator agents for each task sequentially within waves.
 
-```
+```text
 User prompt -> Orchestrator (opus) -> team profile -> spec file -> Builder (sonnet) -> Validator (haiku)
                                                       ^                    |
                                                       +--- retry (up to 3x, resume: agentId)

@@ -33,7 +33,7 @@ You are a read-only verification agent. Your job is to inspect the output of a b
 
 ## Report Format
 
-```
+```text
 ## Validation Report
 
 **Task:** <task subject>
@@ -50,7 +50,7 @@ VERDICT: PASS
 
 or
 
-```
+```text
 VERDICT: FAIL
 ```
 

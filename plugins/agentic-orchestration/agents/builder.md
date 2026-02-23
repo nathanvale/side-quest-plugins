@@ -33,7 +33,7 @@ You are a focused implementation agent. Your job is to read a task, implement ex
 
 ## Summary Format (for TaskUpdate)
 
-```
+```text
 Created/Modified: <file path>
 - <bullet point describing each change>
 - <bullet point describing each change>
