@@ -1,7 +1,7 @@
 {
 	"$schema": "https://code.claude.com/docs/en/plugin-marketplaces",
 	"name": "side-quest",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Curated, verified Claude Code plugins for compound engineering workflows",
 	"owner": {
 		"name": "Nathan Vale",
@@ -45,6 +45,21 @@
 				"x",
 				"community",
 				"multi-agent",
+				"compound-engineering"
+			]
+		},
+		{
+			"name": "agentic-orchestration",
+			"source": "./plugins/agentic-orchestration",
+			"description": "HOP Orchestrator - decomposes prompts into task DAGs and dispatches Builder/Validator agent teams",
+			"category": "development",
+			"tags": [
+				"orchestration",
+				"builder-validator",
+				"hop",
+				"dag",
+				"multi-agent",
+				"agent-teams",
 				"compound-engineering"
 			]
 		}
