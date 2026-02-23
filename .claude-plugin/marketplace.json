@@ -1,7 +1,7 @@
 {
 	"$schema": "https://code.claude.com/docs/en/plugin-marketplaces",
 	"name": "side-quest",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "Curated, verified Claude Code plugins for compound engineering workflows",
 	"owner": {
 		"name": "Nathan Vale",
@@ -62,6 +62,13 @@
 				"agent-teams",
 				"compound-engineering"
 			]
+		},
+		{
+			"name": "observability",
+			"source": "./plugins/observability",
+			"description": "Real-time event streaming from Claude Code sessions to @side-quest/observability server",
+			"category": "development",
+			"tags": ["observability", "events", "telemetry", "lifecycle", "hooks"]
 		}
 	]
 }

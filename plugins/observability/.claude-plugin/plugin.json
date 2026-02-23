@@ -1,0 +1,8 @@
+{
+	"name": "observability",
+	"description": "Real-time observability -- streams Claude Code lifecycle events to @side-quest/observability server",
+	"version": "0.1.0",
+	"author": { "name": "Nathan Vale" },
+	"keywords": ["observability", "events", "telemetry", "lifecycle", "hooks"],
+	"license": "MIT"
+}
