@@ -1,0 +1,21 @@
+{
+	"skillName": "hooks",
+	"paths": {
+		"configPathBash": "${CLAUDE_PLUGIN_ROOT}/community-intel.json",
+		"cacheDirBash": "${CLAUDE_PLUGIN_ROOT}/skills/hooks/cache",
+		"cacheMetaReadPath": "cache/last-updated.json",
+		"verifiedIntelReadPath": "references/verified-intel.md",
+		"verifiedIntelWritePath": "references/verified-intel.md",
+		"uxStatePath": "cache/community-intel-ui-state.json"
+	},
+	"smartRefreshKeywords": [
+		"not working",
+		"not firing",
+		"isn't firing",
+		"isnt firing",
+		"debug",
+		"error",
+		"broken",
+		"help"
+	]
+}
