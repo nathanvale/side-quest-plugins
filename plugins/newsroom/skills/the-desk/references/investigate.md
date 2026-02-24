@@ -103,11 +103,37 @@ If MODE is not `recon` (default), read [mode-playbook.md](mode-playbook.md) to t
 
 If para-obsidian MCP tools are available (check for `para_search` or `para_semantic_search`), read [the-morgue.md](the-morgue.md) and follow its instructions to check for recent research on the topic(s). If tools are not available, skip silently.
 
+### Topic Normalizer
+
+Before dispatching, normalize each topic to improve CLI search precision. The CLI's topic string drives Reddit/X search prompts, YouTube queries, and WebSearch instructions -- small phrasing changes have outsized impact.
+
+**Rules (apply in order):**
+
+1. **Trim to 3-6 core tokens** -- remove filler words: "best", "top", "latest", "new", "guide", "tips", "how to", "what's". Keep proper nouns and product/version identifiers.
+2. **Preserve disambiguators** -- keep tokens like: v2, 2.1.49, 2026, security, release, CVE
+3. **Apply query-type adjustments:**
+   - NEWS: append "release" or "announcement" if not present (e.g., "Claude Code 2.1.49" -> "Claude Code 2.1.49 release")
+   - RECOMMENDATIONS: keep "best/top" only if user explicitly asked for it (e.g., "best React frameworks" stays)
+   - PROMPTING: keep "how to" only if user explicitly asked for it (e.g., "how to prompt Claude" stays)
+   - GENERAL: no extra modifiers
+4. **Shorten if > 8 tokens** -- keep: first 2 proper nouns, 1 version/date token, 1 intent token (release/security) if present
+
+**Examples:**
+
+| Raw Topic | Query Type | Normalized |
+|---|---|---|
+| "what's new in Claude Code 2.1.49" | NEWS | "Claude Code 2.1.49 release" |
+| "best TypeScript frameworks 2026" | RECOMMENDATIONS | "best TypeScript frameworks 2026" |
+| "tips for prompt engineering with Claude" | PROMPTING | "prompt engineering Claude" |
+| "Rust memory safety discussion" | GENERAL | "Rust memory safety" |
+
+Pass the **normalized** topic to the Beat Reporter in the assignment JSON. If you normalized it, keep the original in the assignment as `raw_topic` for transparency.
+
 ### Beat Reporter Dispatch
 
-For each topic, dispatch ONE Beat Reporter. **NEVER split a topic across multiple reporters by platform.** The CLI handles Reddit + X in a single call -- one reporter per topic covers all platforms.
+For each topic, dispatch ONE Beat Reporter. **NEVER split a topic across multiple reporters by platform.** The CLI handles Reddit + X + YouTube in a single call -- one reporter per topic covers all platforms.
 
-Read [query-strategies.md](query-strategies.md) to construct web search queries for the topic's QUERY_TYPE. Resolve year placeholders per the recency rule in query-strategies.md before constructing queries.
+Read [query-strategies.md](query-strategies.md) to construct augmentation queries for the topic's QUERY_TYPE. Resolve year placeholders per the recency rule in query-strategies.md before constructing queries. Note: the CLI now generates base web search instructions via `--include-web` -- Desk queries augment those, not replace them (see query-strategies.md "Augmentation Strategy").
 
 Then read [orchestration.md](orchestration.md) for dispatch patterns, depth scaling, and budget caps.
 
@@ -119,10 +145,11 @@ Task({
   prompt: `Execute this assignment per your workflow. File your report with CLI data, web findings, and telemetry.
 
 {
-  "topic": "[topic]",
+  "topic": "[normalized topic]",
+  "raw_topic": "[original topic, only if normalized]",
   "query_type": "RECOMMENDATIONS|NEWS|PROMPTING|GENERAL",
   "cli_flags": "[depth_flag] [sources_flag] [days_flag] [refresh_flag]",
-  "web_queries": ["query 1", "query 2", ...],
+  "web_queries": ["augmentation query 1", "augmentation query 2", ...],
   "webfetch_budget": N,
   "focus_fields": ["specific names", "star ratings", ...],
   "depth_instruction": "Quick scan|Balanced coverage|Comprehensive -- dig into review sites, forums, niche blogs"
@@ -131,7 +158,9 @@ Task({
 })
 ```
 
-Only include CLI flags that were parsed from `$ARGUMENTS`. Omit flags that use defaults (e.g. no `--days` if DAYS=30, no sources flag if SOURCES=auto). Resolve `web_queries`, `webfetch_budget`, and `focus_fields` from [query-strategies.md](query-strategies.md) before dispatching.
+**CLI flags are always included:** `--include-web` and `--include-youtube` are part of the beat reporter's standard invocation (see beat-reporter.md Phase 1). Do NOT add them to `cli_flags` -- they are implicit. Only include user-requested flags in `cli_flags`: depth (`--quick`/`--deep`), sources (`--sources=...`), `--days=N`, `--refresh`.
+
+**Web queries are augmentation, not replacement.** The CLI's `web_search_instructions` provide the base web plan. The `web_queries` array contains Desk-constructed queries that add depth for specific query types (RECOMMENDATIONS, PROMPTING, NEWS). For GENERAL, the `web_queries` array may be empty -- the CLI's base plan is sufficient. Resolve `web_queries`, `webfetch_budget`, and `focus_fields` from [query-strategies.md](query-strategies.md) before dispatching.
 
 ### Collect Results
 

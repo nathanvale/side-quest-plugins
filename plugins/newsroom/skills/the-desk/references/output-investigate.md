@@ -126,8 +126,9 @@ These lines go in the stats footer (see output-base.md):
 
 ```
 - CLI: {n} threads/posts | {sum} upvotes/likes | {sum} comments/reposts
-- Web: {n} pages from {domains}
-- Top voices: r/{sub1}, @{handle1}, {web_author} on {site}
+- YouTube: {n} videos | {sum} views | {sum} likes
+- Web: {n} pages from {domains} (plan: cli|desk|hybrid)
+- Top voices: r/{sub1}, @{handle1}, {channel} (YT), {web_author} on {site}
 ```
 
 If CLI failed:
@@ -135,6 +136,8 @@ If CLI failed:
 - Web: {n} pages from {domains}
 - Note: No engagement metrics -- add API keys to ~/.config/last-30-days/.env
 ```
+
+If YouTube returned no results, omit the YouTube line (don't show "YouTube: 0 videos").
 
 ## Investigation Follow-Up Options
 

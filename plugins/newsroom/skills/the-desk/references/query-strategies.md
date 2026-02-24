@@ -2,6 +2,29 @@
 
 WebSearch query templates organized by query type. The Editor-in-Chief selects queries based on the topic's QUERY_TYPE and includes them in the Beat Reporter's assignment.
 
+## Augmentation Strategy
+
+The CLI now generates base web search instructions via `--include-web`. These Desk query templates **augment** the CLI's base plan -- they don't replace it.
+
+### How the merge works
+
+1. **CLI base plan** (always present when `--include-web` is set): topic, date range, excluded domains, general "find 8-15 relevant pages" instruction
+2. **Desk augmentation** (this file): query-type-specific variants that add depth the CLI's generic instruction can't provide
+
+| Query Type | Desk Augmentation Role |
+|---|---|
+| RECOMMENDATIONS | Add "best / top / comparison / alternatives" query variants |
+| PROMPTING | Add "how-to / tutorial / guide / workflow" query variants |
+| NEWS | Add "official announcement / release notes / advisory" query variants |
+| GENERAL | No augmentation needed -- CLI base plan is sufficient |
+
+### Precedence rules
+
+- **Always preserve CLI constraints**: date range and excluded domains (reddit.com, x.com, twitter.com)
+- **GENERAL query type**: send empty `web_queries` array -- CLI base plan covers it
+- **All other types**: send augmentation queries from templates below
+- **If CLI's `web_search_instructions` is missing** (--include-web not set or CLI failed): Desk queries become the full web plan (fallback to current behavior)
+
 ## Universal Rules
 
 - **Use the user's exact terminology** -- don't substitute tool names or add terms from your own knowledge
@@ -134,8 +157,30 @@ Template -- fill in from the above based on QUERY_TYPE and include in the Beat R
 The Editor-in-Chief MUST resolve {N} and {M} from the Depth Scaling table
 in orchestration.md BEFORE dispatching. The Beat Reporter cannot read orchestration.md.
 
+**For GENERAL query type** (no augmentation needed):
+
 ```
-After the CLI returns, run these WebSearch queries:
+The CLI's web_search_instructions provide your web plan.
+Use WebFetch on the top {M} most promising results.
+Focus on: {what to extract from GENERAL section above}
+```
+
+**For RECOMMENDATIONS, PROMPTING, NEWS** (augmentation queries):
+
+```
+The CLI's web_search_instructions provide your base web plan.
+Run these additional WebSearch queries for depth:
+{N augmentation queries selected from the templates above}
+
+Use WebFetch on the top {M} most promising results from both CLI-instructed and augmentation searches.
+
+Focus on: {what to extract from above}
+```
+
+**Fallback** (if CLI web_search_instructions are unavailable):
+
+```
+Run these WebSearch queries:
 {N queries selected from the templates above}
 
 Use WebFetch on the top {M} most promising results.
