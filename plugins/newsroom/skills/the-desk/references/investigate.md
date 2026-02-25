@@ -42,7 +42,7 @@ Parse `$ARGUMENTS` to extract:
   - `changes` -- Delta-focused stakeout (always adds `--refresh`, time-constrained queries)
   - `sentiment` -- Source network mode (CLI-heavy, `--sources=both`, community sentiment focus)
   - `verify "claim"` -- Tipster handler (search for/against evidence, confidence rating)
-- **FACT_CHECK**: `--fact-check` flag present? Boolean. Default: false. Auto-enabled when QUERY_TYPE is NEWS or topic contains "security", "CVE", "vulnerability", or "advisory"
+- **FACT_CHECK**: `--fact-check` flag present? Boolean. Default: false. Auto-enabled when ANY topic's QUERY_TYPE is NEWS or ANY topic contains "security", "CVE", "vulnerability", or "advisory"
 - **WIRE**: `--wire kitchen|garden|dojo` target room for handoff. Default: none
 - **QUERY_TYPE** per topic:
   - RECOMMENDATIONS -- "best X", "top X", "recommended X" (user wants a LIST OF THINGS: products, tools, libraries). If "best" modifies a METHOD or APPROACH ("best way to...", "best practice for..."), classify as GENERAL instead.
@@ -134,16 +134,18 @@ If para-obsidian MCP tools are available (check for `para_search` or `para_seman
 
 Before dispatching, normalize each topic to improve CLI search precision. The CLI's topic string drives Reddit/X search prompts, YouTube queries, and WebSearch instructions -- small phrasing changes have outsized impact.
 
-**Rules (apply in order):**
+**Rules (check query type first, then trim):**
 
-1. **Trim to 3-6 core tokens** -- remove filler words: "best", "top", "latest", "new", "guide", "tips", "how to", "what's". Keep proper nouns and product/version identifiers.
-2. **Preserve disambiguators** -- keep tokens like: v2, 2.1.49, 2026, security, release, CVE
-3. **Apply query-type adjustments:**
+1. **Check query-type exceptions FIRST** -- these override the filler removal in step 2:
+   - RECOMMENDATIONS: preserve "best/top" if the user explicitly included them (e.g., "best React frameworks" stays)
+   - PROMPTING: preserve "how to" if the user explicitly included it (e.g., "how to prompt Claude" stays)
+   - NEWS: will append "release" or "announcement" in step 3
+   - GENERAL: no exceptions
+2. **Trim to 3-6 core tokens** -- remove filler words NOT protected by step 1: "latest", "new", "guide", "tips", "what's". Keep proper nouns and product/version identifiers.
+3. **Preserve disambiguators** -- keep tokens like: v2, 2.1.49, 2026, security, release, CVE
+4. **Apply query-type additions:**
    - NEWS: append "release" or "announcement" if not present (e.g., "Claude Code 2.1.49" -> "Claude Code 2.1.49 release")
-   - RECOMMENDATIONS: keep "best/top" only if user explicitly asked for it (e.g., "best React frameworks" stays)
-   - PROMPTING: keep "how to" only if user explicitly asked for it (e.g., "how to prompt Claude" stays)
-   - GENERAL: no extra modifiers
-4. **Shorten if > 8 tokens** -- keep: first 2 proper nouns, 1 version/date token, 1 intent token (release/security) if present
+5. **Shorten if > 8 tokens** -- keep: first 2 proper nouns, 1 version/date token, 1 intent token (release/security) if present
 
 **Examples:**
 

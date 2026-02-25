@@ -48,7 +48,7 @@ For each claim, follow this exact process:
 
    If WebSearch returns no results, skip the fetch step and assign `unverified` with Evidence: "No results found for [search query]."
 
-2. **Fetch the primary source** using WebFetch on the most authoritative URL. Budget: 1 fetch per claim, `max_fetches` total across all claims. If the first URL fails (403, no substantive content, or JS-gated), try one alternate URL from your WebSearch results before marking unverified with "primary source unreachable".
+2. **Fetch the primary source** using WebFetch on the most authoritative URL. Budget: 1-2 fetches per claim, `max_fetches` total across all claims. If the first URL fails (403, no substantive content, or JS-gated), try one alternate URL from your WebSearch results before marking unverified with "primary source unreachable". If the global budget is exhausted, mark remaining claims as unverified with Primary source: "budget exhausted".
 
 3. **Compare** the claim against the primary source content:
    - Does the source confirm the specific assertion?
@@ -94,6 +94,6 @@ The `fact_check:` line maps directly to the Desk's telemetry format. The Claim f
 - **If a claim is too vague to verify** (fewer than 3 searchable tokens, no proper nouns), assign `unverified` immediately with Evidence: "Claim too vague to verify"
 - **If `claims` array is empty**, return: `## Fact-Check Report\n\n(No claims to verify)\n\n## Summary\n- fact_check: 0 claims checked | 0/0/0`
 - **Be precise about what's contradicted** -- "Source says 2.1.48, claim says 2.1.49" not just "numbers don't match"
-- **If primary sources conflict with each other** -- note the discrepancy in evidence ("GitHub says v2.1.49, vendor blog says v2.1.50") and assign `contradicted` with both sources cited
+- **If primary sources conflict with each other** -- check whether the claim matches at least one authoritative source. If yes, assign `verified` and note the discrepancy in evidence ("GitHub confirms v2.1.49; vendor blog says v2.1.50"). Only assign `contradicted` when no primary source confirms the claim.
 - **Stay within fetch budget** -- if budget is exhausted, mark remaining claims as unverified with Primary source: "budget exhausted"
 - **Do not editorialize** -- "Primary source confirms 1,096 commits" not "This is a huge release with over a thousand commits"

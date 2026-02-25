@@ -182,7 +182,7 @@ Options (pick the most relevant 4 based on what was researched):
 | Compare | "Compare two things" | "You saw some names in there -- want me to run a head-to-head?" | When QUERY_TYPE is RECOMMENDATIONS and 2+ items identified |
 | Sentiment check | "How's the mood?" | "I'll tell you if the street loves it, hates it, or can't make up its mind." | When findings show debate or mixed opinions |
 | Save to vault | "File it" | "I'll clip the highlights to your vault. Quick reference for later." | When para-obsidian MCP tools are available |
-| Fact-check | "Fact-check it" / plain: "Verify claims" | "I'll have my boys verify the big claims against the official sources." | When `--fact-check` was NOT used and findings contain version numbers, release claims, pricing, or security advisories |
+| Fact-check | "Fact-check it" / plain: "Verify claims" | "I'll have my boys verify the big claims against the official sources." | When FACT_CHECK is false (neither explicitly flagged nor auto-enabled) and findings contain version numbers, release claims, pricing, or security advisories |
 | New story | "New story" | "Whole new front page. Give me a topic and we'll run it again." | Always |
 
 Always include "Show me the links", "Dig deeper on a beat", and "New story". Fill remaining slots from the conditional options based on what fits.
