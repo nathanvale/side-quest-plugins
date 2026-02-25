@@ -77,27 +77,15 @@ After parsing, check for conflicts:
 
 ## Interactive Assignment (via AskUserQuestion)
 
-**ALWAYS use AskUserQuestion before dispatching.** No skip path. No exceptions. Do NOT call Task() until the user confirms.
+Use AskUserQuestion before dispatching. Do not call Task() until the user confirms via Step 3.
 
-**MANDATORY GATE:** Even when ALL parameters are set by flags, you MUST still call AskUserQuestion in Step 3 before dispatching. This applies to ALL modes including `--plain`. NEVER proceed to Dispatch without the user's explicit confirmation response.
+Even when all parameters are set by flags, Step 3 confirmation is still required. This applies to all modes including `--plain`.
 
 Build questions ONLY for parameters not already set by flags. Use up to 4 questions per AskUserQuestion call (tool limit).
 
-**Step 1: Topic** (if `$ARGUMENTS` has no topic) -- MANDATORY HARD GATE
+**Step 1: Topic** (if `$ARGUMENTS` has no topic)
 
-If no topic is present, you MUST do all of the following before Step 2, Step 3, or any dispatch:
-
-1. Read [no-topic-responses.md](no-topic-responses.md)
-2. Print exactly ONE no-topic variation from that file (Mickey voice). Do not write your own replacement phrasing.
-3. Immediately call AskUserQuestion:
-   - Header: `Topic`
-   - Input: single free-text field (user types topic)
-4. Wait for the user response and set `TOPICS[]` from that answer.
-
-**Forbidden when topic is missing:**
-- Generic meta preambles like "the skill is loaded" or "what story do you want" in non-Mickey wording
-- Proceeding to Step 2/Step 3 without Topic AskUserQuestion
-- Any Task dispatch
+Already handled by SKILL.md's "No Topic? Ask First, Do Nothing Else" section before this file is read. By the time you reach this point, `TOPICS[]` is set. If it is somehow still empty, return to SKILL.md and follow the no-topic flow there -- do not proceed to Step 2.
 
 **Step 2: Assignment details** (ask only what's missing)
 
