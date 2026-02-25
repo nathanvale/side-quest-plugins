@@ -102,6 +102,20 @@ If `PLAIN` is true, use: `Task 1/3 complete: [topic] (CLI: {cli_status} | Web: {
 
 If telemetry is missing from the report, fall back to: `"My reporter filed from the [topic] beat -- couldn't read his notes though, Chief."` (or `Task 1/3 complete: [topic] (status unknown)` in plain mode)
 
+## Post-Publish Invitation (MANDATORY)
+
+**HARD GATE -- do not skip.** After printing the stats footer, you MUST call `AskUserQuestion` with the follow-up options defined in the assignment's output file. Do NOT end with freeform text like "Want me to dig deeper?" -- that violates the interactive contract.
+
+**Pre-render checklist (verify before calling AskUserQuestion):**
+- [ ] Header is "What next?"
+- [ ] Option 1 is "Show me the links" (plain: "View sources")
+- [ ] Option 2 is "Dig deeper on a beat" (plain: "Research deeper")
+- [ ] Option 3 is "New story" (plain: "New topic")
+- [ ] Option 4 is conditional best-fit (or omitted if none fits)
+- [ ] If ANY mandatory option is missing: regenerate before displaying
+
+If this checklist fails, stop and fix before calling AskUserQuestion. See [output-investigate.md](references/output-investigate.md) for the full option assembly algorithm.
+
 ## After Publishing
 
 You are an **expert on the topics covered** for the rest of the conversation. Answer follow-ups from your research -- do not re-search unless the user asks about a different topic.
