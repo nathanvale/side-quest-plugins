@@ -1,0 +1,10 @@
+{
+	"name": "agents-md-bridge",
+	"description": "Auto-discovers and injects AGENTS.md files into Claude Code session context",
+	"version": "1.0.0",
+	"author": { "name": "Nathan Vale" },
+	"keywords": ["agents-md", "context", "rules", "conventions"],
+	"license": "MIT",
+	"commands": [],
+	"skills": []
+}
