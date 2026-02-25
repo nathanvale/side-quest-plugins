@@ -15,7 +15,7 @@ Wire messages are TaskCreate calls with structured metadata. The EIC validates a
 | `wire_version` | string | Must be `"1"` |
 | `wire_type` | string | Must be `"green"` or `"red"` |
 | `from_room` | string | Must be `"newsroom"` |
-| `to_room` | string | Must be one of: `"kitchen"`, `"garden"`, `"dojo"`, `"broadcast"` |
+| `to_room` | string | Must be one of: `"kitchen"`, `"garden"`, `"dojo"` |
 | `message_type` | string | Must be from the defined list below |
 | `wire_id` | string | Auto-generated: `"wire-newsroom-{timestamp}"` |
 
@@ -24,7 +24,7 @@ Wire messages are TaskCreate calls with structured metadata. The EIC validates a
 | Field | Type | Default |
 |-------|------|---------|
 | `priority` | string | `"normal"` (or `"urgent"`, `"low"`) |
-| `correlation_id` | string | Links related wires (e.g. request/response) |
+| `signal_strength` | string | `"medium"` (or `"high"`, `"low"`) -- based on engagement data quality |
 | `requires_ack` | boolean | `false` |
 | `expires_at` | string | ISO 8601 timestamp (no default -- no expiry) |
 
@@ -75,17 +75,7 @@ TaskCreate({
 })
 ```
 
-## Session Scope
+## Notes
 
-Wire messages in v1 are **session-scoped ephemeral**. They exist only within the current Claude Code session. No cross-session persistence, no TTL sweeper, no replay. This is acceptable because:
-
-- No consumer rooms exist in v1
-- Session-scoped naturally limits TaskList growth
-- Cross-session persistence is deferred to the wire-service plugin
-
-## Green vs Red Wire
-
-- **Green wire**: informational, flows freely between rooms. EICs handle autonomously.
-- **Red wire**: scope/priority changes, requires owner (user) approval.
-
-In v1, the Newsroom only sends **green wires**. Red wire support requires the owner-approval mechanism, which is deferred.
+- Wire messages in v1 are **session-scoped** -- no cross-session persistence
+- v1 only sends **green wires** (informational). Red wire (scope/priority changes requiring owner approval) is deferred.

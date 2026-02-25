@@ -123,11 +123,3 @@ When covering multiple topics, use clear section breaks:
 [Stats footer -- covers all topics combined]
 [Single invitation at the end]
 ```
-
-## Follow-Up Responses
-
-After the first output, Mickey is an **expert on the topics covered** for the rest of the conversation:
-
-- Answer from findings -- do not re-run unless explicitly asked
-- Stay in Mickey's voice (unless PLAIN)
-- If a follow-up needs a new dispatch, use the assignment-specific dispatch pattern

@@ -20,7 +20,8 @@ Loaded when the command is `/newsroom:investigate` or when $ARGUMENTS contains i
 | Dispatch | [mode-playbook.md](mode-playbook.md) | MODE != recon |
 | Dispatch | [the-morgue.md](the-morgue.md) | para-obsidian MCP tools available |
 | Dispatch | [query-strategies.md](query-strategies.md) | Always (construct web queries) |
-| Dispatch | [orchestration.md](orchestration.md) | Always (depth scaling, budget caps) |
+| Dispatch | [dispatch-rules.md](dispatch-rules.md) | Always (depth scaling, budget caps) |
+| Collect | [collection-rules.md](collection-rules.md) | Always (error handling, timeouts) |
 | Synthesis | [output-investigate.md](output-investigate.md) | Always (query-type templates) |
 | Synthesis | [output-base.md](output-base.md) | Always (source links, stats, invitation) |
 | Wire | [wire-protocol.md](wire-protocol.md) + [the-wire.md](the-wire.md) | --wire flag present |
@@ -49,7 +50,9 @@ Parse `$ARGUMENTS` to extract:
   - PROMPTING -- "X prompts", "prompting for X"
   - GENERAL -- everything else
 
-Store parsed values: `TOPICS[]`, `DEPTH`, `QUERY_TYPES[]`, `SOURCES`, `DAYS`, `REFRESH`, `FORMAT`, `PLAIN`, `MODE`, `WIRE`, `FACT_CHECK`
+Store parsed values: `TOPICS[]`, `DEPTH`, `SOURCES`, `DAYS`, `REFRESH`, `FORMAT`, `PLAIN`, `MODE`, `WIRE`, `FACT_CHECK`
+
+Compute `QUERY_TYPES[]` by applying the rules above to each topic (auto-detected from phrasing, overridden by `--format` if set).
 
 Flags that were explicitly passed are **locked** -- don't ask about them.
 
@@ -159,7 +162,7 @@ For each topic, dispatch ONE Beat Reporter. **NEVER split a topic across multipl
 
 Read [query-strategies.md](query-strategies.md) to construct augmentation queries for the topic's QUERY_TYPE. Resolve year placeholders per the recency rule in query-strategies.md before constructing queries. Note: the CLI now generates base web search instructions via `--include-web` -- Desk queries augment those, not replace them (see query-strategies.md "Augmentation Strategy").
 
-Then read [orchestration.md](orchestration.md) for dispatch patterns, depth scaling, and budget caps.
+Then read [dispatch-rules.md](dispatch-rules.md) for depth scaling and budget caps.
 
 Dispatch with a structured JSON assignment:
 
@@ -176,7 +179,8 @@ Task({
   "web_queries": ["augmentation query 1", "augmentation query 2", ...],
   "webfetch_budget": N,
   "focus_fields": ["specific names", "star ratings", ...],
-  "depth_instruction": "Quick scan|Balanced coverage|Comprehensive -- dig into review sites, forums, niche blogs"
+  "depth_instruction": "Quick scan|Balanced coverage|Comprehensive -- dig into review sites, forums, niche blogs",
+  "plain": false
 }`,
   subagent_type: "newsroom:beat-reporter"
 })
@@ -188,9 +192,7 @@ Task({
 
 ### Collect Results
 
-Wait for every reporter using TaskOutput with `block: true, timeout: 120000`.
-
-For collection details, read [orchestration.md](orchestration.md).
+Collect all reporter results using TaskOutput with `block: true, timeout: 120000`. Read [collection-rules.md](collection-rules.md) for error handling.
 
 ### Fact-Check Pass (conditional)
 

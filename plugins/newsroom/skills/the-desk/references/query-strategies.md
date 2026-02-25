@@ -42,7 +42,7 @@ Goal: Find SPECIFIC NAMES of things people recommend.
 ### WebSearch Queries
 
 ```
-1. "best {TOPIC} recommendations 2026"
+1. "best {TOPIC} recommendations {YEAR}"
 2. "{TOPIC} list examples comparison"
 3. "most popular {TOPIC} reviews"
 4. "{TOPIC} alternatives ranked"          (--deep only)
@@ -71,8 +71,8 @@ Goal: Find current events and recent developments.
 ### WebSearch Queries
 
 ```
-1. "{TOPIC} news 2026"
-2. "{TOPIC} announcement update February 2026"
+1. "{TOPIC} news {YEAR}"
+2. "{TOPIC} announcement update {YEAR}"
 3. "{TOPIC} launch release"
 4. "{TOPIC} controversy reaction"           (--deep only)
 5. "{TOPIC} industry analysis"              (--deep only)
@@ -99,7 +99,7 @@ Goal: Find techniques and copy-paste prompts for a target tool.
 ### WebSearch Queries
 
 ```
-1. "{TOPIC} prompts examples 2026"
+1. "{TOPIC} prompts examples {YEAR}"
 2. "{TOPIC} techniques tips best practices"
 3. "{TOPIC} prompt engineering guide"
 4. "{TOPIC} workflow tutorial"              (--deep only)
@@ -128,7 +128,7 @@ Goal: Understand what the community is saying about a topic.
 ### WebSearch Queries
 
 ```
-1. "{TOPIC} 2026"
+1. "{TOPIC} {YEAR}"
 2. "{TOPIC} discussion community"
 3. "{TOPIC} opinions review experience"
 4. "{TOPIC} trends analysis"               (--deep only)
@@ -150,40 +150,3 @@ Prioritize:
 - Surprising insights (unexpected findings)
 - Engagement signals (comment counts, shares mentioned in text)
 
-## Constructing the Web Research Assignment
-
-Template -- fill in from the above based on QUERY_TYPE and include in the Beat Reporter's prompt:
-
-The Editor-in-Chief MUST resolve {N} and {M} from the Depth Scaling table
-in orchestration.md BEFORE dispatching. The Beat Reporter cannot read orchestration.md.
-
-**For GENERAL query type** (no augmentation needed):
-
-```
-The CLI's web_search_instructions provide your web plan.
-Use WebFetch on the top {M} most promising results.
-Focus on: {what to extract from GENERAL section above}
-```
-
-**For RECOMMENDATIONS, PROMPTING, NEWS** (augmentation queries):
-
-```
-The CLI's web_search_instructions provide your base web plan.
-Run these additional WebSearch queries for depth:
-{N augmentation queries selected from the templates above}
-
-Use WebFetch on the top {M} most promising results from both CLI-instructed and augmentation searches.
-
-Focus on: {what to extract from above}
-```
-
-**Fallback** (if CLI web_search_instructions are unavailable):
-
-```
-Run these WebSearch queries:
-{N queries selected from the templates above}
-
-Use WebFetch on the top {M} most promising results.
-
-Focus on: {what to extract from above}
-```

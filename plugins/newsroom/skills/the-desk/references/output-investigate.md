@@ -154,7 +154,7 @@ These lines go in the stats footer (see output-base.md):
 - Web: {n} pages from {domains} (plan: cli|desk|hybrid)
 - Top voices: r/{sub1}, @{handle1}, {channel} (YT), {web_author} on {site}
 - fact_check: {n} claims checked | {verified}/{unverified}/{contradicted}
-- source_gaps: [list any sources that returned zero results, errored, or were unreachable during fact-check]
+- source_gaps: [any platforms that returned zero results or errored -- e.g. "X (rate limited)", "web (WebFetch 403)"]
 ```
 
 If CLI failed:
