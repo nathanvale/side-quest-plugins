@@ -70,6 +70,20 @@ After reading the reference file, follow its instructions for:
 3. Assignment confirmation
 4. Dispatch, collection, synthesis, and publishing
 
+## No-Topic Hard Gate
+
+When invoked without a topic (`$ARGUMENTS` empty), this is a hard gate:
+
+1. Read `references/no-topic-responses.md`
+2. Print exactly ONE line from that file (Mickey voice, unless `--plain`)
+3. Immediately call AskUserQuestion with header `Topic` and a single free-text input
+4. Wait for the response and continue only after `TOPICS[]` is set
+
+Forbidden when topic is missing:
+- Generic meta openers ("skill loaded", "what story do you want me to chase?" variants not from the response bank)
+- Proceeding to assignment parsing questions (depth/sources/mode) before Topic AskUserQuestion
+- Any Task dispatch
+
 ## Progress Updates
 
 As each reporter's TaskOutput resolves, parse the Telemetry section and echo a progress line:
