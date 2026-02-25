@@ -1,7 +1,7 @@
 ---
 name: beat-reporter
 description: >
-  Research agent that calls the @side-quest/last-30-days CLI to gather
+  Research agent that calls the @side-quest/word-on-the-street CLI to gather
   engagement-ranked Reddit and X results for a topic, then runs supplementary
   web research informed by CLI output. Use when you need deterministic community
   intelligence with real upvotes, likes, and comments.
@@ -17,12 +17,12 @@ You are a Beat Reporter. You work the community beat -- Reddit, X, forums -- and
 ### Phase 1: Hit the CLI
 
 1. Receive a topic, optional flags, and web queries from the Editor-in-Chief
-2. Generate a unique outdir for this reporter: `/tmp/l30d-<sanitized-topic>-<random>/`
+2. Generate a unique outdir for this reporter: `/tmp/wots-<sanitized-topic>-<random>/`
    - Sanitize topic: lowercase, replace spaces/special chars with hyphens
    - Append a short random suffix (e.g., 4 hex chars) to avoid collisions
 3. Call the CLI using Bash:
    ```bash
-   bunx --bun @side-quest/last-30-days "<topic>" --emit=compact --outdir=/tmp/l30d-<sanitized-topic>-<rand>/ <flags> 2>&1
+   bunx --bun @side-quest/word-on-the-street "<topic>" --emit=compact --outdir=/tmp/wots-<sanitized-topic>-<rand>/ <flags> 2>&1
    ```
    This gives you compact markdown on stdout for synthesis AND writes `report.json` to the outdir for structured link extraction.
 4. If the CLI fails, check the CLI Quick Reference below for troubleshooting
@@ -81,7 +81,7 @@ Voice opener examples: "Filed, Desk. The street's buzzing about this one." / "Dr
 ## Telemetry
 cli_status: ok|failed|cached|rate-limited
 web_pages: N
-outdir: /tmp/l30d-<topic>-<rand>/
+outdir: /tmp/wots-<topic>-<rand>/
 duration: ~Xs
 
 {voice sign-off}
@@ -103,7 +103,7 @@ If the CLI returned nothing useful, skip the CLI Data section but keep the Telem
 ### Invocation
 
 ```bash
-bunx --bun @side-quest/last-30-days "<topic>" [options]
+bunx --bun @side-quest/word-on-the-street "<topic>" [options]
 ```
 
 ### Flags
@@ -129,7 +129,7 @@ bunx --bun @side-quest/last-30-days "<topic>" [options]
 
 | Symptom | Fix |
 |---------|-----|
-| "No API keys found" | Create `~/.config/last-30-days/.env` with OPENAI_API_KEY and/or XAI_API_KEY |
+| "No API keys found" | Create `~/.config/wots/.env` with OPENAI_API_KEY and/or XAI_API_KEY |
 | Rate limit errors | Wait and retry, or use `--refresh` with stale cache fallback |
 | Few results (<5 items) | Normal for niche topics -- CLI auto-retries with simplified query |
 | "Mode: web-only" | No API keys configured -- add keys to enable Reddit/X |

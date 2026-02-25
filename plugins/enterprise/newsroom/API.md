@@ -90,7 +90,7 @@ Shorthand for `/newsroom:investigate` with `--mode changes`. Delta-focused resea
 
 ### `beat-reporter`
 
-Research agent that gathers engagement-ranked Reddit and X results via the `@side-quest/last-30-days` CLI, then runs supplementary web research informed by CLI output.
+Research agent that gathers engagement-ranked Reddit and X results via the `@side-quest/word-on-the-street` CLI, then runs supplementary web research informed by CLI output.
 
 **Model:** `sonnet`
 **Skills:** `[web-scraping]`
@@ -109,7 +109,7 @@ Research agent that gathers engagement-ranked Reddit and X results via the `@sid
 
 **Workflow:**
 
-1. **Phase 1: Hit the CLI** - Generate unique outdir, call `bunx --bun @side-quest/last-30-days` with flags
+1. **Phase 1: Hit the CLI** - Generate unique outdir, call `bunx --bun @side-quest/word-on-the-street` with flags
 2. **Phase 2: Web Research** - Run supplementary WebSearch queries (context-dependent)
 3. **Phase 3: Extract Source Links** - Read `{outdir}/report.json` for structured Reddit/X data
 4. **Phase 4: File Report** - Combined report with CLI data, web findings, source links, telemetry
@@ -130,7 +130,7 @@ Research agent that gathers engagement-ranked Reddit and X results via the `@sid
 ## Telemetry
 cli_status: ok|failed|cached|rate-limited
 web_pages: N
-outdir: /tmp/l30d-<topic>-<rand>/
+outdir: /tmp/wots-<topic>-<rand>/
 duration: ~Xs
 ```
 
@@ -294,13 +294,13 @@ TaskCreate({
 
 ## CLI Integration
 
-### `@side-quest/last-30-days`
+### `@side-quest/word-on-the-street`
 
 The Beat Reporters call this CLI for engagement-ranked Reddit + X results.
 
 **Invocation:**
 ```bash
-bunx --bun @side-quest/last-30-days "<topic>" [options]
+bunx --bun @side-quest/word-on-the-street "<topic>" [options]
 ```
 
 **Flags:**
@@ -353,8 +353,8 @@ bunx --bun @side-quest/last-30-days "<topic>" [options]
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| CLI not installed | `@side-quest/last-30-days` missing | `bun add -g @side-quest/last-30-days` |
-| No API keys | Missing `.env` config | Create `~/.config/last-30-days/.env` with keys |
+| CLI not installed | `@side-quest/word-on-the-street` missing | `bun add -g @side-quest/word-on-the-street` |
+| No API keys | Missing `.env` config | Create `~/.config/wots/.env` with keys |
 | No results | Niche topic or quiet period | Narrower topic, different time window, `--refresh` |
 | Reporter timeout | Exceeded 120s | Note gap, continue with other results |
 | Module resolution | Bunx cache corruption | `rm -rf /private/var/folders/_b/*/T/bunx-501-@side-quest/` |
@@ -364,7 +364,7 @@ bunx --bun @side-quest/last-30-days "<topic>" [options]
 ## Dependencies
 
 ### Required
-- `@side-quest/last-30-days` CLI (via `bunx`)
+- `@side-quest/word-on-the-street` CLI (via `bunx`)
 - Claude Code with Task system support
 - WebSearch, WebFetch, Bash, Read tools
 

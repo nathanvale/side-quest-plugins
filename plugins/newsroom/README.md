@@ -50,7 +50,7 @@ Supervisor pattern: 1 editor dispatches N reporters. Expect 2-5x compute vs a si
 
 ## Requirements
 
-- `@side-quest/last-30-days` CLI -- required for Reddit and X data
+- `@side-quest/word-on-the-street` CLI -- required for Reddit and X data
 - Firecrawl MCP -- optional; falls back to standard web search if not configured
 
 ---

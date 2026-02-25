@@ -58,7 +58,7 @@ Task({
 ```
 
 The Beat Reporter will:
-1. Call `bunx --bun @side-quest/last-30-days "[topic]" --emit=compact [flags]`
+1. Call `bunx --bun @side-quest/word-on-the-street "[topic]" --emit=compact [flags]`
 2. Handle errors using its inline CLI troubleshooting knowledge
 3. Assess CLI output and decide web research approach
 4. Run WebSearch + WebFetch per the assignment
