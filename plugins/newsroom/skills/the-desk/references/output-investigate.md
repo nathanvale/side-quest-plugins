@@ -4,6 +4,16 @@ Assignment-specific output format for `/newsroom:investigate`. Defines synthesis
 
 Read [output-base.md](output-base.md) for the generic wrapper (source links, stats footer, invitation framework).
 
+## Contents
+- [Synthesis Templates](#synthesis-templates)
+- [Verification](#verification)
+- [Relaying Reporter Voice](#relaying-reporter-voice)
+- [Investigation Telemetry](#investigation-telemetry)
+- [Investigation Follow-Up Options](#investigation-follow-up-options)
+- [Follow-Up Handlers](#follow-up-handlers)
+- [Wire Summary Format](#wire-summary-format)
+- [Edition Title](#edition-title)
+
 ## Synthesis Templates
 
 ### Query Type: RECOMMENDATIONS
@@ -90,6 +100,20 @@ Default for any topic that doesn't match above.
 - [Where community opinion is split]
 ```
 
+### Verification
+
+ONLY if fact-check ran. OMIT this section entirely if `FACT_CHECK` was not triggered.
+
+```
+### Verification
+
+| Claim | Status | Primary Source | Notes |
+|-------|--------|---------------|-------|
+| "[factual assertion]" (source) | verified/unverified/contradicted | [URL or "none found"] | [1 sentence rationale] |
+```
+
+---
+
 ## Relaying Reporter Voice
 
 Beat Reporters file with their own voice -- openers ("Filed, Desk. The street's buzzing about this one.") and sign-offs ("Three sources, all saying the same thing."). Mickey doesn't just summarize their data -- he **relays their character** to the Chief.
@@ -129,6 +153,8 @@ These lines go in the stats footer (see output-base.md):
 - YouTube: {n} videos | {sum} views | {sum} likes
 - Web: {n} pages from {domains} (plan: cli|desk|hybrid)
 - Top voices: r/{sub1}, @{handle1}, {channel} (YT), {web_author} on {site}
+- fact_check: {n} claims checked | {verified}/{unverified}/{contradicted}
+- source_gaps: [list any sources that returned zero results, errored, or were unreachable during fact-check]
 ```
 
 If CLI failed:
@@ -156,6 +182,7 @@ Options (pick the most relevant 4 based on what was researched):
 | Compare | "Compare two things" | "You saw some names in there -- want me to run a head-to-head?" | When QUERY_TYPE is RECOMMENDATIONS and 2+ items identified |
 | Sentiment check | "How's the mood?" | "I'll tell you if the street loves it, hates it, or can't make up its mind." | When findings show debate or mixed opinions |
 | Save to vault | "File it" | "I'll clip the highlights to your vault. Quick reference for later." | When para-obsidian MCP tools are available |
+| Fact-check | "Fact-check it" / plain: "Verify claims" | "I'll have my boys verify the big claims against the official sources." | When `--fact-check` was NOT used and findings contain version numbers, release claims, pricing, or security advisories |
 | New story | "New story" | "Whole new front page. Give me a topic and we'll run it again." | Always |
 
 Always include "Show me the links", "Dig deeper on a beat", and "New story". Fill remaining slots from the conditional options based on what fits.
@@ -183,6 +210,9 @@ Re-analyze the existing research through a sentiment lens. Categorize community 
 
 **"File it":**
 If para-obsidian tools are available, create a resource note with the synthesis, source links, and metadata. Use `/para-obsidian:clip` pattern.
+
+**"Fact-check it":**
+Extract high-risk claims from the existing reporter data and dispatch the Fact Checker agent (see investigate.md > Fact-Check Pass). No reporter re-dispatch needed -- only the verification agent runs. Present verification results inline and add any primary source URLs to the source links section.
 
 **"New story":**
 Use AskUserQuestion to get the new topic, then run the full investigation flow from the start.

@@ -2,6 +2,29 @@
 
 Loaded when the command is `/newsroom:investigate` or when $ARGUMENTS contains investigation-style input (topics to research). This file handles flag parsing, interactive parameter gathering, and assignment construction for investigation workflows.
 
+## Contents
+- [Flag Parsing](#flag-parsing)
+- [Interactive Assignment](#interactive-assignment-via-askuserquestion)
+- [Dispatch](#dispatch)
+- [Fact-Check Pass](#fact-check-pass-conditional)
+- [Synthesis](#synthesis)
+- [Publish](#publish)
+- [Wire](#wire-conditional)
+- [Error Templates](#error-templates)
+
+## Reference Routing
+
+| Phase | Reference | Read when |
+|-------|-----------|-----------|
+| Flag parsing | [no-topic-responses.md](no-topic-responses.md) | No topic in $ARGUMENTS |
+| Dispatch | [mode-playbook.md](mode-playbook.md) | MODE != recon |
+| Dispatch | [the-morgue.md](the-morgue.md) | para-obsidian MCP tools available |
+| Dispatch | [query-strategies.md](query-strategies.md) | Always (construct web queries) |
+| Dispatch | [orchestration.md](orchestration.md) | Always (depth scaling, budget caps) |
+| Synthesis | [output-investigate.md](output-investigate.md) | Always (query-type templates) |
+| Synthesis | [output-base.md](output-base.md) | Always (source links, stats, invitation) |
+| Wire | [wire-protocol.md](wire-protocol.md) + [the-wire.md](the-wire.md) | --wire flag present |
+
 ## Flag Parsing
 
 Parse `$ARGUMENTS` to extract:
@@ -18,6 +41,7 @@ Parse `$ARGUMENTS` to extract:
   - `changes` -- Delta-focused stakeout (always adds `--refresh`, time-constrained queries)
   - `sentiment` -- Source network mode (CLI-heavy, `--sources=both`, community sentiment focus)
   - `verify "claim"` -- Tipster handler (search for/against evidence, confidence rating)
+- **FACT_CHECK**: `--fact-check` flag present? Boolean. Default: false. Auto-enabled when QUERY_TYPE is NEWS or topic contains "security", "CVE", "vulnerability", or "advisory"
 - **WIRE**: `--wire kitchen|garden|dojo` target room for handoff. Default: none
 - **QUERY_TYPE** per topic:
   - RECOMMENDATIONS -- "best X", "top X", "recommended X" (user wants a LIST OF THINGS: products, tools, libraries). If "best" modifies a METHOD or APPROACH ("best way to...", "best practice for..."), classify as GENERAL instead.
@@ -25,7 +49,7 @@ Parse `$ARGUMENTS` to extract:
   - PROMPTING -- "X prompts", "prompting for X"
   - GENERAL -- everything else
 
-Store parsed values: `TOPICS[]`, `DEPTH`, `QUERY_TYPES[]`, `SOURCES`, `DAYS`, `REFRESH`, `FORMAT`, `PLAIN`, `MODE`, `WIRE`
+Store parsed values: `TOPICS[]`, `DEPTH`, `QUERY_TYPES[]`, `SOURCES`, `DAYS`, `REFRESH`, `FORMAT`, `PLAIN`, `MODE`, `WIRE`, `FACT_CHECK`
 
 Flags that were explicitly passed are **locked** -- don't ask about them.
 
@@ -76,7 +100,7 @@ After all parameters are set (from flags + user answers), use one final AskUserQ
 
 > "Alright Chief, here's the rundown."
 >
-> **Beat**: {TOPICS} | **Depth**: {DEPTH} | **Angle**: {QUERY_TYPE}{" (your call)" if --format used} | **Sources**: {SOURCES} | **Window**: {DAYS} days{" | **Mode**: {MODE} ({mode description})" if MODE != recon}
+> **Beat**: {TOPICS} | **Depth**: {DEPTH} | **Angle**: {QUERY_TYPE}{" (your call)" if --format used} | **Sources**: {SOURCES} | **Window**: {DAYS} days{" | **Mode**: {MODE} ({mode description})" if MODE != recon}{" | **Fact-check**: yes" if FACT_CHECK}
 >
 > "Send my boys out?"
 
@@ -167,6 +191,62 @@ Task({
 Wait for every reporter using TaskOutput with `block: true, timeout: 120000`.
 
 For collection details, read [orchestration.md](orchestration.md).
+
+### Fact-Check Pass (conditional)
+
+**Trigger:** Runs when `FACT_CHECK` is true (explicitly via `--fact-check` OR auto-enabled for NEWS query type / topics containing "security", "CVE", "vulnerability", "advisory"). Skip entirely when not triggered.
+
+**Architecture:** Builder/Validator pattern. Beat reporters are Builders (retrieve data). The Fact Checker agent is the Validator (independently verifies claims against primary sources). Mickey orchestrates both -- he never does web research himself.
+
+After collecting all reporter results, scan for high-risk claims:
+
+**What counts as high-risk:**
+- CVEs and security advisories (version-specific vulnerability claims)
+- Release announcements (version numbers, dates, feature claims)
+- Pricing or benchmark performance claims (numbers that could be wrong)
+- "Official" statements attributed to companies or maintainers
+- Claims with high engagement but no primary source link
+
+**How many to extract:**
+
+| Context | Claims to verify |
+|---------|-----------------|
+| Default (`--fact-check`) | Top 3 across all sources |
+| NEWS query type | Top 5 across all sources |
+| Security-related topic | Top 5, prioritize CVEs |
+
+**Dispatch the Fact Checker:**
+
+Extract claims from reporter results, then dispatch a single `fact-checker` agent:
+
+```
+Task({
+  description: "Fact Checker: [topic(s)]",
+  prompt: `Verify these claims against primary sources per your workflow.
+
+{
+  "claims": [
+    {
+      "id": 1,
+      "assertion": "[specific factual claim from reporter data]",
+      "source": "[reporter attribution]",
+      "category": "release|security|pricing|quote|benchmark"
+    }
+  ],
+  "topic": "[research topic for context]",
+  "max_fetches": 5
+}`,
+  subagent_type: "newsroom:fact-checker"
+})
+```
+
+Collect results using TaskOutput with `block: true, timeout: 120000`.
+
+The Fact Checker returns a structured report with verdicts (verified/unverified/contradicted) and primary source URLs. Parse this into the Verification section during synthesis.
+
+**Error handling:**
+- Fact Checker times out or fails: note "verification unavailable" in telemetry, continue with synthesis
+- No high-risk claims identified in reporter data: skip this phase, note "no high-risk claims identified" in telemetry
 
 ## Synthesis
 

@@ -35,58 +35,7 @@ Total wall-clock time: ~90-120s (bounded by slowest reporter finishing both CLI 
 
 ## Dispatching Beat Reporters
 
-Launch one Beat Reporter per topic. They know the CLI inside-out via inline reference in their agent body.
-
-Read [query-strategies.md](query-strategies.md) first to construct web queries for the topic's QUERY_TYPE, then build a structured JSON assignment:
-
-```
-Task({
-  description: "Beat Reporter: [topic]",
-  prompt: `Execute this assignment per your workflow. File your report with CLI data, web findings, and telemetry.
-
-{
-  "topic": "[normalized topic]",
-  "raw_topic": "[original topic, only if normalized]",
-  "query_type": "RECOMMENDATIONS|NEWS|PROMPTING|GENERAL",
-  "cli_flags": "[user-requested flags only]",
-  "web_queries": ["{N augmentation queries from query-strategies.md}"],
-  "webfetch_budget": {M},
-  "focus_fields": ["{what to extract from query-strategies.md}"],
-  "depth_instruction": "Quick scan|Balanced coverage|Comprehensive..."
-}`,
-  subagent_type: "newsroom:beat-reporter"
-})
-```
-
-The Beat Reporter will:
-1. Call `bunx --bun @side-quest/last-30-days "[topic]" --json --quiet --include-web --include-youtube --outdir=<path> [flags]`
-2. Parse the JSON envelope from stdout (reddit, x, youtube arrays + web_search_instructions)
-3. Handle errors using its inline CLI troubleshooting knowledge
-4. Merge CLI web_search_instructions with Desk augmentation queries for web research
-5. Run WebSearch + WebFetch per the merged web plan
-6. File a combined report with CLI data, web findings, and telemetry
-
-### CLI Flags
-
-**Always included** (part of beat reporter standard invocation -- do NOT add to `cli_flags`):
-- `--json --quiet` -- structured output, no stderr noise
-- `--include-web` -- CLI generates base web search instructions in envelope
-- `--include-youtube` -- YouTube results included in every search
-- `--outdir=<path>` -- parallel-safe output directory
-
-**User-requested flags** (include in `cli_flags` when specified):
-
-| Flag | CLI Equivalent | When to Pass |
-|------|---------------|-------------|
-| `--quick` | `--quick` | User wants fast results |
-| `--deep` | `--deep` | User wants comprehensive results |
-| `--reddit` | `--sources=reddit` | User wants Reddit only |
-| `--x` | `--sources=x` | User wants X only |
-| `--both` | `--sources=both` | User explicitly wants both platforms |
-| `--days N` | `--days=N` | User specifies a time window |
-| `--refresh` | `--refresh` | User wants fresh (uncached) results |
-
-Note: `--sources`, `--days`, `--refresh` only affect the CLI phase. The web research phase runs WebSearch per the merged plan (CLI base + Desk augmentation).
+For the Beat Reporter dispatch JSON template and CLI flags, see [investigate.md > Beat Reporter Dispatch](investigate.md#beat-reporter-dispatch).
 
 ### Depth Scaling
 

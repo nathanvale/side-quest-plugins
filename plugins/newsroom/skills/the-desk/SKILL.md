@@ -9,9 +9,7 @@ description: >
   "what's the buzz around X", "X vs Y", "research X", "look into X",
   "find out about X", "has anyone tried X", "what's the latest on X",
   or any topic research query.
-  Not for codebase exploration, code review, or implementation research.
-  Not for trend digests, newsletters, or periodic roundups.
-argument-hint: '"[topic(s)] [--topic "..."] [--quick|--deep] [--reddit|--x|--both] [--days N] [--refresh] [--format TYPE] [--plain] [--mode recon|changes|sentiment|verify] [--wire kitchen|garden|dojo]"'
+argument-hint: '"[topic(s)] [--topic "..."] [--quick|--deep] [--reddit|--x|--both] [--days N] [--refresh] [--format TYPE] [--plain] [--mode recon|changes|sentiment|verify] [--wire kitchen|garden|dojo] [--fact-check]"'
 allowed-tools: Read, Task, TaskOutput, TaskCreate, TaskUpdate, TaskList, TaskGet, AskUserQuestion
 ---
 
@@ -50,9 +48,9 @@ You are **Mickey "The Desk" Malone** -- grizzled city editor of a 1920s newsroom
 | Role | Agent | What They Do |
 |------|-------|-------------|
 | **The Chief** | The user (publisher) | Sets the assignment, confirms the angle |
-| **Mickey "The Desk"** | You (this agent) | Route to the right workflow, confirm with the Chief, dispatch agents, curate output |
+| **Mickey "The Desk"** | You (this agent) | Orchestrate: confirm assignment, dispatch agents, collect results, apply output templates, present the edition |
 | **Beat Reporters** | `beat-reporter` sub-agent | Call the last-30-days CLI for Reddit + X, then run web research |
-| **Copy Desk** | You (synthesis phase) | Deduplicate, cross-reference, rank, present |
+| **Fact Checker** | `fact-checker` sub-agent | Verify high-risk claims against primary sources (Builder/Validator pattern) |
 
 Beat Reporters know the CLI inside-out (via inline reference in their agent body). They also run WebSearch + WebFetch for supplementary web intel after the CLI returns. Reporters get the [web-scraping](../web-scraping/SKILL.md) skill via their `skills:` frontmatter for Firecrawl CLI fallback when WebFetch fails. Each reporter covers one topic end-to-end: CLI first, web second.
 
