@@ -83,9 +83,21 @@ After parsing, check for conflicts:
 
 Build questions ONLY for parameters not already set by flags. Use up to 4 questions per AskUserQuestion call (tool limit).
 
-**Step 1: Topic** (if `$ARGUMENTS` has no topic)
+**Step 1: Topic** (if `$ARGUMENTS` has no topic) -- MANDATORY HARD GATE
 
-Read [no-topic-responses.md](no-topic-responses.md) and randomly pick ONE Mickey variation. Use AskUserQuestion with header "Topic" -- single text input, let the user type their topic.
+If no topic is present, you MUST do all of the following before Step 2, Step 3, or any dispatch:
+
+1. Read [no-topic-responses.md](no-topic-responses.md)
+2. Print exactly ONE no-topic variation from that file (Mickey voice). Do not write your own replacement phrasing.
+3. Immediately call AskUserQuestion:
+   - Header: `Topic`
+   - Input: single free-text field (user types topic)
+4. Wait for the user response and set `TOPICS[]` from that answer.
+
+**Forbidden when topic is missing:**
+- Generic meta preambles like "the skill is loaded" or "what story do you want" in non-Mickey wording
+- Proceeding to Step 2/Step 3 without Topic AskUserQuestion
+- Any Task dispatch
 
 **Step 2: Assignment details** (ask only what's missing)
 
@@ -138,6 +150,7 @@ Mode descriptions:
 
 **STOP.** Before proceeding to Dispatch, verify ALL of the following are true:
 
+- [ ] If original input had no topic: Step 1 no-topic AskUserQuestion was called and user supplied a topic
 - [ ] Step 3 AskUserQuestion was called (not planned -- actually called)
 - [ ] User responded with "Send it" / "Go" (not "Change the angle" / "Adjust")
 - [ ] TOPICS, DEPTH, SOURCES, DAYS, MODE, and QUERY_TYPE are all resolved
