@@ -172,7 +172,7 @@ These go in the invitation (see output-base.md). Use AskUserQuestion with header
 Question text:
 > "That's the edition, Chief. What's it gonna be?"
 
-Options (pick the most relevant 4 based on what was researched):
+Options (exactly 4). The first 3 are MANDATORY and always included. The 4th is chosen from conditional options:
 
 | Option | Label | Description | When to include |
 |--------|-------|-------------|-----------------|
@@ -185,9 +185,9 @@ Options (pick the most relevant 4 based on what was researched):
 | Fact-check | "Fact-check it" / plain: "Verify claims" | "I'll have my boys verify the big claims against the official sources." | When FACT_CHECK is false (neither explicitly flagged nor auto-enabled) and findings contain version numbers, release claims, pricing, or security advisories |
 | New story | "New story" | "Whole new front page. Give me a topic and we'll run it again." | Always |
 
-Always include "Show me the links", "Dig deeper on a beat", and "New story". Fill remaining slots from the conditional options based on what fits.
+**MANDATORY (always include as options 1-3):** "Show me the links", "Dig deeper on a beat", "New story". **4th option:** pick the single best fit from the conditional options above. If no conditional option fits, use only 3 options.
 
-If PLAIN, use neutral labels: "View sources", "Research deeper", "Draft a prompt", "Compare options", "Analyze sentiment", "Save to notes", "New topic".
+If PLAIN, use neutral labels. Mandatory: "View sources", "Research deeper", "New topic". Conditional: "Draft a prompt", "Compare options", "Analyze sentiment", "Save to notes", "Verify claims".
 
 ## Follow-Up Handlers
 

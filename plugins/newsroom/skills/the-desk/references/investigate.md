@@ -79,7 +79,9 @@ After parsing, check for conflicts:
 
 **ALWAYS use AskUserQuestion before dispatching.** No skip path. No exceptions. Do NOT call Task() until the user confirms.
 
-Build questions ONLY for parameters not already set by flags. Use up to 4 questions per AskUserQuestion call (tool limit). If all parameters are set by flags, still ask the final confirmation question.
+**MANDATORY GATE:** Even when ALL parameters are set by flags, you MUST still call AskUserQuestion in Step 3 before dispatching. This applies to ALL modes including `--plain`. NEVER proceed to Dispatch without the user's explicit confirmation response.
+
+Build questions ONLY for parameters not already set by flags. Use up to 4 questions per AskUserQuestion call (tool limit).
 
 **Step 1: Topic** (if `$ARGUMENTS` has no topic)
 
@@ -87,7 +89,7 @@ Read [no-topic-responses.md](no-topic-responses.md) and randomly pick ONE Mickey
 
 **Step 2: Assignment details** (ask only what's missing)
 
-Combine unanswered parameters into one AskUserQuestion call. Skip any question where the flag was already provided.
+Combine unanswered parameters into one AskUserQuestion call. Skip any **Step 2 question** where the flag was already provided. (This skip rule applies ONLY to Step 2 -- Step 3 confirmation is always required.)
 
 | Parameter | Header | Question (Mickey voice) | Options |
 |-----------|--------|------------------------|---------|
@@ -97,9 +99,13 @@ Combine unanswered parameters into one AskUserQuestion call. Skip any question w
 
 If PLAIN is true, use neutral question text: "Select research depth", "Select sources", "Select research mode".
 
-**Step 3: Confirm and dispatch**
+**Step 3: Confirm assignment -- MANDATORY (never skip)**
 
-After all parameters are set (from flags + user answers), use one final AskUserQuestion with header "Assignment":
+ALWAYS execute this step. No exceptions. Even when every parameter came from flags. Even in `--plain` mode. You MUST call AskUserQuestion here before any Task() dispatch.
+
+After all parameters are set (from flags + user answers), use one final AskUserQuestion with header "Assignment".
+
+**If PLAIN is false** (Mickey voice):
 
 > "Alright Chief, here's the rundown."
 >
@@ -113,12 +119,30 @@ Options:
 
 If the topic seems overly broad (e.g. "AI", "cloud computing", "programming"), add: "That's a mighty broad beat, Chief. '{topic}' could fill ten papers. You sure you don't want to narrow it down?"
 
-If PLAIN, use neutral: "Proceed with these settings?" / "Go (Recommended)" / "Adjust"
+**If PLAIN is true** (neutral voice):
+
+> **Topic**: {TOPICS} | **Depth**: {DEPTH} | **Type**: {QUERY_TYPE}{" (override)" if --format used} | **Sources**: {SOURCES} | **Window**: {DAYS} days{" | **Mode**: {MODE}" if MODE != recon}{" | **Fact-check**: yes" if FACT_CHECK}
+>
+> Proceed with these settings?
+
+Options:
+- "Go (Recommended)" -- dispatch
+- "Adjust" -- change parameters
 
 Mode descriptions:
 - `changes` -- "delta-focused, refreshing sources"
 - `sentiment` -- "community sentiment deep-dive"
 - `verify` -- "fact-checking: {claim}"
+
+### Pre-Dispatch Gate
+
+**STOP.** Before proceeding to Dispatch, verify ALL of the following are true:
+
+- [ ] Step 3 AskUserQuestion was called (not planned -- actually called)
+- [ ] User responded with "Send it" / "Go" (not "Change the angle" / "Adjust")
+- [ ] TOPICS, DEPTH, SOURCES, DAYS, MODE, and QUERY_TYPE are all resolved
+
+If ANY checkbox is false, do NOT proceed. Return to the unfinished step.
 
 ## Dispatch
 
