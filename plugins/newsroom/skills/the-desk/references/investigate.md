@@ -238,7 +238,7 @@ Task({
     }
   ],
   "topic": "[research topic for context]",
-  "max_fetches": 5
+  "max_fetches": <claims count * 2>
 }`,
   subagent_type: "newsroom:fact-checker"
 })
