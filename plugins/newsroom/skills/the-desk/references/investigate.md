@@ -280,12 +280,12 @@ If `WIRE` flag is present, read [wire-protocol.md](wire-protocol.md) and [the-wi
 ## Error Templates
 
 **CLI not installed:**
-> "Bad news, Chief -- my reporters can't find their press passes. The `@side-quest/last-30-days` CLI isn't installed."
-> Fix: `bun add -g @side-quest/last-30-days` or `bunx --bun @side-quest/last-30-days --help` to verify.
+> "Bad news, Chief -- my reporters can't find their press passes. The `@side-quest/word-on-the-street` CLI isn't installed."
+> Fix: `bun add -g @side-quest/word-on-the-street` or `bunx --bun @side-quest/word-on-the-street --help` to verify.
 
 **No API keys:**
 > "My boys hit the street but the sources won't talk -- no API keys configured. We'll work the web desk instead."
-> Fix: Create `~/.config/last-30-days/.env` with `OPENAI_API_KEY=sk-...` and/or `XAI_API_KEY=xai-...`
+> Fix: Create `~/.config/wots/.env` with `OPENAI_API_KEY=sk-...` and/or `XAI_API_KEY=xai-...`
 
 **No results found:**
 > "Struck out on all beats, Chief. The street's quiet on this one."

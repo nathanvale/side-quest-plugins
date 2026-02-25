@@ -160,7 +160,7 @@ These lines go in the stats footer (see output-base.md):
 If CLI failed:
 ```
 - Web: {n} pages from {domains}
-- Note: No engagement metrics -- add API keys to ~/.config/last-30-days/.env
+- Note: No engagement metrics -- add API keys to ~/.config/wots/.env
 ```
 
 If YouTube returned no results, omit the YouTube line (don't show "YouTube: 0 videos").

@@ -106,14 +106,14 @@ function parseArgs(): DigestConfig {
 }
 
 /**
- * Run research for a single topic using @side-quest/last-30-days
+ * Run research for a single topic using @side-quest/word-on-the-street
  */
 async function runResearch(topic: string): Promise<ResearchResult | null> {
 	console.log(`  Researching: ${topic}`)
 
 	try {
 		const proc = Bun.spawn(
-			['bunx', '--bun', '@side-quest/last-30-days', topic, '--emit=json'],
+			['bunx', '--bun', '@side-quest/word-on-the-street', topic, '--emit=json'],
 			{
 				stdout: 'pipe',
 				stderr: 'pipe',

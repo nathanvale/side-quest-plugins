@@ -26,11 +26,11 @@ This skill draws from:
 - Official Claude Code documentation at code.claude.com/docs/en/skills
 - Agent Skills open standard at agentskills.io
 
-Reference files are the primary source. Community intel is opt-in via `/research:last-30-days` -- see Community Perspective below.
+Reference files are the primary source. Community intel is opt-in via `/newsroom:investigate` -- see Community Perspective below.
 
 ## Community Perspective (Opt-In)
 
-This skill does NOT maintain a community intel cache. Instead, it can hand off to `/research:last-30-days` for live community signal when the user wants inspiration or real-world examples.
+This skill does NOT maintain a community intel cache. Instead, it can hand off to `/newsroom:investigate` for live community signal when the user wants inspiration or real-world examples.
 
 **Auto-detect these signals** -- if the user's question contains any of these, offer to run community research:
 - "what are people building", "what are people doing with skills"
@@ -41,12 +41,12 @@ This skill does NOT maintain a community intel cache. Instead, it can hand off t
 
 **When detected**:
 1. Answer from reference files first (the official answer)
-2. Then invoke `/research:last-30-days` with a tailored query like: `"Claude Code skills" OR "SKILL.md" OR "claude skills examples"`
+2. Then invoke `/newsroom:investigate` with a tailored query like: `"Claude Code skills" OR "SKILL.md" OR "claude skills examples"`
 3. Present both: "Here's what the docs say" followed by "Here's what the community is doing"
 
 **Do NOT auto-invoke research** for standard doc questions like "what goes in SKILL.md" or "how do I distribute a skill." Only when the user is explicitly asking for community perspective or inspiration.
 
-**Fallback**: If `/research:last-30-days` is not available, suggest the user search community forums (Reddit r/ClaudeAI, GitHub Discussions) directly.
+**Fallback**: If `/newsroom:investigate` is not available, suggest the user search community forums (Reddit r/ClaudeAI, GitHub Discussions) directly.
 
 
 ## Step 1: Classify the Question
@@ -241,7 +241,7 @@ Here's what the official docs cover for skill patterns:
 
 Let me check what the community is building...
 
-Skill: [Invokes /research:last-30-days "Claude Code skills examples creative patterns"]
+Skill: [Invokes /newsroom:investigate "Claude Code skills examples creative patterns"]
 
 From the community (last 30 days):
 [research results with engagement metrics]
