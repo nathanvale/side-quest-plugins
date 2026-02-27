@@ -1,0 +1,17 @@
+{
+	"description": "Discovers and injects AGENTS.md files into session context",
+	"hooks": {
+		"SessionStart": [
+			{
+				"matcher": "*",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/agents-md-loader.ts",
+						"timeout": 5
+					}
+				]
+			}
+		]
+	}
+}
