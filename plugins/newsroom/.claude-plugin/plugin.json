@@ -1,7 +1,7 @@
 {
 	"name": "newsroom",
 	"description": "Research intelligence orchestrator - dispatches reporters, curates findings, publishes evening editions",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"author": {
 		"name": "Nathan Vale"
 	},
@@ -17,5 +17,5 @@
 	"license": "MIT",
 	"commands": ["./commands/investigate.md", "./commands/stakeout.md"],
 	"skills": ["./skills/the-desk", "./skills/web-scraping"],
-	"agents": ["./agents/beat-reporter.md"]
+	"agents": ["./agents/beat-reporter.md", "./agents/fact-checker.md"]
 }

@@ -2,7 +2,17 @@
 
 **Only loaded when `--mode` is not `recon` (default).**
 
-Translates the `--mode` flag into assignment variations for Beat Reporters.
+Translates the `--mode` flag into assignment variations for Beat Reporters. The Desk resolves all placeholders (like `{TOPIC}`) to actual values before dispatching. Mode `focus_fields` supplement (not replace) query-type fields from query-strategies.md.
+
+## Mode Routing
+
+| MODE value | Section | What it does |
+|------------|---------|-------------|
+| `changes` | [Stakeout](#mode-changes-stakeout) | Delta-focused -- what's new, not what's known |
+| `sentiment` | [Source Network](#mode-sentiment-source-network) | Community mood, praise, complaints, debates |
+| `verify "claim"` | [Tipster Handler](#mode-verify-claim-tipster-handler) | Evidence for/against a specific claim |
+
+Read only the section matching the active MODE value.
 
 ## Mode: changes (Stakeout)
 
@@ -32,6 +42,8 @@ Community sentiment deep-dive. The reporter digs into what people FEEL, not just
 ## Mode: verify "claim" (Tipster Handler)
 
 Fact-checking mode. The reporter searches for evidence FOR and AGAINST a specific claim.
+
+**Prerequisite:** `--mode verify "the claim text"` MUST include the claim string. If missing, the Desk asks the user via AskUserQuestion before proceeding.
 
 **Assignment adjustments:**
 - The claim text is extracted from `--mode verify "the claim text"`

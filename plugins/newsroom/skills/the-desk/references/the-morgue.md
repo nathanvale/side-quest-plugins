@@ -30,8 +30,8 @@ Before dispatching Beat Reporters in Phase 2, check if the vault has recent rese
 > Options: Skip this topic / Research again with fresh data
 
 4. Use AskUserQuestion with options:
-   - "Skip it -- morgue's got enough" (remove topic from dispatch)
-   - "Fresh take -- send a reporter anyway" (proceed with dispatch)
+   - "Skip it -- morgue's got enough" -- removes this topic from TOPICS[] array, it will not be dispatched
+   - "Fresh take -- send a reporter anyway" -- proceeds with dispatch, adds note to assignment: "User acknowledged recent coverage; requesting fresh research"
 
 ## If Tools Are Unavailable
 

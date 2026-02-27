@@ -2,7 +2,7 @@
  * Types for AI Trends Digest
  */
 
-/** Research result from @side-quest/last-30-days --emit=json */
+/** Research result from @side-quest/word-on-the-street --emit=json */
 export interface ResearchResult {
 	topic: string
 	mode: 'both' | 'reddit-only' | 'x-only' | 'web-only'

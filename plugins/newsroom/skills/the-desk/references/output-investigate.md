@@ -4,6 +4,16 @@ Assignment-specific output format for `/newsroom:investigate`. Defines synthesis
 
 Read [output-base.md](output-base.md) for the generic wrapper (source links, stats footer, invitation framework).
 
+## Contents
+- [Synthesis Templates](#synthesis-templates)
+- [Verification](#verification)
+- [Relaying Reporter Voice](#relaying-reporter-voice)
+- [Investigation Telemetry](#investigation-telemetry)
+- [Investigation Follow-Up Options](#investigation-follow-up-options)
+- [Follow-Up Handlers](#follow-up-handlers)
+- [Wire Summary Format](#wire-summary-format)
+- [Edition Title](#edition-title)
+
 ## Synthesis Templates
 
 ### Query Type: RECOMMENDATIONS
@@ -90,6 +100,20 @@ Default for any topic that doesn't match above.
 - [Where community opinion is split]
 ```
 
+### Verification
+
+ONLY if fact-check ran. OMIT this section entirely if `FACT_CHECK` was not triggered.
+
+```
+### Verification
+
+| Claim | Status | Primary Source | Notes |
+|-------|--------|---------------|-------|
+| "[factual assertion]" (source) | verified/unverified/contradicted | [URL or "none found"] | [1 sentence rationale] |
+```
+
+---
+
 ## Relaying Reporter Voice
 
 Beat Reporters file with their own voice -- openers ("Filed, Desk. The street's buzzing about this one.") and sign-offs ("Three sources, all saying the same thing."). Mickey doesn't just summarize their data -- he **relays their character** to the Chief.
@@ -126,15 +150,20 @@ These lines go in the stats footer (see output-base.md):
 
 ```
 - CLI: {n} threads/posts | {sum} upvotes/likes | {sum} comments/reposts
-- Web: {n} pages from {domains}
-- Top voices: r/{sub1}, @{handle1}, {web_author} on {site}
+- YouTube: {n} videos | {sum} views | {sum} likes
+- Web: {n} pages from {domains} (plan: cli|desk|hybrid)
+- Top voices: r/{sub1}, @{handle1}, {channel} (YT), {web_author} on {site}
+- fact_check: {n} claims checked | {verified}/{unverified}/{contradicted}
+- source_gaps: [any platforms that returned zero results or errored -- e.g. "X (rate limited)", "web (WebFetch 403)"]
 ```
 
 If CLI failed:
 ```
 - Web: {n} pages from {domains}
-- Note: No engagement metrics -- add API keys to ~/.config/last-30-days/.env
+- Note: No engagement metrics -- add API keys to ~/.config/wots/.env
 ```
+
+If YouTube returned no results, omit the YouTube line (don't show "YouTube: 0 videos").
 
 ## Investigation Follow-Up Options
 
@@ -143,7 +172,7 @@ These go in the invitation (see output-base.md). Use AskUserQuestion with header
 Question text:
 > "That's the edition, Chief. What's it gonna be?"
 
-Options (pick the most relevant 4 based on what was researched):
+Options (exactly 4). The first 3 are MANDATORY and always included. The 4th is chosen from conditional options:
 
 | Option | Label | Description | When to include |
 |--------|-------|-------------|-----------------|
@@ -153,11 +182,37 @@ Options (pick the most relevant 4 based on what was researched):
 | Compare | "Compare two things" | "You saw some names in there -- want me to run a head-to-head?" | When QUERY_TYPE is RECOMMENDATIONS and 2+ items identified |
 | Sentiment check | "How's the mood?" | "I'll tell you if the street loves it, hates it, or can't make up its mind." | When findings show debate or mixed opinions |
 | Save to vault | "File it" | "I'll clip the highlights to your vault. Quick reference for later." | When para-obsidian MCP tools are available |
+| Fact-check | "Fact-check it" / plain: "Verify claims" | "I'll have my boys verify the big claims against the official sources." | When FACT_CHECK is false (neither explicitly flagged nor auto-enabled) and findings contain version numbers, release claims, pricing, or security advisories |
 | New story | "New story" | "Whole new front page. Give me a topic and we'll run it again." | Always |
 
-Always include "Show me the links", "Dig deeper on a beat", and "New story". Fill remaining slots from the conditional options based on what fits.
+### Option Assembly (MANDATORY)
 
-If PLAIN, use neutral labels: "View sources", "Research deeper", "Draft a prompt", "Compare options", "Analyze sentiment", "Save to notes", "New topic".
+Build follow-up options using this exact algorithm:
+
+1. `BASE_OPTIONS` (always present, always first):
+   - `show_links`: "Show me the links" (plain: "View sources")
+   - `dig_deeper`: "Dig deeper on a beat" (plain: "Research deeper")
+   - `new_story`: "New story" (plain: "New topic")
+2. `OPTION_4`:
+   - Pick exactly one best-fit conditional option from: "Write me a prompt", "Compare two things", "How's the mood?", "File it", "Fact-check it"
+   - If none fits, omit slot 4 and show only `BASE_OPTIONS` (3 total)
+3. Render in fixed order:
+   - Option 1: `show_links`
+   - Option 2: `dig_deeper`
+   - Option 3: `new_story`
+   - Option 4: conditional best-fit (if present)
+
+**Never omit `show_links`.** Do not remove it just because a Sources section already appeared above.
+
+**Pre-render guard checklist (hard gate):**
+- Is option 1 `show_links` (or plain `View sources`)?
+- Is option 2 `dig_deeper` (or plain `Research deeper`)?
+- Is option 3 `new_story` (or plain `New topic`)?
+- If any answer is NO: regenerate options before displaying AskUserQuestion.
+
+If `PLAIN` is true, use neutral labels only:
+- Base: "View sources", "Research deeper", "New topic"
+- Conditional: "Draft a prompt", "Compare options", "Analyze sentiment", "Save to notes", "Verify claims"
 
 ## Follow-Up Handlers
 
@@ -180,6 +235,9 @@ Re-analyze the existing research through a sentiment lens. Categorize community 
 
 **"File it":**
 If para-obsidian tools are available, create a resource note with the synthesis, source links, and metadata. Use `/para-obsidian:clip` pattern.
+
+**"Fact-check it":**
+Extract high-risk claims from the existing reporter data and dispatch the Fact Checker agent (see investigate.md > Fact-Check Pass). No reporter re-dispatch needed -- only the verification agent runs. Present verification results inline and add any primary source URLs to the source links section.
 
 **"New story":**
 Use AskUserQuestion to get the new topic, then run the full investigation flow from the start.

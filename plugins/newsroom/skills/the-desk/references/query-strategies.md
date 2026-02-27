@@ -2,6 +2,29 @@
 
 WebSearch query templates organized by query type. The Editor-in-Chief selects queries based on the topic's QUERY_TYPE and includes them in the Beat Reporter's assignment.
 
+## Augmentation Strategy
+
+The CLI now generates base web search instructions via `--include-web`. These Desk query templates **augment** the CLI's base plan -- they don't replace it.
+
+### How the merge works
+
+1. **CLI base plan** (always present when `--include-web` is set): topic, date range, excluded domains, general "find 8-15 relevant pages" instruction
+2. **Desk augmentation** (this file): query-type-specific variants that add depth the CLI's generic instruction can't provide
+
+| Query Type | Desk Augmentation Role |
+|---|---|
+| RECOMMENDATIONS | Add "best / top / comparison / alternatives" query variants |
+| PROMPTING | Add "how-to / tutorial / guide / workflow" query variants |
+| NEWS | Add "official announcement / release notes / advisory" query variants |
+| GENERAL | No augmentation needed -- CLI base plan is sufficient |
+
+### Precedence rules
+
+- **Always preserve CLI constraints**: date range and excluded domains (reddit.com, x.com, twitter.com)
+- **GENERAL query type**: send empty `web_queries` array -- CLI base plan covers it
+- **All other types**: send augmentation queries from templates below
+- **If CLI's `web_search_instructions` is missing** (--include-web not set or CLI failed): Desk queries become the full web plan (fallback to current behavior)
+
 ## Universal Rules
 
 - **Use the user's exact terminology** -- don't substitute tool names or add terms from your own knowledge
@@ -19,7 +42,7 @@ Goal: Find SPECIFIC NAMES of things people recommend.
 ### WebSearch Queries
 
 ```
-1. "best {TOPIC} recommendations 2026"
+1. "best {TOPIC} recommendations {YEAR}"
 2. "{TOPIC} list examples comparison"
 3. "most popular {TOPIC} reviews"
 4. "{TOPIC} alternatives ranked"          (--deep only)
@@ -48,8 +71,8 @@ Goal: Find current events and recent developments.
 ### WebSearch Queries
 
 ```
-1. "{TOPIC} news 2026"
-2. "{TOPIC} announcement update February 2026"
+1. "{TOPIC} news {YEAR}"
+2. "{TOPIC} announcement update {YEAR}"
 3. "{TOPIC} launch release"
 4. "{TOPIC} controversy reaction"           (--deep only)
 5. "{TOPIC} industry analysis"              (--deep only)
@@ -76,7 +99,7 @@ Goal: Find techniques and copy-paste prompts for a target tool.
 ### WebSearch Queries
 
 ```
-1. "{TOPIC} prompts examples 2026"
+1. "{TOPIC} prompts examples {YEAR}"
 2. "{TOPIC} techniques tips best practices"
 3. "{TOPIC} prompt engineering guide"
 4. "{TOPIC} workflow tutorial"              (--deep only)
@@ -105,7 +128,7 @@ Goal: Understand what the community is saying about a topic.
 ### WebSearch Queries
 
 ```
-1. "{TOPIC} 2026"
+1. "{TOPIC} {YEAR}"
 2. "{TOPIC} discussion community"
 3. "{TOPIC} opinions review experience"
 4. "{TOPIC} trends analysis"               (--deep only)
@@ -127,18 +150,3 @@ Prioritize:
 - Surprising insights (unexpected findings)
 - Engagement signals (comment counts, shares mentioned in text)
 
-## Constructing the Web Research Assignment
-
-Template -- fill in from the above based on QUERY_TYPE and include in the Beat Reporter's prompt:
-
-The Editor-in-Chief MUST resolve {N} and {M} from the Depth Scaling table
-in orchestration.md BEFORE dispatching. The Beat Reporter cannot read orchestration.md.
-
-```
-After the CLI returns, run these WebSearch queries:
-{N queries selected from the templates above}
-
-Use WebFetch on the top {M} most promising results.
-
-Focus on: {what to extract from above}
-```
