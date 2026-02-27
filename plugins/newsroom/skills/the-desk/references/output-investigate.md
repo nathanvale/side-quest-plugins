@@ -185,9 +185,34 @@ Options (exactly 4). The first 3 are MANDATORY and always included. The 4th is c
 | Fact-check | "Fact-check it" / plain: "Verify claims" | "I'll have my boys verify the big claims against the official sources." | When FACT_CHECK is false (neither explicitly flagged nor auto-enabled) and findings contain version numbers, release claims, pricing, or security advisories |
 | New story | "New story" | "Whole new front page. Give me a topic and we'll run it again." | Always |
 
-**MANDATORY (always include as options 1-3):** "Show me the links", "Dig deeper on a beat", "New story". **4th option:** pick the single best fit from the conditional options above. If no conditional option fits, use only 3 options.
+### Option Assembly (MANDATORY)
 
-If PLAIN, use neutral labels. Mandatory: "View sources", "Research deeper", "New topic". Conditional: "Draft a prompt", "Compare options", "Analyze sentiment", "Save to notes", "Verify claims".
+Build follow-up options using this exact algorithm:
+
+1. `BASE_OPTIONS` (always present, always first):
+   - `show_links`: "Show me the links" (plain: "View sources")
+   - `dig_deeper`: "Dig deeper on a beat" (plain: "Research deeper")
+   - `new_story`: "New story" (plain: "New topic")
+2. `OPTION_4`:
+   - Pick exactly one best-fit conditional option from: "Write me a prompt", "Compare two things", "How's the mood?", "File it", "Fact-check it"
+   - If none fits, omit slot 4 and show only `BASE_OPTIONS` (3 total)
+3. Render in fixed order:
+   - Option 1: `show_links`
+   - Option 2: `dig_deeper`
+   - Option 3: `new_story`
+   - Option 4: conditional best-fit (if present)
+
+**Never omit `show_links`.** Do not remove it just because a Sources section already appeared above.
+
+**Pre-render guard checklist (hard gate):**
+- Is option 1 `show_links` (or plain `View sources`)?
+- Is option 2 `dig_deeper` (or plain `Research deeper`)?
+- Is option 3 `new_story` (or plain `New topic`)?
+- If any answer is NO: regenerate options before displaying AskUserQuestion.
+
+If `PLAIN` is true, use neutral labels only:
+- Base: "View sources", "Research deeper", "New topic"
+- Conditional: "Draft a prompt", "Compare options", "Analyze sentiment", "Save to notes", "Verify claims"
 
 ## Follow-Up Handlers
 

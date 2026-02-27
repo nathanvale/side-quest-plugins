@@ -92,7 +92,14 @@ Options: [defined by the assignment's output file]
 
 If PLAIN, use: "Follow-up options:" with neutral option labels.
 
-The invitation MUST use AskUserQuestion -- not just printed text. This keeps the interactive pattern that warms up Mickey's voice for follow-up responses.
+### HARD GATE -- AskUserQuestion Required
+
+The invitation MUST use AskUserQuestion -- not freeform text. Never end the edition with prose like "Want me to dig deeper?" or "Let me know if you'd like to explore..." -- those are contract violations. The publish step is not complete until AskUserQuestion has been called with the assignment's mandatory options.
+
+**Verify before calling:**
+- Header is "What next?"
+- Mandatory options are present (defined per assignment type)
+- AskUserQuestion is the final tool call in the publish sequence
 
 ## Plain Mode
 

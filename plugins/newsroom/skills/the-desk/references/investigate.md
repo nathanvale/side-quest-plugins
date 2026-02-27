@@ -77,15 +77,15 @@ After parsing, check for conflicts:
 
 ## Interactive Assignment (via AskUserQuestion)
 
-**ALWAYS use AskUserQuestion before dispatching.** No skip path. No exceptions. Do NOT call Task() until the user confirms.
+Use AskUserQuestion before dispatching. Do not call Task() until the user confirms via Step 3.
 
-**MANDATORY GATE:** Even when ALL parameters are set by flags, you MUST still call AskUserQuestion in Step 3 before dispatching. This applies to ALL modes including `--plain`. NEVER proceed to Dispatch without the user's explicit confirmation response.
+Even when all parameters are set by flags, Step 3 confirmation is still required. This applies to all modes including `--plain`.
 
 Build questions ONLY for parameters not already set by flags. Use up to 4 questions per AskUserQuestion call (tool limit).
 
 **Step 1: Topic** (if `$ARGUMENTS` has no topic)
 
-Read [no-topic-responses.md](no-topic-responses.md) and randomly pick ONE Mickey variation. Use AskUserQuestion with header "Topic" -- single text input, let the user type their topic.
+Already handled by SKILL.md's "No Topic? Ask First, Do Nothing Else" section before this file is read. By the time you reach this point, `TOPICS[]` is set. If it is somehow still empty, return to SKILL.md and follow the no-topic flow there -- do not proceed to Step 2.
 
 **Step 2: Assignment details** (ask only what's missing)
 
@@ -138,6 +138,7 @@ Mode descriptions:
 
 **STOP.** Before proceeding to Dispatch, verify ALL of the following are true:
 
+- [ ] If original input had no topic: Step 1 no-topic AskUserQuestion was called and user supplied a topic
 - [ ] Step 3 AskUserQuestion was called (not planned -- actually called)
 - [ ] User responded with "Send it" / "Go" (not "Change the angle" / "Adjust")
 - [ ] TOPICS, DEPTH, SOURCES, DAYS, MODE, and QUERY_TYPE are all resolved
